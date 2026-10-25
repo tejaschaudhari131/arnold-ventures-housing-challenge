@@ -1,0 +1,8 @@
+# Runtime and test dependencies for Stateframe.
+# Every license below is permissive and compatible with Apache-2.0 downstream use.
+# The automated test tests/test_licenses.py reads installed metadata and fails
+# if a dependency is GPL, LGPL, AGPL, MPL, EUPL, CC0, or unknown.
+
+PyYAML==6.0.2
+pytest==8.3.5
+ruff==0.14.2

@@ -1,15 +1,23 @@
 # Data
 
-Do **not** commit raw or large data to this repository. The root `.gitignore` already ignores everything in `data/` except this README and the `sample/` folder.
+Do not commit raw or large extracts. `.gitignore` ignores `data/` except this file and `data/sample/`.
 
 ## How to obtain the data
 
-[Document the exact steps to fetch the datasets your tool needs — download links, API calls, or a script such as `scripts/get_data.sh`. Someone should be able to reproduce your data setup from these instructions alone.]
+From a clean checkout, with or without a network:
+
+```bash
+bash scripts/get_data.sh
+```
+
+With a network, `python -m src.data.acquire` streams public files from `www2.census.gov` and `www.fhfa.gov` and writes `data/cache/fixtures.json`. It does not call the Census API, so `CENSUS_API_KEY` is optional and unused. If a download fails, the command exits 0 and the app keeps the committed benchmark in `data/sample/`.
+
+The tier-1 lot-size bins and the transit inventory are screened aggregates already in `data/sample/`. Acquisition merges those files. It does not re-download parcel geometries. Re-screening instructions and the query hosts are in [docs/DATA_PROVENANCE.md](../docs/DATA_PROVENANCE.md).
 
 ## Sample data
 
-Keep only small, shareable samples in `data/sample/` so tests and demos can run without the full datasets. Confirm that any sample you commit is permitted by that dataset's license and contains no sensitive or restricted records.
+`data/sample/` is the benchmark tests, CI, and the web app run against. See [data/sample/README.md](sample/README.md). The files are a few hundred kilobytes of JSON. No CSV or parcel dump is committed.
 
 ## Provenance
 
-Full source, version, license, and cleaning details for every dataset go in [docs/DATA_PROVENANCE.md](../docs/DATA_PROVENANCE.md).
+Source, vintage, license, and cleaning for every series are in [docs/DATA_PROVENANCE.md](../docs/DATA_PROVENANCE.md). The challenge's state-by-state catalog is in [data/DATA_SOURCES.md](DATA_SOURCES.md).

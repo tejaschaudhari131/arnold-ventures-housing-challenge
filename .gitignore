@@ -51,6 +51,17 @@ sbom.json
 sbom.spdx.json
 
 # ==============================================================================
-# Language-specific — paste rules for your stack here
-# (Python, Node, Go, R, Rust, etc.)
+# Language-specific — Python
 # ==============================================================================
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+.coverage
+htmlcov/
+output/
+data/cache/
