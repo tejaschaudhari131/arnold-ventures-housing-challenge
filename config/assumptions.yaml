@@ -1,0 +1,896 @@
+# Stateframe structural assumptions.
+# Mechanics live in src/model/. This file is the only place default parameter
+# values are set. Every band is Low / Central / High. The simulator's central
+# case uses `central`. Sensitivity, tornado charts, and Monte Carlo draws use
+# the band. Do not hide calibrated constants in code.
+#
+# Challenge-fixed choices (not free parameters):
+#   horizon_years = 5
+#   fee scenario baseline = $50,000 per unit, reduced by 50%
+
+horizon_years: 5
+monte_carlo_draws: 250
+monte_carlo_seed: 20261014
+
+# Per-state legal starting point. These are screening assumptions about how
+# much of the benchmark reform is ALREADY law, so results are incremental.
+# They are not a legal opinion. Bands are used in sensitivity.
+states:
+  PA:
+    name: Pennsylvania
+    tier: 2
+    adu_already_legal_share: {low: 0.05, central: 0.15, high: 0.30}
+    mm_already_legal_share: {low: 0.00, central: 0.05, high: 0.15}
+    geography_eligible_share: {low: 0.90, central: 1.00, high: 1.00}
+    legal_note: "Zoning remains primarily municipal. Statewide ADU or middle-housing preemption is limited, so most single-family parcels are treated as not yet entitled to the benchmark reforms."
+  CT:
+    name: Connecticut
+    tier: 1
+    adu_already_legal_share: {low: 0.55, central: 0.75, high: 0.90}
+    mm_already_legal_share: {low: 0.10, central: 0.25, high: 0.45}
+    geography_eligible_share: {low: 0.90, central: 1.00, high: 1.00}
+    legal_note: "Public Act 21-29 substantially legalized ADUs. The incremental ADU effect is the residual share of parcels still outside that entitlement. Middle housing is only partly pre-empted."
+  WI:
+    name: Wisconsin
+    tier: 1
+    adu_already_legal_share: {low: 0.02, central: 0.10, high: 0.25}
+    mm_already_legal_share: {low: 0.00, central: 0.05, high: 0.15}
+    geography_eligible_share: {low: 0.90, central: 1.00, high: 1.00}
+    legal_note: "Local control predominates. Statewide parcel data describe current use and lot size, not a state ADU statute."
+  UT:
+    name: Utah
+    tier: 1
+    adu_already_legal_share: {low: 0.15, central: 0.35, high: 0.55}
+    mm_already_legal_share: {low: 0.05, central: 0.15, high: 0.30}
+    geography_eligible_share: {low: 0.75, central: 0.90, high: 1.00}
+    legal_note: "Several Wasatch Front cities already allow ADUs. The Housing Unit Inventory covers urban counties, not every rural parcel."
+  OR:
+    name: Oregon
+    tier: 2
+    adu_already_legal_share: {low: 0.50, central: 0.70, high: 0.85}
+    mm_already_legal_share: {low: 0.35, central: 0.55, high: 0.75}
+    geography_eligible_share: {low: 0.70, central: 0.86, high: 0.95}
+    legal_note: "Statewide ADU rules and HB 2001 middle housing already cover many cities inside urban growth boundaries. geography_eligible_share is an assumption standing in for a statewide UGB layer this build does not ingest."
+  HI:
+    name: Hawaii
+    tier: 1
+    adu_already_legal_share: {low: 0.20, central: 0.40, high: 0.60}
+    mm_already_legal_share: {low: 0.02, central: 0.10, high: 0.25}
+    geography_eligible_share: {low: 0.85, central: 0.93, high: 0.98}
+    legal_note: "Ohana and additional-dwelling rules differ by county. State Land Use Urban district is about 5 percent of land but contains nearly all housing. geography_eligible_share is the share of the single-family stock inside that district, not the land share."
+  AZ:
+    name: Arizona
+    tier: 2
+    adu_already_legal_share: {low: 0.10, central: 0.25, high: 0.45}
+    mm_already_legal_share: {low: 0.02, central: 0.10, high: 0.25}
+    geography_eligible_share: {low: 0.90, central: 1.00, high: 1.00}
+    legal_note: "Recent state bills have expanded ADU permissions in larger cities. Coverage is uneven, so the central share is partial."
+  VA:
+    name: Virginia
+    tier: 2
+    adu_already_legal_share: {low: 0.05, central: 0.20, high: 0.40}
+    mm_already_legal_share: {low: 0.02, central: 0.08, high: 0.20}
+    geography_eligible_share: {low: 0.90, central: 1.00, high: 1.00}
+    legal_note: "Authority is mostly local. Northern Virginia localities differ sharply from rural counties; county prices, not a single state statute, drive the result."
+  TN:
+    name: Tennessee
+    tier: 2
+    adu_already_legal_share: {low: 0.05, central: 0.15, high: 0.30}
+    mm_already_legal_share: {low: 0.00, central: 0.05, high: 0.15}
+    geography_eligible_share: {low: 0.90, central: 1.00, high: 1.00}
+    legal_note: "Local zoning. Statewide parcel delivery requires a comptroller request, so Tennessee is modeled as a Tier-2 census-and-permits state."
+  RI:
+    name: Rhode Island
+    tier: 2
+    adu_already_legal_share: {low: 0.10, central: 0.30, high: 0.50}
+    mm_already_legal_share: {low: 0.02, central: 0.10, high: 0.25}
+    geography_eligible_share: {low: 0.90, central: 1.00, high: 1.00}
+    legal_note: "ADU legislation has expanded eligibility. Middle housing remains mostly local."
+  NH:
+    name: New Hampshire
+    tier: 2
+    adu_already_legal_share: {low: 0.25, central: 0.45, high: 0.65}
+    mm_already_legal_share: {low: 0.02, central: 0.12, high: 0.25}
+    geography_eligible_share: {low: 0.90, central: 1.00, high: 1.00}
+    legal_note: "RSA 674:72 already requires municipalities to allow ADUs, with local conditions. The incremental effect is the gap between that statute and the benchmark (detached or semi-detached, at least 600 sq ft, no extra parking)."
+
+parameters:
+  permit_growth_rate:
+    low: -0.02
+    central: 0.0
+    high: 0.03
+    ui: true
+    group: Baseline
+    label: Annual permit trend
+    unit: rate
+    help: "Applied to the latest three-year Building Permits Survey average. Central is zero so the 5-year baseline is exactly five times the recent annual run-rate."
+
+  completion_ratio_sf:
+    low: 0.85
+    central: 0.93
+    high: 0.98
+    ui: false
+    group: Baseline
+    label: Single-family completion ratio
+    unit: share
+    help: "Share of permitted 1-unit homes completed inside a steady 5-year window, after cancellations. The pipeline of homes permitted just before the window offsets homes permitted at the end of it."
+
+  completion_ratio_small:
+    low: 0.80
+    central: 0.90
+    high: 0.96
+    ui: false
+    group: Baseline
+    label: 2–4 unit completion ratio
+    unit: share
+    help: "Completion ratio for 2-unit and 3–4 unit buildings."
+
+  completion_ratio_mf:
+    low: 0.70
+    central: 0.84
+    high: 0.93
+    ui: true
+    group: Baseline
+    label: Multifamily completion ratio
+    unit: share
+    help: "5+ unit buildings take longer. Some permits issued in year 5 deliver after the horizon."
+
+  completion_ratio_adu:
+    low: 0.80
+    central: 0.92
+    high: 0.98
+    ui: false
+    group: ADU
+    label: ADU completion ratio
+    unit: share
+    help: "ADUs are small and usually owner-commissioned, so cancellation inside the window is limited."
+
+  supply_elasticity:
+    low: 0.35
+    central: 0.80
+    high: 1.60
+    ui: true
+    group: Economics
+    label: Supply elasticity to cost
+    unit: elasticity
+    help: "Percent change in baseline permits for a 1 percent change in non-land development cost. Central 0.8 is a moderate regulatory-constraint elasticity in the Gyourko–Molloy range, not an unconstrained long-run elasticity."
+
+  cap_rate:
+    low: 0.045
+    central: 0.055
+    high: 0.070
+    ui: true
+    group: Economics
+    label: Rental cap rate
+    unit: rate
+    help: "Converts stabilized net operating income into a building value when the rental pro forma is the better of sale and rent."
+
+  opex_ratio:
+    low: 0.28
+    central: 0.35
+    high: 0.45
+    ui: false
+    group: Economics
+    label: Operating-expense ratio
+    unit: share
+    help: "Share of gross rent consumed by operations, reserves, and vacancy before NOI."
+
+  profit_ratio:
+    low: 0.10
+    central: 0.15
+    high: 0.22
+    ui: true
+    group: Economics
+    label: Required developer margin
+    unit: share
+    help: "Profit target as a share of hard plus soft cost. Projects below this margin are not treated as feasible."
+
+  soft_cost_share:
+    low: 0.12
+    central: 0.18
+    high: 0.25
+    ui: true
+    group: Economics
+    label: Soft-cost share of hard cost
+    unit: share
+    help: "Architecture, financing, contingency, and carrying costs excluding impact fees, which are modeled on their own."
+
+  new_construction_premium:
+    low: 1.00
+    central: 1.10
+    high: 1.25
+    ui: true
+    group: Economics
+    label: New-unit price premium vs median
+    unit: ratio
+    help: "Sale price per square foot of a new unit relative to the county median existing home (median value divided by the reference single-family size)."
+
+  reference_sf_sqft:
+    low: 1500
+    central: 1800
+    high: 2200
+    ui: false
+    group: Economics
+    label: Reference existing-home size
+    unit: sqft
+    help: "Converts ACS median home value into a price per square foot."
+
+  feasibility_sigma:
+    low: 0.12
+    central: 0.22
+    high: 0.40
+    ui: true
+    group: Economics
+    label: Cross-site margin dispersion
+    unit: stdev
+    help: "Standard deviation of project margin across sites. Feasible share is the normal CDF of (margin / sigma). Wider sigma means a fatter tail of sites that pencil even when the average site does not."
+
+  feasibility_threshold:
+    low: -0.05
+    central: 0.0
+    high: 0.10
+    ui: false
+    group: Economics
+    label: Feasibility margin threshold
+    unit: margin
+    help: "A site pencils when residual margin exceeds this threshold. Central is zero: residual value must cover opportunity cost and required profit."
+
+  tier2_sigma_multiplier:
+    low: 1.10
+    central: 1.35
+    high: 1.70
+    ui: false
+    group: Data
+    label: Tier-2 uncertainty multiplier
+    unit: ratio
+    help: "When parcel fields are imputed, feasibility dispersion is multiplied by this factor so confidence bands widen."
+
+  imputed_lot_feasible_share:
+    low: 0.70
+    central: 0.89
+    high: 0.97
+    ui: true
+    group: Data
+    label: Imputed share of lots fitting an ADU
+    unit: share
+    help: "Used when a state has no lot-size bins. Central is the midpoint of the Connecticut (>= 5,000 sq ft of measured CAMA shape area) and Wisconsin (>= 0.10 acre of improved Class 1 parcels) screening shares. It is an imputation, not a measurement."
+
+  lot_size_log_sigma:
+    low: 0.45
+    central: 0.70
+    high: 1.00
+    ui: false
+    group: Data
+    label: Lognormal lot-size dispersion
+    unit: stdev
+    help: "When a tier-1 source reports a mean lot size but not bins (Utah HUI), lot feasibility is the lognormal tail above the size cutoff."
+
+  adu_sqft:
+    low: 600
+    central: 800
+    high: 1000
+    ui: true
+    group: ADU
+    label: Prototype ADU size
+    unit: sqft
+    help: "The benchmark requires at least 600 sq ft. The central prototype is 800 sq ft because built ADUs cluster above the legal minimum."
+
+  adu_cost_psf:
+    low: 190
+    central: 250
+    high: 340
+    ui: true
+    group: ADU
+    label: ADU hard cost per sq ft
+    unit: usd_per_sqft
+    help: "Small-job wood-frame cost, national dollars, then multiplied by the state's Building Permits Survey cost index. Higher than large-project Type V-B because ADUs lack economies of scale."
+
+  adu_fee_per_unit:
+    low: 2000
+    central: 6000
+    high: 20000
+    ui: true
+    group: ADU
+    label: ADU fee (not the $50k stack)
+    unit: usd
+    help: "Fees actually charged on an ADU in the ADU scenario. The challenge $50,000 figure is applied only in the fee-reduction scenario. Sensitivity can raise this toward a full impact-fee stack."
+
+  adu_hazard0:
+    low: 0.0015
+    central: 0.0040
+    high: 0.0100
+    ui: true
+    group: ADU
+    label: Baseline annual ADU adoption hazard
+    unit: per_year
+    help: "Share of legally and physically eligible homes that permit an ADU per year when the pro forma margin is zero. Central 0.4 percent per year is in the range of California's post-preemption take-up relative to the single-family stock (Terner Center). This is the dominant ADU uncertainty."
+
+  adu_hazard_beta:
+    low: 0.4
+    central: 1.2
+    high: 2.2
+    ui: true
+    group: ADU
+    label: Hazard response to pro forma margin
+    unit: per_margin
+    help: "Hazard = hazard0 * exp(beta * margin), then capped. Positive margins raise take-up; negative margins cut it."
+
+  adu_hazard_max:
+    low: 0.03
+    central: 0.06
+    high: 0.10
+    ui: false
+    group: ADU
+    label: Maximum annual ADU hazard
+    unit: per_year
+    help: "Caps the exponential hazard so a hot county cannot convert an implausible share of the stock inside five years."
+
+  adu_soft_share:
+    low: 0.08
+    central: 0.12
+    high: 0.18
+    ui: false
+    group: ADU
+    label: ADU soft-cost share
+    unit: share
+    help: "ADU soft costs are lower than a merchant project. Homeowners do not pay a developer profit margin on top."
+
+  adu_homeowner_cap_rate:
+    low: 0.035
+    central: 0.045
+    high: 0.060
+    ui: true
+    group: ADU
+    label: Homeowner cap rate
+    unit: rate
+    help: "Converts ADU gross rent into a value the owner is willing to build against. Lower than a merchant cap rate because operating costs are smaller and part of the return is housing a family member."
+
+  adu_rent_ratio:
+    low: 0.65
+    central: 0.85
+    high: 1.05
+    ui: true
+    group: ADU
+    label: ADU rent vs county median rent
+    unit: ratio
+    help: "Gross rent of the prototype ADU relative to the ACS median gross rent."
+
+  adu_attached_eligible_share:
+    low: 0.15
+    central: 0.35
+    high: 0.60
+    ui: false
+    group: ADU
+    label: Townhouse eligibility vs detached
+    unit: share
+    help: "Single-family attached units are less able to host a detached ADU. They enter the eligible stock at this weight."
+
+  adu_owner_weight:
+    low: 0.70
+    central: 0.90
+    high: 1.00
+    ui: false
+    group: ADU
+    label: Owner-occupant participation weight
+    unit: share
+    help: "Owner-occupants are the main ADU adopters."
+
+  adu_landlord_weight:
+    low: 0.15
+    central: 0.40
+    high: 0.70
+    ui: false
+    group: ADU
+    label: Small-landlord participation weight
+    unit: share
+    help: "Renter-occupied single-family homes can add an ADU, but financing and occupancy rules make take-up lower."
+
+  adu_detached_min_lot_sqft:
+    low: 6000
+    central: 7500
+    high: 10000
+    ui: true
+    group: ADU
+    label: Minimum lot for a detached ADU
+    unit: sqft
+    help: "Screening cutoff for a detached unit of at least 600 sq ft plus a modest side yard. The scenario also allows semi-detached units, which use the lower cutoff."
+
+  adu_semi_min_lot_sqft:
+    low: 3500
+    central: 5000
+    high: 7000
+    ui: true
+    group: ADU
+    label: Minimum lot for a semi-detached ADU
+    unit: sqft
+    help: "Lots above this size are treated as physically able to hold a semi-detached ADU of at least 600 sq ft. The benchmark says setbacks are not an additional constraint beyond this screen."
+
+  adu_stock_cap_share:
+    low: 0.010
+    central: 0.045
+    high: 0.080
+    ui: false
+    group: ADU
+    label: Five-year cap as a share of eligible homes
+    unit: share
+    help: "Even in the high-hazard band, permitted ADUs cannot exceed this share of the eligible stock. Keeps the high sensitivity case inside historical experience."
+
+  mm_expected_units:
+    low: 2.5
+    central: 4.0
+    high: 5.5
+    ui: true
+    group: Missing middle
+    label: Units in a teardown 2–6 plex
+    unit: units
+    help: "Expected unit count if a single-family parcel is redeveloped under the benchmark (2 to 6 units, up to 3 stories). Net new units equal this count minus the home that is replaced."
+
+  mm_unit_sqft:
+    low: 850
+    central: 1050
+    high: 1300
+    ui: false
+    group: Missing middle
+    label: Missing-middle unit size
+    unit: sqft
+    help: "Net square feet per unit in the 3-story Type V-B prototype."
+
+  mm_cost_psf:
+    low: 180
+    central: 225
+    high: 290
+    ui: true
+    group: Missing middle
+    label: Type V-B hard cost per sq ft
+    unit: usd_per_sqft
+    help: "Three-story wood-frame hard cost in national dollars, indexed by the state permit-value index. This is a planning allowance, not a proprietary RSMeans file."
+
+  mm_fee_per_unit:
+    low: 10000
+    central: 25000
+    high: 50000
+    ui: true
+    group: Missing middle
+    label: Fee per missing-middle unit
+    unit: usd
+    help: "Current fee assumption inside the missing-middle pro forma. The high band equals the challenge's $50,000 comparability stack. Scenario 5 always uses $50,000, separate from this knob."
+
+  mm_demolition_cost:
+    low: 12000
+    central: 25000
+    high: 50000
+    ui: false
+    group: Missing middle
+    label: Demolition cost
+    unit: usd
+    help: "Cost to remove the existing house in the teardown pathway."
+
+  mm_conversion_added_units:
+    low: 1.0
+    central: 1.5
+    high: 2.5
+    ui: true
+    group: Missing middle
+    label: Units added by conversion
+    unit: units
+    help: "Near-term gentle density is mostly addition and conversion (a second or third unit) rather than a full teardown. Net new units equal this figure; the existing home remains."
+
+  mm_conversion_cost_per_unit:
+    low: 110000
+    central: 165000
+    high: 240000
+    ui: true
+    group: Missing middle
+    label: Conversion cost per added unit
+    unit: usd
+    help: "Hard cost to add one unit inside or beside an existing house, national dollars, then indexed. Far below teardown reconstruction."
+
+  mm_conversion_sqft:
+    low: 900
+    central: 900
+    high: 900
+    ui: false
+    group: Missing middle
+    label: Conversion addition size
+    unit: sqft
+    help: "Prototype floor area of the added unit. Held fixed so the cost-per-unit slider is the sensitivity lever."
+
+  mm_conversion_eligible_share:
+    low: 0.06
+    central: 0.14
+    high: 0.28
+    ui: true
+    group: Missing middle
+    label: Share of single-family homes convertible
+    unit: share
+    help: "Physical share with the room, a large lot, or a basement/wing that can become another unit. The handbook allows us to assume setbacks and lot coverage do not further bind 2–6 units."
+
+  mm_obsolete_share_of_older_stock:
+    low: 0.08
+    central: 0.20
+    high: 0.40
+    ui: false
+    group: Missing middle
+    label: Obsolete share of pre-1940 stock
+    unit: share
+    help: "Teardown candidates are a slice of the pre-1940 stock, not the median house. The model buys them at land value rather than at the county median."
+
+  mm_land_share_of_value:
+    low: 0.25
+    central: 0.40
+    high: 0.60
+    ui: true
+    group: Missing middle
+    label: Land share of an obsolete home's price
+    unit: share
+    help: "Opportunity cost of a teardown candidate is land share times the county median, not the full median. Paying the full median for a sound house rarely pencils at a 4-unit cap."
+
+  mm_pace_hazard:
+    low: 0.03
+    central: 0.08
+    high: 0.16
+    ui: true
+    group: Missing middle
+    label: Annual pace on feasible middle sites
+    unit: per_year
+    help: "Even feasible sites are not all permitted in year one. Cumulative pace is 1 - exp(-hazard * 5), and only after the pro forma margin scales the hazard down when the average site loses money."
+
+  absorption_ratio:
+    low: 0.25
+    central: 0.75
+    high: 1.50
+    ui: true
+    group: Economics
+    label: Five-year absorption vs baseline
+    unit: ratio
+    help: "Merchant-builder pathways (missing-middle teardown, TOD, and conversions) cannot add more net units, county by county, than this multiple of that county's baseline completions. ADUs use their own stock cap."
+
+  tod_far_existing:
+    low: 0.8
+    central: 1.3
+    high: 2.0
+    ui: false
+    group: TOD
+    label: Existing FAR near transit
+    unit: far
+    help: "Typical built or allowed floor area ratio on the redevelopable slice of the walkshed before the reform."
+
+  tod_far_policy:
+    low: 2.2
+    central: 3.5
+    high: 5.5
+    ui: true
+    group: TOD
+    label: Allowed FAR after the reform
+    unit: far
+    help: "Policy envelope near major transit stops. The uplift is the gap over tod_far_existing. Heights are assumed to rise with FAR; the model does not draw a second height constraint."
+
+  tod_unit_sqft:
+    low: 750
+    central: 900
+    high: 1100
+    ui: false
+    group: TOD
+    label: TOD unit size
+    unit: sqft
+    help: "Average net unit size in the podium / mid-rise prototype."
+
+  tod_cost_psf:
+    low: 260
+    central: 325
+    high: 420
+    ui: true
+    group: TOD
+    label: Podium / mid-rise hard cost per sq ft
+    unit: usd_per_sqft
+    help: "Higher than 3-story wood frame because of podium structure, vertical circulation, and Type III/V over I construction."
+
+  tod_fee_per_unit:
+    low: 15000
+    central: 40000
+    high: 50000
+    ui: false
+    group: TOD
+    label: Fee per TOD unit
+    unit: usd
+    help: "Current fee inside the TOD pro forma. High band matches the challenge $50,000 stack."
+
+  tod_transit_premium:
+    low: 0.04
+    central: 0.12
+    high: 0.22
+    ui: true
+    group: TOD
+    label: Transit price premium
+    unit: share
+    help: "Price and rent uplift inside the walkshed relative to the county median. Central 12 percent is a screening allowance, not a hedonic estimate for each station."
+
+  tod_redevelop_fraction:
+    low: 0.08
+    central: 0.18
+    high: 0.35
+    ui: true
+    group: TOD
+    label: Share of walkshed stock that is a candidate site
+    unit: share
+    help: "Most buildings near transit are not redeveloped in five years. This is the share of walkshed housing units sitting on parcels a developer would even underwrite."
+
+  tod_buffer_miles:
+    low: 0.25
+    central: 0.50
+    high: 0.50
+    ui: true
+    group: TOD
+    label: Rail and BRT walk buffer
+    unit: miles
+    help: "Major-stop definition uses a 1/2 mile walk for rail and BRT in the central case and a 1/4 mile walk in the low case. Frequent bus always uses 1/4 mile."
+
+  tod_bus_buffer_miles:
+    low: 0.25
+    central: 0.25
+    high: 0.50
+    ui: false
+    group: TOD
+    label: Frequent-bus walk buffer
+    unit: miles
+    help: "High-frequency bus (15 minute headway or better) uses a shorter walk than rail."
+
+  tod_shed_density:
+    low: 2000
+    central: 4500
+    high: 8000
+    ui: true
+    group: TOD
+    label: Housing density inside the walkshed
+    unit: units_per_sqmi
+    help: "Converts walkshed area into housing units. 4,500 units per square mile is a compact urban neighborhood, about 7 units per acre. The station inventory does not include a parcel-level join, so this density is the bridge from buffers to homes."
+
+  tod_station_scale:
+    low: 0.70
+    central: 1.00
+    high: 1.30
+    ui: true
+    group: TOD
+    label: Station-inventory scale
+    unit: ratio
+    help: "Scales the curated station and frequent-bus inventory. The inventory is a screened public count, not a full GTFS rebuild, so this band is the inventory uncertainty."
+
+  tod_parking_ratio:
+    low: 0.00
+    central: 0.25
+    high: 0.60
+    ui: false
+    group: TOD
+    label: Parking ratio inside TOD
+    unit: spaces_per_unit
+    help: "The benchmark allows parking minimums to be reduced or eliminated near major stops. Central keeps a small market-provided ratio rather than zero."
+
+  parking_p_min_urban:
+    low: 1.00
+    central: 1.25
+    high: 1.75
+    ui: false
+    group: Parking
+    label: Minimum spaces, urban
+    unit: spaces_per_unit
+    help: "Baseline mandate before the reform, urban counties."
+
+  parking_p_min_suburban:
+    low: 1.50
+    central: 1.75
+    high: 2.25
+    ui: false
+    group: Parking
+    label: Minimum spaces, suburban
+    unit: spaces_per_unit
+    help: "Baseline mandate, suburban counties."
+
+  parking_p_min_rural:
+    low: 1.50
+    central: 2.00
+    high: 2.50
+    ui: false
+    group: Parking
+    label: Minimum spaces, rural
+    unit: spaces_per_unit
+    help: "Baseline mandate, rural counties."
+
+  parking_p_mkt_urban:
+    low: 0.40
+    central: 0.70
+    high: 1.05
+    ui: true
+    group: Parking
+    label: Market-chosen spaces, urban
+    unit: spaces_per_unit
+    help: "What developers build when the mandate is lifted, urban context. Must be read against the minimum. If market exceeds minimum, savings are zero."
+
+  parking_p_mkt_suburban:
+    low: 0.90
+    central: 1.25
+    high: 1.70
+    ui: true
+    group: Parking
+    label: Market-chosen spaces, suburban
+    unit: spaces_per_unit
+    help: "Unmandated suburban ratio. Buyers still demand some parking, so the ratio does not fall to zero."
+
+  parking_p_mkt_rural:
+    low: 1.20
+    central: 1.70
+    high: 2.10
+    ui: false
+    group: Parking
+    label: Market-chosen spaces, rural
+    unit: spaces_per_unit
+    help: "Rural unmandated ratio. The gap versus the minimum is small."
+
+  parking_surface_cost:
+    low: 5500
+    central: 8500
+    high: 14000
+    ui: true
+    group: Parking
+    label: Surface space cost
+    unit: usd
+    help: "National cost of one surface space, indexed by the state cost index."
+
+  parking_structured_cost:
+    low: 25000
+    central: 35000
+    high: 52000
+    ui: true
+    group: Parking
+    label: Structured space cost
+    unit: usd
+    help: "Above-grade garage space. Urban and TOD prototypes use a blend of structured and surface."
+
+  parking_underground_cost:
+    low: 40000
+    central: 55000
+    high: 80000
+    ui: false
+    group: Parking
+    label: Underground space cost
+    unit: usd
+    help: "Below-grade space. Used only as part of the urban blend, not as the default."
+
+  parking_structured_share_urban:
+    low: 0.35
+    central: 0.60
+    high: 0.85
+    ui: false
+    group: Parking
+    label: Urban share of spaces that are structured
+    unit: share
+    help: "Urban blend weight on structured cost. The rest is surface. Suburban and rural are surface in the central case."
+
+  parking_sqft_per_space:
+    low: 280
+    central: 325
+    high: 380
+    ui: false
+    group: Parking
+    label: Site area per space
+    unit: sqft
+    help: "Stall plus aisle. Used only for the footprint-yield channel on constrained multifamily sites."
+
+  parking_constrained_urban:
+    low: 0.25
+    central: 0.45
+    high: 0.70
+    ui: true
+    group: Parking
+    label: Share of urban multifamily that is footprint-constrained
+    unit: share
+    help: "Yield channel applies only on sites where parking consumes buildable area. Unconstrained sites get the cost-elasticity channel only."
+
+  parking_constrained_suburban:
+    low: 0.05
+    central: 0.18
+    high: 0.35
+    ui: false
+    group: Parking
+    label: Share of suburban multifamily that is footprint-constrained
+    unit: share
+    help: "Suburban lots are more often land-rich, so the yield channel is smaller."
+
+  parking_constrained_rural:
+    low: 0.00
+    central: 0.05
+    high: 0.15
+    ui: false
+    group: Parking
+    label: Share of rural multifamily that is footprint-constrained
+    unit: share
+    help: "Rural yield channel is near zero. Savings are almost entirely the cost channel."
+
+  fee_challenge_baseline:
+    low: 50000
+    central: 50000
+    high: 50000
+    ui: false
+    group: Fees
+    label: Challenge fee stack
+    unit: usd
+    help: "Fixed by the challenge at $50,000 per unit across planning, environmental review, building, and impact fees."
+
+  fee_reduction_fraction:
+    low: 0.25
+    central: 0.50
+    high: 0.75
+    ui: true
+    group: Fees
+    label: Fee reduction
+    unit: share
+    help: "Scenario 5 central case is a 50 percent cut, from $50,000 to $25,000. The slider is the sensitivity around that benchmark."
+
+  sf_fee_per_unit:
+    low: 8000
+    central: 15000
+    high: 30000
+    ui: false
+    group: Fees
+    label: Current single-family fee used in cost base
+    unit: usd
+    help: "Used only to size the baseline single-family cost stack for the elasticity denominator. Scenario 5 still shocks the challenge $50,000 stack, not this number."
+
+  price_shock:
+    low: 0.80
+    central: 1.00
+    high: 1.25
+    ui: true
+    group: Economics
+    label: Price level shock
+    unit: ratio
+    help: "Multiplies county prices and rents together. Use it to see how the ranking changes if values are lower or higher than the ACS vintage."
+
+  cost_index_shock:
+    low: 0.85
+    central: 1.00
+    high: 1.25
+    ui: true
+    group: Economics
+    label: Construction-cost shock
+    unit: ratio
+    help: "Multiplies the state permit-value cost index. This is the construction-cost sensitivity."
+
+  urban_density_threshold:
+    low: 800
+    central: 1500
+    high: 2500
+    ui: false
+    group: Data
+    label: Urban density cutoff
+    unit: units_per_sqmi
+    help: "Housing units per square mile of land above which a county is urban for parking context."
+
+  suburban_density_threshold:
+    low: 100
+    central: 200
+    high: 400
+    ui: false
+    group: Data
+    label: Suburban density cutoff
+    unit: units_per_sqmi
+    help: "Counties between this cutoff and the urban cutoff are suburban. Below it, rural."
+
+  urban_transit_share:
+    low: 0.04
+    central: 0.06
+    high: 0.10
+    ui: false
+    group: Data
+    label: Transit-commute share that marks a county urban
+    unit: share
+    help: "A county with this ACS transit-commute share is treated as urban for parking even if its land area is large."
+
+  combined_tod_priority:
+    low: 1
+    central: 1
+    high: 1
+    ui: false
+    group: Package
+    label: TOD takes the walkshed first
+    unit: flag
+    help: "In the package, walkshed parcels use the TOD envelope. Missing middle is applied outside the walkshed. ADUs are applied only on homes that are not converted or torn down."

@@ -1,0 +1,83 @@
+{
+  "definition": "A major transit stop is (1) a local fixed-guideway station — heavy rail, light rail, commuter rail, or streetcar — or a bus-rapid-transit station, buffered at 0.50 miles in the central case, or (2) a stop on a bus corridor with scheduled headway of 15 minutes or better, buffered at 0.25 miles. Intercity Amtrak-only stops are excluded except where the same station is also a commuter-rail stop. Counts are a screened public inventory for offline replication, not a live GTFS extract. tod_station_scale is the uncertainty band.",
+  "vintage": "Screened 2024-2025 system maps and NTD agency descriptions, compiled 2026-10-25.",
+  "states": {
+    "PA": {
+      "rail_stations": 290,
+      "brt_stations": 24,
+      "frequent_bus_route_miles": 70,
+      "overlap_factor": 0.42,
+      "note": "SEPTA Metro and Regional Rail, Pittsburgh light rail, and Pittsburgh busway stations. Overlap is high in Philadelphia."
+    },
+    "CT": {
+      "rail_stations": 52,
+      "brt_stations": 11,
+      "frequent_bus_route_miles": 18,
+      "overlap_factor": 0.28,
+      "note": "Metro-North, Shore Line East, and Hartford Line stations in Connecticut, plus CTfastrak."
+    },
+    "WI": {
+      "rail_stations": 18,
+      "brt_stations": 19,
+      "frequent_bus_route_miles": 12,
+      "overlap_factor": 0.20,
+      "note": "The Hop streetcar and Milwaukee East-West BRT. Intercity Amtrak is not counted. The walkshed is a small share of the state."
+    },
+    "UT": {
+      "rail_stations": 72,
+      "brt_stations": 8,
+      "frequent_bus_route_miles": 22,
+      "overlap_factor": 0.30,
+      "note": "TRAX, FrontRunner, S-Line, and UVX-style BRT stations along the Wasatch Front."
+    },
+    "OR": {
+      "rail_stations": 100,
+      "brt_stations": 8,
+      "frequent_bus_route_miles": 40,
+      "overlap_factor": 0.38,
+      "note": "MAX light rail, WES, and Portland Streetcar. Frequent bus is concentrated in Portland. Statewide coverage is metro-only, which the overlap factor and the urban-county allocation both reflect."
+    },
+    "HI": {
+      "rail_stations": 9,
+      "brt_stations": 0,
+      "frequent_bus_route_miles": 15,
+      "overlap_factor": 0.15,
+      "note": "Skyline segment in operation. Later segments are not counted as open stops."
+    },
+    "AZ": {
+      "rail_stations": 56,
+      "brt_stations": 6,
+      "frequent_bus_route_miles": 25,
+      "overlap_factor": 0.25,
+      "note": "Valley Metro light rail and Tempe streetcar."
+    },
+    "VA": {
+      "rail_stations": 56,
+      "brt_stations": 10,
+      "frequent_bus_route_miles": 30,
+      "overlap_factor": 0.33,
+      "note": "Metrorail stations in Virginia, VRE, and The Tide. The walkshed is almost entirely in Northern Virginia and Norfolk."
+    },
+    "TN": {
+      "rail_stations": 18,
+      "brt_stations": 6,
+      "frequent_bus_route_miles": 14,
+      "overlap_factor": 0.12,
+      "note": "Music City Star and a short Memphis streetcar. No big-city metro. TOD capacity is small."
+    },
+    "RI": {
+      "rail_stations": 3,
+      "brt_stations": 6,
+      "frequent_bus_route_miles": 10,
+      "overlap_factor": 0.10,
+      "note": "MBTA Providence Line stations in Rhode Island (Providence, T. F. Green, Wickford Junction) and the RIPTA R-Line treated as a short frequent corridor."
+    },
+    "NH": {
+      "rail_stations": 0,
+      "brt_stations": 0,
+      "frequent_bus_route_miles": 4,
+      "overlap_factor": 0.05,
+      "note": "No local fixed guideway. Downeaster stops are intercity and are not counted as major transit stops under this definition. TOD is expected to be negligible."
+    }
+  }
+}

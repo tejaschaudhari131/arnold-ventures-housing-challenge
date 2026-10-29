@@ -1,17 +1,32 @@
-[Project name]
-Copyright [yyyy] [team or author name]
+Stateframe
+Copyright 2026 Tejas Chaudhari, Yoon Yik Ng, and Christopher Severns
 
 This product includes software developed for the Housing Data and Technology
-Innovation Challenge.
+Innovation Challenge by Tejas Chaudhari (tchaudha@andrew.cmu.edu),
+Yoon Yik Ng (yoonyikn@andrew.cmu.edu), and Christopher Severns
+(cseverns@andrew.cmu.edu), Carnegie Mellon University.
 
-This NOTICE file is required by the Apache License, Version 2.0. If you keep
-the default Apache-2.0 license, list here any third-party attributions that
-their licenses require you to reproduce (for example, code you adapted from
-another Apache-2.0 project). If you do not have any such attributions yet,
-you may leave the section below empty.
+This NOTICE file is required by the Apache License, Version 2.0.
 
 --------------------------------------------------------------------------------
 Third-party attributions
 --------------------------------------------------------------------------------
 
-[none]
+PyYAML, version 6.0.2, MIT License.
+Copyright (c) 2017-2021 Ingy döt Net
+Copyright (c) 2006-2016 Kirill Simonov
+Used to read config/assumptions.yaml. No PyYAML source is copied into this
+repository.
+
+pytest, version 8.3.5, MIT License.
+Copyright (c) 2004 Holger Krekel and others.
+Development and test dependency only.
+
+ruff, version 0.14.2, MIT License.
+Copyright (c) 2022 Astral Software Inc.
+Development and lint dependency only. The ruff binary is not bundled here.
+
+No other third-party source is copied into this repository. The web interface
+is HTML, CSS, and JavaScript written for this project and served by the
+Python standard library. Census, FHFA, and state GIS statistics are data,
+not code; their terms are in docs/DATA_PROVENANCE.md.

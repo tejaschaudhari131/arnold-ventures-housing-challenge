@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stateframe"
+version = "1.0.0"
+description = "Transparent state-level housing policy reform simulator for the Arnold Ventures / The Turnout Housing Data and Technology Innovation Challenge."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
+authors = [
+  {name = "Tejas Chaudhari", email = "tchaudha@andrew.cmu.edu"},
+  {name = "Yoon Yik Ng", email = "yoonyikn@andrew.cmu.edu"},
+  {name = "Christopher Severns", email = "cseverns@andrew.cmu.edu"},
+]
+dependencies = ["PyYAML==6.0.2"]
+
+[project.optional-dependencies]
+dev = ["pytest==8.3.5"]
+
+[project.scripts]
+stateframe = "src.cli:main"
+
+[tool.setuptools]
+packages = ["src", "src.data", "src.model", "src.export", "src.web"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]

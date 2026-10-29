@@ -1,0 +1,75 @@
+{
+  "access_date": "2026-10-25",
+  "method": "Aggregate statistics only. Queries request counts, sums, and lot-size bins. Owner names, mailing addresses, and parcel identifiers are never requested or stored.",
+  "states": {
+    "CT": {
+      "coverage": "statewide",
+      "source": "Connecticut CAMA and Parcel Layer, services3.arcgis.com Connecticut_CAMA_and_Parcel_Layer",
+      "parcel_count": 1320686,
+      "sf_use_codes": ["101", "1010", "101.0", "107"],
+      "sf_bin_count": 569165,
+      "lot_bins_sqft": [
+        {"min_sqft": 0, "max_sqft": 5000, "n": 23478},
+        {"min_sqft": 5000, "max_sqft": 7500, "n": 56811},
+        {"min_sqft": 7500, "max_sqft": 10890, "n": 78083},
+        {"min_sqft": 10890, "max_sqft": 21780, "n": 145460},
+        {"min_sqft": 21780, "max_sqft": 43560, "n": 109853},
+        {"min_sqft": 43560, "max_sqft": 87120, "n": 85561},
+        {"min_sqft": 87120, "max_sqft": 5000000, "n": 69919}
+      ],
+      "area_field_note": "Land_Acres is rounded to integers in this layer, so bins use Shape__Area, which matches square-foot magnitudes (mean near one acre).",
+      "urban_land_share": null,
+      "mean_lot_sqft": null,
+      "covered_unit_count": null
+    },
+    "WI": {
+      "coverage": "statewide",
+      "source": "Wisconsin Statewide Parcels DB V1200 (2026), services3.arcgis.com Wisconsin_Statewide_Parcels_DB. Improved PROPCLASS 1 (residential) with GIS acres.",
+      "parcel_count": null,
+      "sf_use_codes": ["PROPCLASS includes 1"],
+      "sf_bin_count": 1188351,
+      "lot_bins_sqft": [
+        {"min_sqft": 0, "max_sqft": 4356, "n": 98075},
+        {"min_sqft": 4356, "max_sqft": 6534, "n": 145327},
+        {"min_sqft": 6534, "max_sqft": 10890, "n": 252228},
+        {"min_sqft": 10890, "max_sqft": 21780, "n": 277840},
+        {"min_sqft": 21780, "max_sqft": 43560, "n": 152272},
+        {"min_sqft": 43560, "max_sqft": 87120, "n": 114018},
+        {"min_sqft": 87120, "max_sqft": 217800, "n": 94330},
+        {"min_sqft": 217800, "max_sqft": 50000000, "n": 54261}
+      ],
+      "area_field_note": "Class 1 is residential, not detached single-family only. The model caps eligible homes at the ACS single-family stock so apartments inside Class 1 are not treated as ADU lots.",
+      "urban_land_share": null,
+      "mean_lot_sqft": null,
+      "covered_unit_count": null
+    },
+    "UT": {
+      "coverage": "urban_counties",
+      "source": "Utah Housing Unit Inventory, services1.arcgis.com HousingUnitInventory. Urban-county derivative of assessor parcels, not the full statewide SGID parcel layer.",
+      "parcel_count": 702461,
+      "sf_records": 637533,
+      "sf_units": 688521,
+      "mf_records": 64928,
+      "mf_units": 372859,
+      "sf_mean_acres": 0.5118891205036937,
+      "mean_lot_sqft": 22218,
+      "lot_bins_sqft": null,
+      "sf_bin_count": null,
+      "urban_land_share": null,
+      "covered_unit_count": 1061380,
+      "area_field_note": "Mean single-family lot is 0.512 acres. Feasibility uses a documented lognormal tail because the service did not return percentile bins in this build."
+    },
+    "HI": {
+      "coverage": "statewide",
+      "source": "Hawaii Statewide TMKs (MapServer layer 25) and State Land Use Districts (layer 20) on geodata.hawaii.gov ParcelsZoning.",
+      "parcel_count": 384035,
+      "lot_bins_sqft": null,
+      "sf_bin_count": null,
+      "mean_lot_sqft": null,
+      "urban_land_share": 0.049502,
+      "land_use_acres": {"urban": 204061.61, "agricultural": 1885398.998, "conservation": 2022332.929, "rural": 10458.788},
+      "covered_unit_count": null,
+      "area_field_note": "The parcel layer has no normalized zoning class. The binding tier-1 fact used by the model is the State Land Use Urban share of land. Housing eligibility uses geography_eligible_share, the assumed share of the single-family stock inside that district."
+    }
+  }
+}

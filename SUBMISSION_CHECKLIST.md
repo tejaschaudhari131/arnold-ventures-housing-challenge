@@ -1,29 +1,29 @@
 # Submission Checklist
 
-This checklist is advisory and is not a guarantee that a submission will be deemed complete. Refer to the [Official Rules](https://housingchallenge.turnout.rocks/rules) for all submission requirements.
+Advisory only. The Official Rules govern completeness. Team: Tejas Chaudhari, Yoon Yik Ng, and Christopher Severns, Carnegie Mellon University. Tool: Stateframe.
 
 ## Eligibility gates
 
-- [ ] Reproducible setup from documented commands
-- [ ] Automated tests covering core logic, with a documented run command
-- [ ] No committed secrets; secret scanning enabled, zero unresolved alerts
-- [ ] Dependabot alerts and CodeQL enabled; no unaddressed critical/high findings
-- [ ] Approved OSI-compliant license (Apache-2.0 default; MIT/BSD-2/BSD-3 allowed)
+- [x] Reproducible setup from documented commands (`bash scripts/setup.sh`, `bash scripts/run.sh`, `bash scripts/test.sh`, also the Makefile)
+- [x] Automated tests covering core logic, with a documented run command (`bash scripts/test.sh`)
+- [x] No committed secrets; `.env` is gitignored and `.env.example` has no credentials
+- [ ] Dependabot alerts and CodeQL enabled in the GitHub security settings; workflows are committed (`.github/workflows/codeql.yml`, `.github/dependabot.yml`) and the dashboard steps are in docs/REPO_SETUP_GUIDE.md
+- [x] Approved OSI-compliant license (Apache-2.0)
 
-See docs/REPO_SETUP_GUIDE.md for turning on the repository security settings.
+Secret scanning is a repository setting. The workflow files cannot flip that toggle by themselves. Turn it on from the GitHub settings page before the deadline and confirm zero unresolved alerts.
 
 ## Deliverables
 
-- [ ] Interactive tool (functional)
-- [ ] Slide deck (≤ 30 slides, PDF)
-- [ ] Demo video (5 minutes, viewable without an account)
-- [ ] Model & Assumptions Overview (≤ 25 pages)
-- [ ] Source code (public GitHub repo)
-- [ ] Software Bill of Materials (SBOM)
-- [ ] Policy scenario comparison (≤ 4 pages)
+- [x] Interactive tool (web app at `bash scripts/run.sh`, plus CSV/JSON/Markdown export)
+- [ ] Slide deck (≤ 30 slides, PDF) — not in this commit; presentation guidance remains in docs/PRESENTATION_GUIDE.md
+- [ ] Demo video (5 minutes, viewable without an account) — not in this commit
+- [x] Model & Assumptions Overview (`docs/MODEL_AND_ASSUMPTIONS.md`)
+- [x] Source code (this repository)
+- [x] Software Bill of Materials (`docs/sbom.cdx.json`, summarized in `docs/DISCLOSURES.md`)
+- [x] Policy scenario comparison (`docs/POLICY_SCENARIO_COMPARISON.md`)
 
 ## Scope and disclosures
 
-- [ ] Baseline + at least three benchmark scenarios modeled at the state level
-- [ ] Data provenance documented
-- [ ] AI tools, models, APIs, and dependencies disclosed
+- [x] Baseline and all five benchmark scenarios, plus the combined package, for all eleven states
+- [x] Data provenance documented (`docs/DATA_PROVENANCE.md`)
+- [x] AI tools, models, APIs, and dependencies disclosed (`docs/DISCLOSURES.md`)
