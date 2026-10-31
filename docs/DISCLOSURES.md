@@ -2,11 +2,17 @@
 
 Prepared for the Arnold Ventures / The Turnout Housing Data and Technology Innovation Challenge by Tejas Chaudhari (tchaudha@andrew.cmu.edu), Yoon Yik Ng (yoonyikn@andrew.cmu.edu), and Christopher Severns (cseverns@andrew.cmu.edu), Carnegie Mellon University.
 
+# Prior work
+
+PlayHouse is an earlier Pittsburgh parcel explorer by Tejas Chaudhari. The repository is [github.com/tejaschaudhari131/playhouse](https://github.com/tejaschaudhari131/playhouse). A deployment is at [playhouse-pittsburgh.vercel.app](https://playhouse-pittsburgh.vercel.app). It was written before the Registration and Coding Periods of this challenge, it has no open-source license, and it operates at city and parcel scale. It is not this submission, and it cannot be submitted under Rules §7a and §7c.
+
+Stateframe borrows interaction ideas from that project only: a map a person can click, before-and-after numbers, plain language next to a result, controls that reset, a flag when a result is close, and a one-page brief. Yoon Yik Ng and Christopher Severns are co-authors of Stateframe. No PlayHouse source file, stylesheet, image, icon, 3D asset, or parcel extract was copied, forked, or vendored. The map in this repository is generated in the browser from Census gazetteer interior points in `data/sample/county_points.json`. The scenario arithmetic is the county pro forma in `src/model/`.
+
 # AI-Assisted Code Generation
 
-The simulator was drafted with Cursor's cloud agent (Grok) acting under the authors' specification: equations, data pulls, tests, the web client, and these documents. The authors are responsible for the equations, the committed figures, and the Apache-2.0 license on the output. Cursor's terms, as used for this challenge submission, permit the authors to own and openly license the generated source. No prompt, weight, or hidden chain is required to run, test, or modify Stateframe. A reviewer can recompute every published integer from `bash scripts/test.sh` and the files in `config/` and `data/sample/`.
+Cursor cloud agents and Grok Bot assistants drafted code, tests, the web client, and documentation under the authors' specification. The authors are responsible for the equations, the committed figures, and the Apache-2.0 license on the output. Cursor's terms, as used for this challenge submission, permit the authors to own and openly license the generated source. No prompt, weight, or hidden chain is required to run, test, or modify Stateframe. A reviewer can recompute every published integer from `bash scripts/test.sh` and the files in `config/` and `data/sample/`.
 
-Incidental use of the same assistant for wording in this disclosure is noted here.
+The same assistants were used for wording in this disclosure. The running application does not call a model API.
 
 # Pretrained Models, Weights, and Embeddings
 
@@ -29,6 +35,26 @@ The installed app runs offline on `data/sample/`. Live refresh is optional.
 | National Transit Database SODA | Attempted; endpoints returned 404. Not a runtime dependency | No | Replaced by the screened inventory |
 
 No paid API, no authentication token, and no service whose disappearance changes a result the tests already locked. `scripts/get_data.sh` exits 0 when the network fails and leaves the sample benchmark in place.
+
+# Datasets
+
+Every series below is public and is on the challenge data list, except the team-created legal screens and the screened transit counts, which are assumptions or compilations of public facts rather than a redistributed dataset. The code license does not relicense the data. Full vintages, cleaning, and the privacy rule are in `docs/DATA_PROVENANCE.md`.
+
+| Dataset | License or terms | Where it appears |
+| ------- | ---------------- | ---------------- |
+| ACS 2019–2023 5-year summary file (Census) | Public domain, U.S. government work | `data/sample/fixtures.json` |
+| Building Permits Survey, 2022–2024 state and county files (Census) | Public domain, U.S. government work | `data/sample/fixtures.json` |
+| Population estimates NST-EST2024 (Census) | Public domain, U.S. government work | `data/sample/fixtures.json` |
+| County gazetteer, 2024, land area and interior points (Census) | Public domain, U.S. government work | `data/sample/fixtures.json` and `data/sample/county_points.json` |
+| FHFA All-Transactions state house-price index | Public FHFA statistical release | `data/sample/fixtures.json` |
+| Connecticut CAMA and parcel aggregates | Connecticut open data; counts and lot-size bins only | `data/sample/tier1_benchmarks.json` |
+| Wisconsin Statewide Parcels, improved residential class bins | Wisconsin statewide parcel program; aggregates only | `data/sample/tier1_benchmarks.json` |
+| Utah Housing Unit Inventory aggregates | Utah Geospatial Resource Center / SGID derivative; aggregates only | `data/sample/tier1_benchmarks.json` |
+| Hawaii parcel count and State Land Use acres | Hawaii statewide GIS; aggregates only | `data/sample/tier1_benchmarks.json` |
+| Major transit stop inventory | Team-compiled counts of public system facts, not a GTFS extract | `data/sample/transit_inventory.json` |
+| Legal-baseline shares | Team assumptions in `config/assumptions.yaml`, not a dataset | `config/assumptions.yaml` |
+
+No raw parcel geometry, owner table, or household microdata is committed. `scripts/get_data.sh` refreshes the Census and FHFA portion, including gazetteer interior points, and falls back to `data/sample/` when the network is unavailable.
 
 # Dependency Licenses
 

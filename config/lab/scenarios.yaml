@@ -1,0 +1,194 @@
+# Small Homes Policy Lab — scenario definitions.
+#
+# Locked for milestone 1 (2026-11-07). The engine reads every lever below;
+# tests/test_lab_rules.py checks each benchmark against the Participant
+# Handbook text quoted in `handbook`. Where this file and the Handbook or the
+# Official Rules disagree, the Handbook and the Rules win and this file is wrong.
+#
+# Outcome (Handbook: "Teams may choose the housing outcome they model ... but
+# must clearly define and justify that choice"):
+#   Net new homes completed inside the five-year window, statewide, as the sum
+#   of county results. A home counts once, when it is finished. A rebuild that
+#   demolishes one house and finishes four counts +3.
+#
+# Justification: completions are what a household can move into. Permits
+# overstate small-home supply because a permit is not a finished home, and
+# housing-stock growth needs demolition data the Census does not publish at
+# county level. The Building Permits Survey is converted to completions with
+# published completion shares (config/lab/assumptions.yaml).
+
+version: 1
+locked: "2026-11-07"
+horizon_years: 5
+outcome:
+  id: net_completions_5yr
+  label: Net new homes completed within five years
+  unit: homes
+
+# Every scenario lists the legal options it adds and the economic levers it
+# moves. Option ids are defined in src/lab/options.py:
+#   adu   one detached or semi-detached ADU on a lot with a single-family home
+#   mm2   2 homes on the lot: keep the house, add one unit (conversion/addition)
+#   mm4   4 homes, up to 3 stories, replacing the house (+3 net)
+#   mm6   6 homes, up to 3 stories, replacing the house (+5 net)
+scenarios:
+  baseline:
+    label: Baseline
+    short: Baseline
+    kind: baseline
+    handbook: >-
+      Housing production under the current regulatory and economic
+      environment, with no policy changes.
+    definition: >-
+      The 2023–2025 Building Permits Survey run-rate for each county, extended
+      five years and converted to completions, plus homes from local or state
+      reforms that were enacted after that permit window (for example
+      Pittsburgh's October 2026 ADU ordinance and New Hampshire's 2025 ADU and
+      parking laws). Nothing else changes.
+    legalize: []
+    levers: {}
+
+  adu:
+    label: 1. Accessory dwelling units
+    short: ADUs
+    kind: benchmark
+    benchmark_number: 1
+    handbook: >-
+      Model the effect of allowing one ADU on parcels with existing
+      single-family buildings. Assume detached and semi-detached ADUs of at
+      least 600 square feet are allowed, and no additional parking is
+      required.
+    definition: >-
+      Every lot with a single-family home (ACS 1-unit detached or 1-unit
+      attached) may add one ADU, detached or semi-detached, of at least 600
+      square feet, with no parking space required for the ADU.
+    legalize: [adu]
+    levers:
+      adu_max_per_host: 1
+      adu_min_sqft: 600
+      adu_forms: [detached, semi_detached]
+      adu_parking_spaces: 0
+    host_types: [detached, attached]
+
+  missing_middle:
+    label: 2. Missing middle (2–6 homes)
+    short: Missing middle
+    kind: benchmark
+    benchmark_number: 2
+    handbook: >-
+      Model the effect of allowing 2–6 dwelling units on parcels currently
+      restricted to single-family use, with building heights up to three
+      stories. Teams may assume that setback and lot coverage requirements do
+      not constrain the development of 2–6 units on a parcel currently
+      restricted to single-family use.
+    definition: >-
+      Lots now limited to one home may hold 2 to 6 homes in a building of at
+      most three stories. Setbacks and lot coverage do not bind. Existing
+      parking minimums still apply, because this scenario does not change
+      parking rules. Each lot chooses at most one of: keep the house and add
+      a second home (2 homes), rebuild as 4 homes, or rebuild as 6 homes.
+    legalize: [mm2, mm4, mm6]
+    levers:
+      mm_min_units: 2
+      mm_max_units: 6
+      mm_max_stories: 3
+      setbacks_bind: false
+      lot_coverage_binds: false
+    host_types: [detached, attached]
+
+  parking:
+    label: 4. Parking requirement reduction
+    short: Parking
+    kind: benchmark
+    benchmark_number: 4
+    handbook: >-
+      Model the effects of reducing or eliminating minimum parking
+      requirements for new residential development. Specify assumptions about
+      developer-provided parking in the absence of mandates.
+    definition: >-
+      Minimum parking requirements for new residential development are
+      eliminated. Developers then provide the market ratio in
+      config/lab/assumptions.yaml (parking_market_*): 0.5 spaces per home in
+      urban tracts, 1.25 suburban, 1.75 rural, and single-family builders keep
+      providing the driveway or garage the mandate required
+      (parking_sf_gap_share = 0). Nothing about approvals, review time, or
+      zoning envelopes changes in this scenario.
+    legalize: []
+    levers:
+      parking_minimums: eliminated
+      developer_parking: market_ratio
+      approval_reform: false
+    host_types: []
+
+  fees:
+    label: 5. Development fee reduction
+    short: Fees
+    kind: benchmark
+    benchmark_number: 5
+    handbook: >-
+      Model the effect of reducing total development fees (planning,
+      environmental review, building, and impact fees) by 50% across all
+      major fee categories. For comparability across submissions, Teams
+      should assume development fees total $50,000 per unit across all major
+      fee categories.
+    definition: >-
+      Every new home pays $50,000 in development fees today. The scenario cuts
+      that by 50 percent, to $25,000, for every new home in every county.
+    legalize: []
+    levers:
+      fee_per_unit_baseline: 50000
+      fee_cut_share: 0.5
+    host_types: []
+
+  # --- Extra, state-specific scenarios (NOT benchmarks) ----------------------
+  package:
+    label: Small Homes package (extra, state-specific)
+    short: Package
+    kind: extra
+    handbook: >-
+      Teams are encouraged to develop additional state-specific scenarios with
+      mentor guidance, particularly those reflecting state-specific policy
+      debates in the chosen jurisdiction.
+    definition: >-
+      ADUs, missing middle, parking reduction, and the fee cut together. Each
+      lot picks at most one option (the one with the largest margin over its
+      hurdle). Fee and parking savings apply inside the ADU and missing-middle
+      pro formas and to the existing pipeline. The package is resolved lot by
+      lot; it is never the sum of the four separate results.
+    combines: [adu, missing_middle, parking, fees]
+    resolution: one_best_option_per_host
+    legalize: [adu, mm2, mm4, mm6]
+    levers:
+      adu_parking_spaces: 0
+      parking_minimums: eliminated
+      developer_parking: market_ratio
+      fee_per_unit_baseline: 50000
+      fee_cut_share: 0.5
+      approval_reform: false
+    host_types: [detached, attached]
+
+  approval:
+    label: By-right approval with a shot clock (extra, state-specific)
+    short: Approval
+    kind: extra
+    handbook: >-
+      Teams are encouraged to develop additional state-specific scenarios with
+      mentor guidance, particularly those reflecting state-specific policy
+      debates in the chosen jurisdiction.
+    definition: >-
+      Code-compliant residential projects are approved administratively within
+      a fixed review period. This saves approval_time_saved_years of carrying
+      cost on the existing pipeline and finishes those homes sooner inside the
+      window. It is not bundled with the parking scenario or any benchmark.
+    legalize: []
+    levers:
+      approval_reform: true
+    host_types: []
+
+benchmarks_modeled: [adu, missing_middle, parking, fees]
+not_modeled_in_lab:
+  tod: >-
+    Benchmark 3 (transit-oriented density) raises density near major transit
+    stops. It is not a small-homes reform, so the Lab does not model it. The
+    Stateframe core engine (src/model/engine.py, docs/MODEL_AND_ASSUMPTIONS.md
+    section 7) models it for all eleven states.

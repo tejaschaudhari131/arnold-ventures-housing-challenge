@@ -16,12 +16,15 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from src.bundle import load_bundle
-from src.data.schema import CHALLENGE_STATES
+from src.data.schema import CHALLENGE_STATES, ROOT
 from src.export.report import simulate_many, to_csv, to_json, to_markdown
 from src.model.assumptions import AssumptionError
+from src.model.case_study import build_case_study
 from src.model.crossval import cross_validate_state, cross_validate_tier1
-from src.model.engine import simulate_state
+from src.model.engine import REFORM_IDS, simulate_state
 from src.model.sensitivity import monte_carlo, tornado
+
+COUNTY_POINTS = ROOT / "data" / "sample" / "county_points.json"
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 STATIC_FILES = {
@@ -84,7 +87,23 @@ class App:
             overrides,
             parcel_mode=parcel_mode,
             resolution=resolution,
+            reform_weights=self._reforms(payload.get("reforms")),
         )
+
+    def case_study(self, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+        payload = payload or {}
+        overrides = payload.get("overrides") or {}
+        if not isinstance(overrides, dict):
+            raise AssumptionError("overrides must be an object")
+        return build_case_study(
+            self.fixtures,
+            self.assumptions,
+            overrides,
+            reform_weights=self._reforms(payload.get("reforms")),
+        )
+
+    def map_points(self) -> dict[str, Any]:
+        return json.loads(COUNTY_POINTS.read_text(encoding="utf-8"))
 
     def sensitivity(self, payload: dict[str, Any]) -> dict[str, Any]:
         state = self._check_state(str(payload.get("state", "PA")))
@@ -129,6 +148,31 @@ class App:
         return code
 
     @staticmethod
+    def _reforms(raw: Any) -> dict[str, float] | None:
+        if raw is None:
+            return None
+        if not isinstance(raw, dict):
+            raise AssumptionError("reforms must be an object")
+        weights: dict[str, float] = {}
+        for key, value in raw.items():
+            if key not in REFORM_IDS:
+                raise AssumptionError(f"Unknown reform '{key}'")
+            if isinstance(value, bool):
+                weights[key] = 1.0 if value else 0.0
+            elif isinstance(value, (int, float)):
+                weights[key] = float(value)
+            elif isinstance(value, dict):
+                turned_on = bool(value.get("on", True))
+                try:
+                    weight = float(value.get("weight", 1.0))
+                except (TypeError, ValueError) as exc:
+                    raise AssumptionError(f"Reform '{key}' weight must be a number") from exc
+                weights[key] = weight if turned_on else 0.0
+            else:
+                raise AssumptionError(f"Reform '{key}' must be a number or an object")
+        return weights
+
+    @staticmethod
     def _check_scenario(scenario: str) -> None:
         allowed = {"baseline", "adu", "missing_middle", "tod", "parking", "fees", "combined"}
         if scenario not in allowed:
@@ -168,6 +212,9 @@ def make_handler(app: App):
         def do_GET(self) -> None:  # noqa: N802
             parsed = urlparse(self.path)
             path = parsed.path
+            if path == "/favicon.ico":
+                self._send(204, b"", "image/x-icon")
+                return
             if path in STATIC_FILES:
                 name, content_type = STATIC_FILES[path]
                 body = (STATIC_DIR / name).read_bytes()
@@ -187,6 +234,10 @@ def make_handler(app: App):
                     fmt = query.get("format", ["csv"])[0]
                     body, mime, filename = app.export(state, fmt)
                     self._send(200, body, mime, filename)
+                elif path == "/api/map":
+                    self._json(200, app.map_points())
+                elif path == "/api/case-study":
+                    self._json(200, app.case_study())
                 else:
                     self._json(404, {"error": "Not found"})
             except AssumptionError as exc:
@@ -200,6 +251,8 @@ def make_handler(app: App):
                 payload = self._read_json()
                 if parsed.path == "/api/simulate":
                     self._json(200, app.simulate(payload))
+                elif parsed.path == "/api/case-study":
+                    self._json(200, app.case_study(payload))
                 elif parsed.path == "/api/sensitivity":
                     self._json(200, app.sensitivity(payload))
                 elif parsed.path == "/api/crossval":

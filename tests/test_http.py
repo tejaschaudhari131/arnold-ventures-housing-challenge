@@ -47,6 +47,12 @@ def test_pages_name_the_team_and_simulate_pennsylvania():
         assert "Yoon Yik Ng" in text
         assert "Christopher Severns" in text
         assert "YY Ng" not in text
+        assert "observed" in text
+        assert "assumed" in text
+        assert "calculated" in text
+        assert "Pennsylvania case study" in text
+        assert "One-page brief" in text
+        assert 'id="map-stage"' in text
         health, _body, _ = _get(base, "/api/health")
         assert health == 200
         catalog_status, catalog_body, _ = _get(base, "/api/assumptions?state=PA")
@@ -57,6 +63,16 @@ def test_pages_name_the_team_and_simulate_pennsylvania():
         assert code == 200
         assert result["state"] == "PA"
         assert result["scenarios"]["baseline"]["completions_5yr"] > 0
+        assert result["provenance"]["baseline_completions_5yr"] == "calculated"
+        map_status, map_body, _ = _get(base, "/api/map")
+        assert map_status == 200
+        points = json.loads(map_body.decode("utf-8"))["points"]
+        assert any(point["fips"] == "42003" for point in points)
+        case_status, case_body, _ = _get(base, "/api/case-study")
+        assert case_status == 200
+        study = json.loads(case_body.decode("utf-8"))
+        assert study["county_name"] == "Allegheny County"
+        assert study["counties_sum_to_state"] is True
         script_status, script, _ = _get(base, "/app.js")
         assert script_status == 200
         assert b"api/simulate" in script

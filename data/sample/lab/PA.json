@@ -1,0 +1,8714 @@
+{
+ "state": "PA",
+ "state_fips": "42",
+ "name": "Pennsylvania",
+ "vintage": {
+  "acs": "ACS 2020\u20132024 5-year table-based summary file",
+  "bps": "Census Building Permits Survey annual county files (imputed + reported), 2023, 2024, 2025",
+  "gazetteer": "2024 Census gazetteer (counties, tracts)",
+  "hud_fmr": "HUD FY2026 Fair Market Rents (manually downloaded workbook)",
+  "access_date": "2026-10-31"
+ },
+ "density_edges": [
+  0,
+  50,
+  100,
+  200,
+  500,
+  1000,
+  2000,
+  4000,
+  8000
+ ],
+ "state_acs": {
+  "housing_units": {
+   "e": 5806452.0,
+   "m": 672.0
+  },
+  "units_total": {
+   "e": 5806452.0,
+   "m": 672.0
+  },
+  "detached": {
+   "e": 3287467.0,
+   "m": 7816.0
+  },
+  "attached": {
+   "e": 1089832.0,
+   "m": 6335.0
+  },
+  "rent_1br": {
+   "e": 1025.0,
+   "m": 10.0
+  },
+  "rent_2br": {
+   "e": 1245.0,
+   "m": 7.0
+  },
+  "median_value": {
+   "e": 254500.0,
+   "m": 767.0
+  }
+ },
+ "places": [
+  {
+   "place": "4261000",
+   "name": "Pittsburgh city",
+   "county": "42003",
+   "rule": "pittsburgh_adu_2026",
+   "detached": {
+    "e": 70572.0,
+    "m": 1437.0
+   },
+   "attached": {
+    "e": 22776.0,
+    "m": 1154.0
+   }
+  }
+ ],
+ "counties": [
+  {
+   "fips": "42001",
+   "name": "Adams County",
+   "land_sqmi": 518.576,
+   "lat": 39.869437,
+   "lon": -77.21775,
+   "acs": {
+    "housing_units": {
+     "e": 43672.0,
+     "m": 85.0
+    },
+    "units_total": {
+     "e": 43672.0,
+     "m": 85.0
+    },
+    "detached": {
+     "e": 32607.0,
+     "m": 553.0
+    },
+    "attached": {
+     "e": 4042.0,
+     "m": 401.0
+    },
+    "rent_1br": {
+     "e": 808.0,
+     "m": 51.0
+    },
+    "rent_2br": {
+     "e": 1123.0,
+     "m": 57.0
+    },
+    "median_value": {
+     "e": 268500.0,
+     "m": 6871.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 6368.0,
+     "attached": 306.0,
+     "housing_units": 7665.0,
+     "tracts": 4
+    },
+    {
+     "detached": 13997.0,
+     "attached": 823.0,
+     "housing_units": 17164.0,
+     "tracts": 10
+    },
+    {
+     "detached": 4238.0,
+     "attached": 447.0,
+     "housing_units": 5535.0,
+     "tracts": 4
+    },
+    {
+     "detached": 2859.0,
+     "attached": 947.0,
+     "housing_units": 4272.0,
+     "tracts": 3
+    },
+    {
+     "detached": 1351.0,
+     "attached": 250.0,
+     "housing_units": 2103.0,
+     "tracts": 2
+    },
+    {
+     "detached": 2774.0,
+     "attached": 914.0,
+     "housing_units": 4731.0,
+     "tracts": 3
+    },
+    {
+     "detached": 1020.0,
+     "attached": 355.0,
+     "housing_units": 2202.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 338.0,
+     "v1": 84252715.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 403.0,
+     "v1": 135442780.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 476.0,
+     "v1": 174571469.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1099,
+    "fmr_2br": 1374
+   }
+  },
+  {
+   "fips": "42003",
+   "name": "Allegheny County",
+   "land_sqmi": 729.952,
+   "lat": 40.469757,
+   "lon": -79.980451,
+   "acs": {
+    "housing_units": {
+     "e": 606827.0,
+     "m": 276.0
+    },
+    "units_total": {
+     "e": 606827.0,
+     "m": 276.0
+    },
+    "detached": {
+     "e": 373731.0,
+     "m": 2510.0
+    },
+    "attached": {
+     "e": 62526.0,
+     "m": 2030.0
+    },
+    "rent_1br": {
+     "e": 965.0,
+     "m": 16.0
+    },
+    "rent_2br": {
+     "e": 1201.0,
+     "m": 15.0
+    },
+    "median_value": {
+     "e": 227600.0,
+     "m": 1801.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 11.0,
+     "attached": 0.0,
+     "housing_units": 30.0,
+     "tracts": 4
+    },
+    {
+     "detached": 5899.0,
+     "attached": 479.0,
+     "housing_units": 7043.0,
+     "tracts": 6
+    },
+    {
+     "detached": 12476.0,
+     "attached": 1270.0,
+     "housing_units": 15457.0,
+     "tracts": 10
+    },
+    {
+     "detached": 56340.0,
+     "attached": 7718.0,
+     "housing_units": 75156.0,
+     "tracts": 41
+    },
+    {
+     "detached": 68448.0,
+     "attached": 7791.0,
+     "housing_units": 92363.0,
+     "tracts": 55
+    },
+    {
+     "detached": 102996.0,
+     "attached": 11306.0,
+     "housing_units": 142905.0,
+     "tracts": 89
+    },
+    {
+     "detached": 92775.0,
+     "attached": 19354.0,
+     "housing_units": 165699.0,
+     "tracts": 110
+    },
+    {
+     "detached": 30869.0,
+     "attached": 11763.0,
+     "housing_units": 85712.0,
+     "tracts": 54
+    },
+    {
+     "detached": 3917.0,
+     "attached": 2845.0,
+     "housing_units": 22462.0,
+     "tracts": 15
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 1247.0,
+     "v1": 423665661.0,
+     "u2": 6.0,
+     "v2": 834318.0,
+     "u34": 6.0,
+     "v34": 620497.0,
+     "u5": 1811.0,
+     "v5": 170603401.0
+    },
+    "2024": {
+     "u1": 1379.0,
+     "v1": 462961423.0,
+     "u2": 10.0,
+     "v2": 2283700.0,
+     "u34": 19.0,
+     "v34": 3543463.0,
+     "u5": 1588.0,
+     "v5": 152184199.0
+    },
+    "2025": {
+     "u1": 1265.0,
+     "v1": 438208959.0,
+     "u2": 4.0,
+     "v2": 546740.0,
+     "u34": 13.0,
+     "v34": 1976508.0,
+     "u5": 2015.0,
+     "v5": 169634193.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1077,
+    "fmr_2br": 1299
+   }
+  },
+  {
+   "fips": "42005",
+   "name": "Armstrong County",
+   "land_sqmi": 653.321,
+   "lat": 40.81238,
+   "lon": -79.464129,
+   "acs": {
+    "housing_units": {
+     "e": 32128.0,
+     "m": 90.0
+    },
+    "units_total": {
+     "e": 32128.0,
+     "m": 90.0
+    },
+    "detached": {
+     "e": 24877.0,
+     "m": 417.0
+    },
+    "attached": {
+     "e": 1314.0,
+     "m": 237.0
+    },
+    "rent_1br": {
+     "e": 555.0,
+     "m": 85.0
+    },
+    "rent_2br": {
+     "e": 796.0,
+     "m": 43.0
+    },
+    "median_value": {
+     "e": 157300.0,
+     "m": 4753.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 12673.0,
+     "attached": 143.0,
+     "housing_units": 15448.0,
+     "tracts": 9
+    },
+    {
+     "detached": 5602.0,
+     "attached": 191.0,
+     "housing_units": 7097.0,
+     "tracts": 4
+    },
+    {
+     "detached": 2030.0,
+     "attached": 10.0,
+     "housing_units": 2336.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 500.0,
+     "attached": 88.0,
+     "housing_units": 901.0,
+     "tracts": 1
+    },
+    {
+     "detached": 1142.0,
+     "attached": 28.0,
+     "housing_units": 1407.0,
+     "tracts": 1
+    },
+    {
+     "detached": 2930.0,
+     "attached": 854.0,
+     "housing_units": 4939.0,
+     "tracts": 3
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 40.0,
+     "v1": 10416544.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 5.0,
+     "v5": 1125000.0
+    },
+    "2024": {
+     "u1": 38.0,
+     "v1": 10889412.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 20.0,
+     "v5": 4722224.0
+    },
+    "2025": {
+     "u1": 37.0,
+     "v1": 9821346.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 10.0,
+     "v5": 2361112.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 767,
+    "fmr_2br": 1002
+   }
+  },
+  {
+   "fips": "42007",
+   "name": "Beaver County",
+   "land_sqmi": 434.695,
+   "lat": 40.68414,
+   "lon": -80.350721,
+   "acs": {
+    "housing_units": {
+     "e": 79328.0,
+     "m": 141.0
+    },
+    "units_total": {
+     "e": 79328.0,
+     "m": 141.0
+    },
+    "detached": {
+     "e": 60638.0,
+     "m": 835.0
+    },
+    "attached": {
+     "e": 4370.0,
+     "m": 455.0
+    },
+    "rent_1br": {
+     "e": 698.0,
+     "m": 36.0
+    },
+    "rent_2br": {
+     "e": 905.0,
+     "m": 43.0
+    },
+    "median_value": {
+     "e": 190900.0,
+     "m": 4239.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 4502.0,
+     "attached": 81.0,
+     "housing_units": 5574.0,
+     "tracts": 5
+    },
+    {
+     "detached": 7021.0,
+     "attached": 530.0,
+     "housing_units": 8534.0,
+     "tracts": 6
+    },
+    {
+     "detached": 9894.0,
+     "attached": 433.0,
+     "housing_units": 11169.0,
+     "tracts": 6
+    },
+    {
+     "detached": 12097.0,
+     "attached": 716.0,
+     "housing_units": 14358.0,
+     "tracts": 8
+    },
+    {
+     "detached": 12154.0,
+     "attached": 1323.0,
+     "housing_units": 16536.0,
+     "tracts": 11
+    },
+    {
+     "detached": 7178.0,
+     "attached": 622.0,
+     "housing_units": 11124.0,
+     "tracts": 8
+    },
+    {
+     "detached": 7792.0,
+     "attached": 665.0,
+     "housing_units": 12033.0,
+     "tracts": 9
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 162.0,
+     "v1": 41671442.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 50.0,
+     "v5": 7143968.0
+    },
+    "2024": {
+     "u1": 187.0,
+     "v1": 56794196.0,
+     "u2": 2.0,
+     "v2": 341127.0,
+     "u34": 3.0,
+     "v34": 472845.0,
+     "u5": 80.0,
+     "v5": 11288756.0
+    },
+    "2025": {
+     "u1": 210.0,
+     "v1": 63397263.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 95.0,
+     "v5": 13715132.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1077,
+    "fmr_2br": 1299
+   }
+  },
+  {
+   "fips": "42009",
+   "name": "Bedford County",
+   "land_sqmi": 1011.988,
+   "lat": 39.998634,
+   "lon": -78.494747,
+   "acs": {
+    "housing_units": {
+     "e": 23567.0,
+     "m": 119.0
+    },
+    "units_total": {
+     "e": 23567.0,
+     "m": 119.0
+    },
+    "detached": {
+     "e": 17263.0,
+     "m": 407.0
+    },
+    "attached": {
+     "e": 468.0,
+     "m": 107.0
+    },
+    "rent_1br": {
+     "e": 582.0,
+     "m": 57.0
+    },
+    "rent_2br": {
+     "e": 795.0,
+     "m": 51.0
+    },
+    "median_value": {
+     "e": 179000.0,
+     "m": 9160.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 14759.0,
+     "attached": 354.0,
+     "housing_units": 19414.0,
+     "tracts": 10
+    },
+    {
+     "detached": 1772.0,
+     "attached": 54.0,
+     "housing_units": 2518.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 732.0,
+     "attached": 60.0,
+     "housing_units": 1635.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 58.0,
+     "v1": 16963512.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 54.0,
+     "v1": 14687025.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 71.0,
+     "v1": 21251634.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 742,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42011",
+   "name": "Berks County",
+   "land_sqmi": 856.404,
+   "lat": 40.413957,
+   "lon": -75.92686,
+   "acs": {
+    "housing_units": {
+     "e": 171580.0,
+     "m": 199.0
+    },
+    "units_total": {
+     "e": 171580.0,
+     "m": 199.0
+    },
+    "detached": {
+     "e": 96704.0,
+     "m": 1476.0
+    },
+    "attached": {
+     "e": 39192.0,
+     "m": 1144.0
+    },
+    "rent_1br": {
+     "e": 922.0,
+     "m": 31.0
+    },
+    "rent_2br": {
+     "e": 1243.0,
+     "m": 32.0
+    },
+    "median_value": {
+     "e": 257300.0,
+     "m": 3633.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 6976.0,
+     "attached": 257.0,
+     "housing_units": 8198.0,
+     "tracts": 4
+    },
+    {
+     "detached": 21083.0,
+     "attached": 997.0,
+     "housing_units": 25352.0,
+     "tracts": 17
+    },
+    {
+     "detached": 19302.0,
+     "attached": 1852.0,
+     "housing_units": 23331.0,
+     "tracts": 12
+    },
+    {
+     "detached": 12360.0,
+     "attached": 3134.0,
+     "housing_units": 18364.0,
+     "tracts": 11
+    },
+    {
+     "detached": 12908.0,
+     "attached": 3294.0,
+     "housing_units": 18916.0,
+     "tracts": 12
+    },
+    {
+     "detached": 16502.0,
+     "attached": 8924.0,
+     "housing_units": 34596.0,
+     "tracts": 21
+    },
+    {
+     "detached": 6064.0,
+     "attached": 8007.0,
+     "housing_units": 20529.0,
+     "tracts": 12
+    },
+    {
+     "detached": 722.0,
+     "attached": 5547.0,
+     "housing_units": 8637.0,
+     "tracts": 7
+    },
+    {
+     "detached": 787.0,
+     "attached": 7180.0,
+     "housing_units": 13657.0,
+     "tracts": 10
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 271.0,
+     "v1": 74007626.0,
+     "u2": 12.0,
+     "v2": 1088908.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 110.0,
+     "v5": 9286592.0
+    },
+    "2024": {
+     "u1": 219.0,
+     "v1": 59797621.0,
+     "u2": 8.0,
+     "v2": 1073338.0,
+     "u34": 4.0,
+     "v34": 630460.0,
+     "u5": 27.0,
+     "v5": 4500000.0
+    },
+    "2025": {
+     "u1": 262.0,
+     "v1": 74727812.0,
+     "u2": 32.0,
+     "v2": 3098499.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 86.0,
+     "v5": 7416666.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1237,
+    "fmr_2br": 1575
+   }
+  },
+  {
+   "fips": "42013",
+   "name": "Blair County",
+   "land_sqmi": 525.067,
+   "lat": 40.498683,
+   "lon": -78.309597,
+   "acs": {
+    "housing_units": {
+     "e": 55901.0,
+     "m": 120.0
+    },
+    "units_total": {
+     "e": 55901.0,
+     "m": 120.0
+    },
+    "detached": {
+     "e": 39803.0,
+     "m": 616.0
+    },
+    "attached": {
+     "e": 2322.0,
+     "m": 287.0
+    },
+    "rent_1br": {
+     "e": 701.0,
+     "m": 59.0
+    },
+    "rent_2br": {
+     "e": 896.0,
+     "m": 37.0
+    },
+    "median_value": {
+     "e": 161100.0,
+     "m": 3077.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 7590.0,
+     "attached": 343.0,
+     "housing_units": 10090.0,
+     "tracts": 6
+    },
+    {
+     "detached": 8049.0,
+     "attached": 216.0,
+     "housing_units": 10289.0,
+     "tracts": 5
+    },
+    {
+     "detached": 2209.0,
+     "attached": 151.0,
+     "housing_units": 2994.0,
+     "tracts": 2
+    },
+    {
+     "detached": 1626.0,
+     "attached": 20.0,
+     "housing_units": 2948.0,
+     "tracts": 2
+    },
+    {
+     "detached": 1039.0,
+     "attached": 167.0,
+     "housing_units": 1791.0,
+     "tracts": 2
+    },
+    {
+     "detached": 11250.0,
+     "attached": 790.0,
+     "housing_units": 14503.0,
+     "tracts": 12
+    },
+    {
+     "detached": 7977.0,
+     "attached": 635.0,
+     "housing_units": 12080.0,
+     "tracts": 8
+    },
+    {
+     "detached": 63.0,
+     "attached": 0.0,
+     "housing_units": 1206.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 57.0,
+     "v1": 18920043.0,
+     "u2": 2.0,
+     "v2": 458000.0,
+     "u34": 4.0,
+     "v34": 400000.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 72.0,
+     "v1": 21062898.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 27.0,
+     "v34": 2568858.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 74.0,
+     "v1": 29769730.0,
+     "u2": 14.0,
+     "v2": 2280000.0,
+     "u34": 6.0,
+     "v34": 570858.0,
+     "u5": 5.0,
+     "v5": 287500.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 948,
+    "fmr_2br": 1138
+   }
+  },
+  {
+   "fips": "42015",
+   "name": "Bradford County",
+   "land_sqmi": 1147.376,
+   "lat": 41.791504,
+   "lon": -76.502123,
+   "acs": {
+    "housing_units": {
+     "e": 29486.0,
+     "m": 66.0
+    },
+    "units_total": {
+     "e": 29486.0,
+     "m": 66.0
+    },
+    "detached": {
+     "e": 21214.0,
+     "m": 430.0
+    },
+    "attached": {
+     "e": 476.0,
+     "m": 133.0
+    },
+    "rent_1br": {
+     "e": 684.0,
+     "m": 63.0
+    },
+    "rent_2br": {
+     "e": 930.0,
+     "m": 31.0
+    },
+    "median_value": {
+     "e": 187500.0,
+     "m": 6366.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 16368.0,
+     "attached": 244.0,
+     "housing_units": 21870.0,
+     "tracts": 11
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 820.0,
+     "attached": 0.0,
+     "housing_units": 1222.0,
+     "tracts": 1
+    },
+    {
+     "detached": 4026.0,
+     "attached": 232.0,
+     "housing_units": 6394.0,
+     "tracts": 3
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 65.0,
+     "v1": 19793590.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 66.0,
+     "v1": 19178612.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 70.0,
+     "v1": 20748782.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 844,
+    "fmr_2br": 1066
+   }
+  },
+  {
+   "fips": "42017",
+   "name": "Bucks County",
+   "land_sqmi": 604.447,
+   "lat": 40.336887,
+   "lon": -75.10706,
+   "acs": {
+    "housing_units": {
+     "e": 257260.0,
+     "m": 158.0
+    },
+    "units_total": {
+     "e": 257260.0,
+     "m": 158.0
+    },
+    "detached": {
+     "e": 163200.0,
+     "m": 1652.0
+    },
+    "attached": {
+     "e": 41335.0,
+     "m": 1333.0
+    },
+    "rent_1br": {
+     "e": 1375.0,
+     "m": 38.0
+    },
+    "rent_2br": {
+     "e": 1702.0,
+     "m": 35.0
+    },
+    "median_value": {
+     "e": 445700.0,
+     "m": 3616.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 891.0,
+     "attached": 5.0,
+     "housing_units": 955.0,
+     "tracts": 1
+    },
+    {
+     "detached": 9290.0,
+     "attached": 460.0,
+     "housing_units": 10490.0,
+     "tracts": 6
+    },
+    {
+     "detached": 16543.0,
+     "attached": 2779.0,
+     "housing_units": 20780.0,
+     "tracts": 13
+    },
+    {
+     "detached": 30181.0,
+     "attached": 7672.0,
+     "housing_units": 41688.0,
+     "tracts": 21
+    },
+    {
+     "detached": 43247.0,
+     "attached": 9535.0,
+     "housing_units": 63477.0,
+     "tracts": 36
+    },
+    {
+     "detached": 50189.0,
+     "attached": 14035.0,
+     "housing_units": 85404.0,
+     "tracts": 51
+    },
+    {
+     "detached": 12397.0,
+     "attached": 6160.0,
+     "housing_units": 32742.0,
+     "tracts": 17
+    },
+    {
+     "detached": 462.0,
+     "attached": 689.0,
+     "housing_units": 1724.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 434.0,
+     "v1": 136419183.0,
+     "u2": 2.0,
+     "v2": 192000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 346.0,
+     "v5": 66054546.0
+    },
+    "2024": {
+     "u1": 531.0,
+     "v1": 199087431.0,
+     "u2": 22.0,
+     "v2": 2022000.0,
+     "u34": 4.0,
+     "v34": 994191.0,
+     "u5": 106.0,
+     "v5": 14046574.0
+    },
+    "2025": {
+     "u1": 634.0,
+     "v1": 196826479.0,
+     "u2": 4.0,
+     "v2": 357000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 53.0,
+     "v5": 3796634.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1520,
+    "fmr_2br": 1810
+   }
+  },
+  {
+   "fips": "42019",
+   "name": "Butler County",
+   "land_sqmi": 789.482,
+   "lat": 40.913847,
+   "lon": -79.918978,
+   "acs": {
+    "housing_units": {
+     "e": 87382.0,
+     "m": 109.0
+    },
+    "units_total": {
+     "e": 87382.0,
+     "m": 109.0
+    },
+    "detached": {
+     "e": 60740.0,
+     "m": 775.0
+    },
+    "attached": {
+     "e": 7161.0,
+     "m": 562.0
+    },
+    "rent_1br": {
+     "e": 785.0,
+     "m": 61.0
+    },
+    "rent_2br": {
+     "e": 1061.0,
+     "m": 57.0
+    },
+    "median_value": {
+     "e": 294200.0,
+     "m": 5907.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 8736.0,
+     "attached": 62.0,
+     "housing_units": 11092.0,
+     "tracts": 6
+    },
+    {
+     "detached": 14592.0,
+     "attached": 1399.0,
+     "housing_units": 19990.0,
+     "tracts": 9
+    },
+    {
+     "detached": 11011.0,
+     "attached": 439.0,
+     "housing_units": 13467.0,
+     "tracts": 7
+    },
+    {
+     "detached": 10353.0,
+     "attached": 1412.0,
+     "housing_units": 13800.0,
+     "tracts": 8
+    },
+    {
+     "detached": 9549.0,
+     "attached": 2444.0,
+     "housing_units": 17251.0,
+     "tracts": 9
+    },
+    {
+     "detached": 3144.0,
+     "attached": 1240.0,
+     "housing_units": 5452.0,
+     "tracts": 4
+    },
+    {
+     "detached": 3355.0,
+     "attached": 165.0,
+     "housing_units": 6330.0,
+     "tracts": 4
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 867.0,
+     "v1": 289746570.0,
+     "u2": 8.0,
+     "v2": 940000.0,
+     "u34": 3.0,
+     "v34": 392396.0,
+     "u5": 120.0,
+     "v5": 19663626.0
+    },
+    "2024": {
+     "u1": 969.0,
+     "v1": 349107233.0,
+     "u2": 14.0,
+     "v2": 1623725.0,
+     "u34": 4.0,
+     "v34": 682192.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 986.0,
+     "v1": 336353185.0,
+     "u2": 8.0,
+     "v2": 964314.0,
+     "u34": 9.0,
+     "v34": 1439625.0,
+     "u5": 194.0,
+     "v5": 36849465.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1077,
+    "fmr_2br": 1299
+   }
+  },
+  {
+   "fips": "42021",
+   "name": "Cambria County",
+   "land_sqmi": 687.963,
+   "lat": 40.510209,
+   "lon": -78.710488,
+   "acs": {
+    "housing_units": {
+     "e": 64456.0,
+     "m": 91.0
+    },
+    "units_total": {
+     "e": 64456.0,
+     "m": 91.0
+    },
+    "detached": {
+     "e": 47964.0,
+     "m": 643.0
+    },
+    "attached": {
+     "e": 4184.0,
+     "m": 483.0
+    },
+    "rent_1br": {
+     "e": 532.0,
+     "m": 49.0
+    },
+    "rent_2br": {
+     "e": 777.0,
+     "m": 29.0
+    },
+    "median_value": {
+     "e": 121000.0,
+     "m": 2848.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 13044.0,
+     "attached": 222.0,
+     "housing_units": 15091.0,
+     "tracts": 10
+    },
+    {
+     "detached": 9435.0,
+     "attached": 364.0,
+     "housing_units": 11324.0,
+     "tracts": 6
+    },
+    {
+     "detached": 4155.0,
+     "attached": 224.0,
+     "housing_units": 5474.0,
+     "tracts": 3
+    },
+    {
+     "detached": 5785.0,
+     "attached": 576.0,
+     "housing_units": 8372.0,
+     "tracts": 4
+    },
+    {
+     "detached": 6332.0,
+     "attached": 752.0,
+     "housing_units": 8243.0,
+     "tracts": 6
+    },
+    {
+     "detached": 2877.0,
+     "attached": 374.0,
+     "housing_units": 4246.0,
+     "tracts": 4
+    },
+    {
+     "detached": 5038.0,
+     "attached": 1467.0,
+     "housing_units": 8935.0,
+     "tracts": 7
+    },
+    {
+     "detached": 1298.0,
+     "attached": 205.0,
+     "housing_units": 2771.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 72.0,
+     "v1": 17749780.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 61.0,
+     "v1": 20715249.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 3.0,
+     "v34": 213000.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 59.0,
+     "v1": 20401822.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 3.0,
+     "v34": 463599.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 846,
+    "fmr_2br": 1035
+   }
+  },
+  {
+   "fips": "42023",
+   "name": "Cameron County",
+   "land_sqmi": 396.234,
+   "lat": 41.438291,
+   "lon": -78.198323,
+   "acs": {
+    "housing_units": {
+     "e": 3920.0,
+     "m": 30.0
+    },
+    "units_total": {
+     "e": 3920.0,
+     "m": 30.0
+    },
+    "detached": {
+     "e": 3108.0,
+     "m": 114.0
+    },
+    "attached": {
+     "e": 34.0,
+     "m": 41.0
+    },
+    "rent_1br": {
+     "e": 585.0,
+     "m": 48.0
+    },
+    "rent_2br": {
+     "e": 822.0,
+     "m": 233.0
+    },
+    "median_value": {
+     "e": 88900.0,
+     "m": 6194.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 2240.0,
+     "attached": 2.0,
+     "housing_units": 2701.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 868.0,
+     "attached": 32.0,
+     "housing_units": 1219.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 0.0,
+     "v1": 0.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 0.0,
+     "v1": 0.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 0.0,
+     "v1": 0.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 748,
+    "fmr_2br": 981
+   }
+  },
+  {
+   "fips": "42025",
+   "name": "Carbon County",
+   "land_sqmi": 381.356,
+   "lat": 40.918367,
+   "lon": -75.705039,
+   "acs": {
+    "housing_units": {
+     "e": 34417.0,
+     "m": 64.0
+    },
+    "units_total": {
+     "e": 34417.0,
+     "m": 64.0
+    },
+    "detached": {
+     "e": 23666.0,
+     "m": 565.0
+    },
+    "attached": {
+     "e": 5881.0,
+     "m": 529.0
+    },
+    "rent_1br": {
+     "e": 695.0,
+     "m": 50.0
+    },
+    "rent_2br": {
+     "e": 979.0,
+     "m": 36.0
+    },
+    "median_value": {
+     "e": 211400.0,
+     "m": 6685.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 4695.0,
+     "attached": 1108.0,
+     "housing_units": 6520.0,
+     "tracts": 4
+    },
+    {
+     "detached": 10182.0,
+     "attached": 759.0,
+     "housing_units": 12495.0,
+     "tracts": 6
+    },
+    {
+     "detached": 4145.0,
+     "attached": 1408.0,
+     "housing_units": 6166.0,
+     "tracts": 3
+    },
+    {
+     "detached": 1869.0,
+     "attached": 71.0,
+     "housing_units": 2016.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 2775.0,
+     "attached": 2535.0,
+     "housing_units": 7220.0,
+     "tracts": 3
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 149.0,
+     "v1": 41058203.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 170.0,
+     "v1": 45588913.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 10.0,
+     "v5": 800000.0
+    },
+    "2025": {
+     "u1": 184.0,
+     "v1": 59120962.0,
+     "u2": 2.0,
+     "v2": 75000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1341,
+    "fmr_2br": 1634
+   }
+  },
+  {
+   "fips": "42027",
+   "name": "Centre County",
+   "land_sqmi": 1107.259,
+   "lat": 40.909322,
+   "lon": -77.847667,
+   "acs": {
+    "housing_units": {
+     "e": 66475.0,
+     "m": 145.0
+    },
+    "units_total": {
+     "e": 66475.0,
+     "m": 145.0
+    },
+    "detached": {
+     "e": 37951.0,
+     "m": 860.0
+    },
+    "attached": {
+     "e": 4672.0,
+     "m": 530.0
+    },
+    "rent_1br": {
+     "e": 986.0,
+     "m": 48.0
+    },
+    "rent_2br": {
+     "e": 1237.0,
+     "m": 51.0
+    },
+    "median_value": {
+     "e": 323500.0,
+     "m": 7308.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 15959.0,
+     "attached": 500.0,
+     "housing_units": 20089.0,
+     "tracts": 13
+    },
+    {
+     "detached": 4232.0,
+     "attached": 440.0,
+     "housing_units": 5936.0,
+     "tracts": 4
+    },
+    {
+     "detached": 1910.0,
+     "attached": 422.0,
+     "housing_units": 3942.0,
+     "tracts": 2
+    },
+    {
+     "detached": 6020.0,
+     "attached": 847.0,
+     "housing_units": 8604.0,
+     "tracts": 5
+    },
+    {
+     "detached": 850.0,
+     "attached": 160.0,
+     "housing_units": 1942.0,
+     "tracts": 1
+    },
+    {
+     "detached": 6402.0,
+     "attached": 1434.0,
+     "housing_units": 12295.0,
+     "tracts": 8
+    },
+    {
+     "detached": 797.0,
+     "attached": 48.0,
+     "housing_units": 1757.0,
+     "tracts": 1
+    },
+    {
+     "detached": 1693.0,
+     "attached": 821.0,
+     "housing_units": 10120.0,
+     "tracts": 5
+    },
+    {
+     "detached": 88.0,
+     "attached": 0.0,
+     "housing_units": 1790.0,
+     "tracts": 1
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 302.0,
+     "v1": 91355298.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 12.0,
+     "v34": 2680000.0,
+     "u5": 41.0,
+     "v5": 13698521.0
+    },
+    "2024": {
+     "u1": 296.0,
+     "v1": 91904708.0,
+     "u2": 28.0,
+     "v2": 4044598.0,
+     "u34": 31.0,
+     "v34": 4869456.0,
+     "u5": 44.0,
+     "v5": 13051004.0
+    },
+    "2025": {
+     "u1": 249.0,
+     "v1": 82476769.0,
+     "u2": 30.0,
+     "v2": 4758717.0,
+     "u34": 12.0,
+     "v34": 2232702.0,
+     "u5": 15.0,
+     "v5": 2748759.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1194,
+    "fmr_2br": 1406
+   }
+  },
+  {
+   "fips": "42029",
+   "name": "Chester County",
+   "land_sqmi": 750.551,
+   "lat": 39.974029,
+   "lon": -75.749751,
+   "acs": {
+    "housing_units": {
+     "e": 212491.0,
+     "m": 225.0
+    },
+    "units_total": {
+     "e": 212491.0,
+     "m": 225.0
+    },
+    "detached": {
+     "e": 127481.0,
+     "m": 1658.0
+    },
+    "attached": {
+     "e": 40971.0,
+     "m": 1238.0
+    },
+    "rent_1br": {
+     "e": 1604.0,
+     "m": 33.0
+    },
+    "rent_2br": {
+     "e": 1870.0,
+     "m": 56.0
+    },
+    "median_value": {
+     "e": 485600.0,
+     "m": 4003.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 2523.0,
+     "attached": 69.0,
+     "housing_units": 2925.0,
+     "tracts": 4
+    },
+    {
+     "detached": 6595.0,
+     "attached": 524.0,
+     "housing_units": 8303.0,
+     "tracts": 8
+    },
+    {
+     "detached": 33302.0,
+     "attached": 5002.0,
+     "housing_units": 42728.0,
+     "tracts": 24
+    },
+    {
+     "detached": 42957.0,
+     "attached": 8696.0,
+     "housing_units": 59246.0,
+     "tracts": 35
+    },
+    {
+     "detached": 23677.0,
+     "attached": 8112.0,
+     "housing_units": 39594.0,
+     "tracts": 19
+    },
+    {
+     "detached": 13209.0,
+     "attached": 9923.0,
+     "housing_units": 34483.0,
+     "tracts": 19
+    },
+    {
+     "detached": 3354.0,
+     "attached": 4345.0,
+     "housing_units": 12148.0,
+     "tracts": 8
+    },
+    {
+     "detached": 1864.0,
+     "attached": 4300.0,
+     "housing_units": 13064.0,
+     "tracts": 6
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 1216.0,
+     "v1": 377779512.0,
+     "u2": 22.0,
+     "v2": 2996500.0,
+     "u34": 19.0,
+     "v34": 2652064.0,
+     "u5": 227.0,
+     "v5": 39403694.0
+    },
+    "2024": {
+     "u1": 1132.0,
+     "v1": 377487672.0,
+     "u2": 12.0,
+     "v2": 2811067.0,
+     "u34": 15.0,
+     "v34": 3801116.0,
+     "u5": 354.0,
+     "v5": 60524294.0
+    },
+    "2025": {
+     "u1": 1235.0,
+     "v1": 377300811.0,
+     "u2": 6.0,
+     "v2": 1400000.0,
+     "u34": 12.0,
+     "v34": 2418510.0,
+     "u5": 177.0,
+     "v5": 32006760.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1520,
+    "fmr_2br": 1810
+   }
+  },
+  {
+   "fips": "42031",
+   "name": "Clarion County",
+   "land_sqmi": 600.836,
+   "lat": 41.198159,
+   "lon": -79.420369,
+   "acs": {
+    "housing_units": {
+     "e": 18856.0,
+     "m": 72.0
+    },
+    "units_total": {
+     "e": 18856.0,
+     "m": 72.0
+    },
+    "detached": {
+     "e": 14242.0,
+     "m": 297.0
+    },
+    "attached": {
+     "e": 152.0,
+     "m": 65.0
+    },
+    "rent_1br": {
+     "e": 657.0,
+     "m": 52.0
+    },
+    "rent_2br": {
+     "e": 800.0,
+     "m": 48.0
+    },
+    "median_value": {
+     "e": 155700.0,
+     "m": 4324.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 12616.0,
+     "attached": 79.0,
+     "housing_units": 15412.0,
+     "tracts": 11
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 736.0,
+     "attached": 30.0,
+     "housing_units": 1547.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 890.0,
+     "attached": 43.0,
+     "housing_units": 1897.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 27.0,
+     "v1": 6955943.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 25.0,
+     "v1": 7534563.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 24.0,
+     "v1": 7620306.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 762,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42033",
+   "name": "Clearfield County",
+   "land_sqmi": 1145.06,
+   "lat": 41.006862,
+   "lon": -78.477724,
+   "acs": {
+    "housing_units": {
+     "e": 38198.0,
+     "m": 161.0
+    },
+    "units_total": {
+     "e": 38198.0,
+     "m": 161.0
+    },
+    "detached": {
+     "e": 28787.0,
+     "m": 599.0
+    },
+    "attached": {
+     "e": 581.0,
+     "m": 191.0
+    },
+    "rent_1br": {
+     "e": 636.0,
+     "m": 70.0
+    },
+    "rent_2br": {
+     "e": 808.0,
+     "m": 67.0
+    },
+    "median_value": {
+     "e": 137000.0,
+     "m": 5904.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 16303.0,
+     "attached": 150.0,
+     "housing_units": 20796.0,
+     "tracts": 12
+    },
+    {
+     "detached": 3209.0,
+     "attached": 97.0,
+     "housing_units": 4588.0,
+     "tracts": 2
+    },
+    {
+     "detached": 4779.0,
+     "attached": 192.0,
+     "housing_units": 5740.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 1427.0,
+     "attached": 60.0,
+     "housing_units": 2234.0,
+     "tracts": 1
+    },
+    {
+     "detached": 3069.0,
+     "attached": 82.0,
+     "housing_units": 4840.0,
+     "tracts": 3
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 70.0,
+     "v1": 19682232.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 6.0,
+     "v5": 525000.0
+    },
+    "2024": {
+     "u1": 89.0,
+     "v1": 26238962.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 10.0,
+     "v5": 875000.0
+    },
+    "2025": {
+     "u1": 60.0,
+     "v1": 17643685.0,
+     "u2": 2.0,
+     "v2": 270000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 5.0,
+     "v5": 519375.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 779,
+    "fmr_2br": 975
+   }
+  },
+  {
+   "fips": "42035",
+   "name": "Clinton County",
+   "land_sqmi": 889.63,
+   "lat": 41.239508,
+   "lon": -77.629009,
+   "acs": {
+    "housing_units": {
+     "e": 18617.0,
+     "m": 84.0
+    },
+    "units_total": {
+     "e": 18617.0,
+     "m": 84.0
+    },
+    "detached": {
+     "e": 13301.0,
+     "m": 332.0
+    },
+    "attached": {
+     "e": 549.0,
+     "m": 122.0
+    },
+    "rent_1br": {
+     "e": 621.0,
+     "m": 51.0
+    },
+    "rent_2br": {
+     "e": 836.0,
+     "m": 31.0
+    },
+    "median_value": {
+     "e": 175900.0,
+     "m": 5637.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 9149.0,
+     "attached": 345.0,
+     "housing_units": 11067.0,
+     "tracts": 5
+    },
+    {
+     "detached": 1398.0,
+     "attached": 31.0,
+     "housing_units": 1851.0,
+     "tracts": 1
+    },
+    {
+     "detached": 1454.0,
+     "attached": 35.0,
+     "housing_units": 1976.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 1300.0,
+     "attached": 138.0,
+     "housing_units": 3723.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 19.0,
+     "v1": 5279148.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 44.0,
+     "v1": 11027511.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 34.0,
+     "v1": 8630447.0,
+     "u2": 4.0,
+     "v2": 244000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 775,
+    "fmr_2br": 995
+   }
+  },
+  {
+   "fips": "42037",
+   "name": "Columbia County",
+   "land_sqmi": 483.259,
+   "lat": 41.045517,
+   "lon": -76.40426,
+   "acs": {
+    "housing_units": {
+     "e": 29824.0,
+     "m": 70.0
+    },
+    "units_total": {
+     "e": 29824.0,
+     "m": 70.0
+    },
+    "detached": {
+     "e": 20648.0,
+     "m": 479.0
+    },
+    "attached": {
+     "e": 1875.0,
+     "m": 341.0
+    },
+    "rent_1br": {
+     "e": 712.0,
+     "m": 46.0
+    },
+    "rent_2br": {
+     "e": 965.0,
+     "m": 35.0
+    },
+    "median_value": {
+     "e": 206200.0,
+     "m": 5897.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 9581.0,
+     "attached": 388.0,
+     "housing_units": 11291.0,
+     "tracts": 5
+    },
+    {
+     "detached": 2411.0,
+     "attached": 42.0,
+     "housing_units": 3336.0,
+     "tracts": 2
+    },
+    {
+     "detached": 2189.0,
+     "attached": 72.0,
+     "housing_units": 3031.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 2085.0,
+     "attached": 134.0,
+     "housing_units": 3059.0,
+     "tracts": 2
+    },
+    {
+     "detached": 4049.0,
+     "attached": 1005.0,
+     "housing_units": 8354.0,
+     "tracts": 4
+    },
+    {
+     "detached": 333.0,
+     "attached": 234.0,
+     "housing_units": 753.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 78.0,
+     "v1": 21348661.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 11.0,
+     "v5": 997910.0
+    },
+    "2024": {
+     "u1": 82.0,
+     "v1": 25097602.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 66.0,
+     "v1": 16475210.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 16.0,
+     "v34": 3273950.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 941,
+    "fmr_2br": 1140
+   }
+  },
+  {
+   "fips": "42039",
+   "name": "Crawford County",
+   "land_sqmi": 1012.355,
+   "lat": 41.687876,
+   "lon": -80.107795,
+   "acs": {
+    "housing_units": {
+     "e": 42157.0,
+     "m": 86.0
+    },
+    "units_total": {
+     "e": 42157.0,
+     "m": 86.0
+    },
+    "detached": {
+     "e": 30941.0,
+     "m": 539.0
+    },
+    "attached": {
+     "e": 587.0,
+     "m": 138.0
+    },
+    "rent_1br": {
+     "e": 632.0,
+     "m": 46.0
+    },
+    "rent_2br": {
+     "e": 781.0,
+     "m": 46.0
+    },
+    "median_value": {
+     "e": 153200.0,
+     "m": 3301.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 17630.0,
+     "attached": 226.0,
+     "housing_units": 22413.0,
+     "tracts": 13
+    },
+    {
+     "detached": 4683.0,
+     "attached": 88.0,
+     "housing_units": 6537.0,
+     "tracts": 3
+    },
+    {
+     "detached": 3929.0,
+     "attached": 74.0,
+     "housing_units": 4758.0,
+     "tracts": 2
+    },
+    {
+     "detached": 943.0,
+     "attached": 39.0,
+     "housing_units": 1368.0,
+     "tracts": 1
+    },
+    {
+     "detached": 1021.0,
+     "attached": 40.0,
+     "housing_units": 1717.0,
+     "tracts": 1
+    },
+    {
+     "detached": 2735.0,
+     "attached": 120.0,
+     "housing_units": 5364.0,
+     "tracts": 3
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 65.0,
+     "v1": 10503128.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 83.0,
+     "v1": 25152695.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 113.0,
+     "v1": 29027691.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 787,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42041",
+   "name": "Cumberland County",
+   "land_sqmi": 545.482,
+   "lat": 40.164805,
+   "lon": -77.263442,
+   "acs": {
+    "housing_units": {
+     "e": 111278.0,
+     "m": 111.0
+    },
+    "units_total": {
+     "e": 111278.0,
+     "m": 111.0
+    },
+    "detached": {
+     "e": 66917.0,
+     "m": 1165.0
+    },
+    "attached": {
+     "e": 17825.0,
+     "m": 864.0
+    },
+    "rent_1br": {
+     "e": 968.0,
+     "m": 36.0
+    },
+    "rent_2br": {
+     "e": 1279.0,
+     "m": 54.0
+    },
+    "median_value": {
+     "e": 277600.0,
+     "m": 4540.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 6434.0,
+     "attached": 174.0,
+     "housing_units": 8102.0,
+     "tracts": 5
+    },
+    {
+     "detached": 10131.0,
+     "attached": 536.0,
+     "housing_units": 12868.0,
+     "tracts": 6
+    },
+    {
+     "detached": 4053.0,
+     "attached": 1232.0,
+     "housing_units": 7581.0,
+     "tracts": 3
+    },
+    {
+     "detached": 11306.0,
+     "attached": 2842.0,
+     "housing_units": 16424.0,
+     "tracts": 7
+    },
+    {
+     "detached": 7167.0,
+     "attached": 3288.0,
+     "housing_units": 11935.0,
+     "tracts": 6
+    },
+    {
+     "detached": 23555.0,
+     "attached": 7049.0,
+     "housing_units": 42896.0,
+     "tracts": 20
+    },
+    {
+     "detached": 4198.0,
+     "attached": 2475.0,
+     "housing_units": 10132.0,
+     "tracts": 6
+    },
+    {
+     "detached": 73.0,
+     "attached": 229.0,
+     "housing_units": 1340.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 728.0,
+     "v1": 193748194.0,
+     "u2": 16.0,
+     "v2": 1451424.0,
+     "u34": 33.0,
+     "v34": 6001965.0,
+     "u5": 299.0,
+     "v5": 38082474.0
+    },
+    "2024": {
+     "u1": 729.0,
+     "v1": 213802460.0,
+     "u2": 10.0,
+     "v2": 1965040.0,
+     "u34": 3.0,
+     "v34": 734500.0,
+     "u5": 310.0,
+     "v5": 45221425.0
+    },
+    "2025": {
+     "u1": 614.0,
+     "v1": 179607623.0,
+     "u2": 12.0,
+     "v2": 2643600.0,
+     "u34": 8.0,
+     "v34": 1336288.0,
+     "u5": 121.0,
+     "v5": 13563292.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1212,
+    "fmr_2br": 1493
+   }
+  },
+  {
+   "fips": "42043",
+   "name": "Dauphin County",
+   "land_sqmi": 524.87,
+   "lat": 40.412565,
+   "lon": -76.792634,
+   "acs": {
+    "housing_units": {
+     "e": 127828.0,
+     "m": 159.0
+    },
+    "units_total": {
+     "e": 127828.0,
+     "m": 159.0
+    },
+    "detached": {
+     "e": 63327.0,
+     "m": 1293.0
+    },
+    "attached": {
+     "e": 28682.0,
+     "m": 1169.0
+    },
+    "rent_1br": {
+     "e": 993.0,
+     "m": 35.0
+    },
+    "rent_2br": {
+     "e": 1285.0,
+     "m": 36.0
+    },
+    "median_value": {
+     "e": 236400.0,
+     "m": 3814.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 5547.0,
+     "attached": 135.0,
+     "housing_units": 6268.0,
+     "tracts": 3
+    },
+    {
+     "detached": 6492.0,
+     "attached": 554.0,
+     "housing_units": 8878.0,
+     "tracts": 5
+    },
+    {
+     "detached": 5912.0,
+     "attached": 968.0,
+     "housing_units": 8782.0,
+     "tracts": 5
+    },
+    {
+     "detached": 10559.0,
+     "attached": 4518.0,
+     "housing_units": 18551.0,
+     "tracts": 9
+    },
+    {
+     "detached": 13824.0,
+     "attached": 5811.0,
+     "housing_units": 23810.0,
+     "tracts": 11
+    },
+    {
+     "detached": 16277.0,
+     "attached": 4680.0,
+     "housing_units": 32385.0,
+     "tracts": 17
+    },
+    {
+     "detached": 2750.0,
+     "attached": 4693.0,
+     "housing_units": 13900.0,
+     "tracts": 7
+    },
+    {
+     "detached": 1819.0,
+     "attached": 6713.0,
+     "housing_units": 12625.0,
+     "tracts": 8
+    },
+    {
+     "detached": 147.0,
+     "attached": 610.0,
+     "housing_units": 2629.0,
+     "tracts": 2
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 454.0,
+     "v1": 104788489.0,
+     "u2": 2.0,
+     "v2": 260000.0,
+     "u34": 8.0,
+     "v34": 1343000.0,
+     "u5": 243.0,
+     "v5": 29940706.0
+    },
+    "2024": {
+     "u1": 290.0,
+     "v1": 74772572.0,
+     "u2": 10.0,
+     "v2": 296245.0,
+     "u34": 46.0,
+     "v34": 7783372.0,
+     "u5": 194.0,
+     "v5": 21401040.0
+    },
+    "2025": {
+     "u1": 176.0,
+     "v1": 61479128.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 28.0,
+     "v34": 4256513.0,
+     "u5": 121.0,
+     "v5": 14278862.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1212,
+    "fmr_2br": 1493
+   }
+  },
+  {
+   "fips": "42045",
+   "name": "Delaware County",
+   "land_sqmi": 183.808,
+   "lat": 39.916685,
+   "lon": -75.398818,
+   "acs": {
+    "housing_units": {
+     "e": 229715.0,
+     "m": 174.0
+    },
+    "units_total": {
+     "e": 229715.0,
+     "m": 174.0
+    },
+    "detached": {
+     "e": 100207.0,
+     "m": 1466.0
+    },
+    "attached": {
+     "e": 73436.0,
+     "m": 1304.0
+    },
+    "rent_1br": {
+     "e": 1176.0,
+     "m": 21.0
+    },
+    "rent_2br": {
+     "e": 1482.0,
+     "m": 34.0
+    },
+    "median_value": {
+     "e": 332200.0,
+     "m": 4050.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 2179.0,
+     "attached": 621.0,
+     "housing_units": 3632.0,
+     "tracts": 3
+    },
+    {
+     "detached": 10901.0,
+     "attached": 2042.0,
+     "housing_units": 15396.0,
+     "tracts": 11
+    },
+    {
+     "detached": 18756.0,
+     "attached": 6408.0,
+     "housing_units": 31480.0,
+     "tracts": 22
+    },
+    {
+     "detached": 27194.0,
+     "attached": 11201.0,
+     "housing_units": 48904.0,
+     "tracts": 31
+    },
+    {
+     "detached": 34352.0,
+     "attached": 25926.0,
+     "housing_units": 77719.0,
+     "tracts": 50
+    },
+    {
+     "detached": 6689.0,
+     "attached": 22063.0,
+     "housing_units": 45424.0,
+     "tracts": 30
+    },
+    {
+     "detached": 136.0,
+     "attached": 5175.0,
+     "housing_units": 7160.0,
+     "tracts": 3
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 232.0,
+     "v1": 69353608.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 3.0,
+     "v34": 605000.0,
+     "u5": 49.0,
+     "v5": 6430776.0
+    },
+    "2024": {
+     "u1": 285.0,
+     "v1": 108789011.0,
+     "u2": 2.0,
+     "v2": 450000.0,
+     "u34": 7.0,
+     "v34": 1103304.0,
+     "u5": 5.0,
+     "v5": 805500.0
+    },
+    "2025": {
+     "u1": 218.0,
+     "v1": 84942828.0,
+     "u2": 2.0,
+     "v2": 450000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1520,
+    "fmr_2br": 1810
+   }
+  },
+  {
+   "fips": "42047",
+   "name": "Elk County",
+   "land_sqmi": 826.901,
+   "lat": 41.427332,
+   "lon": -78.653937,
+   "acs": {
+    "housing_units": {
+     "e": 16880.0,
+     "m": 32.0
+    },
+    "units_total": {
+     "e": 16880.0,
+     "m": 32.0
+    },
+    "detached": {
+     "e": 13681.0,
+     "m": 330.0
+    },
+    "attached": {
+     "e": 185.0,
+     "m": 81.0
+    },
+    "rent_1br": {
+     "e": 601.0,
+     "m": 123.0
+    },
+    "rent_2br": {
+     "e": 771.0,
+     "m": 64.0
+    },
+    "median_value": {
+     "e": 133600.0,
+     "m": 7119.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 6921.0,
+     "attached": 116.0,
+     "housing_units": 8371.0,
+     "tracts": 5
+    },
+    {
+     "detached": 2242.0,
+     "attached": 18.0,
+     "housing_units": 2822.0,
+     "tracts": 1
+    },
+    {
+     "detached": 2186.0,
+     "attached": 28.0,
+     "housing_units": 2510.0,
+     "tracts": 1
+    },
+    {
+     "detached": 922.0,
+     "attached": 11.0,
+     "housing_units": 1237.0,
+     "tracts": 1
+    },
+    {
+     "detached": 1410.0,
+     "attached": 12.0,
+     "housing_units": 1940.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 31.0,
+     "v1": 9615198.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 49.0,
+     "v1": 12216245.0,
+     "u2": 4.0,
+     "v2": 921808.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 45.0,
+     "v1": 9158736.0,
+     "u2": 2.0,
+     "v2": 460904.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 825,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42049",
+   "name": "Erie County",
+   "land_sqmi": 798.901,
+   "lat": 42.117952,
+   "lon": -80.096386,
+   "acs": {
+    "housing_units": {
+     "e": 120111.0,
+     "m": 136.0
+    },
+    "units_total": {
+     "e": 120111.0,
+     "m": 136.0
+    },
+    "detached": {
+     "e": 82017.0,
+     "m": 1061.0
+    },
+    "attached": {
+     "e": 4825.0,
+     "m": 494.0
+    },
+    "rent_1br": {
+     "e": 709.0,
+     "m": 30.0
+    },
+    "rent_2br": {
+     "e": 949.0,
+     "m": 26.0
+    },
+    "median_value": {
+     "e": 177000.0,
+     "m": 4034.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 13159.0,
+     "attached": 282.0,
+     "housing_units": 15991.0,
+     "tracts": 11
+    },
+    {
+     "detached": 5033.0,
+     "attached": 80.0,
+     "housing_units": 6228.0,
+     "tracts": 4
+    },
+    {
+     "detached": 6845.0,
+     "attached": 454.0,
+     "housing_units": 9430.0,
+     "tracts": 5
+    },
+    {
+     "detached": 5721.0,
+     "attached": 226.0,
+     "housing_units": 6774.0,
+     "tracts": 3
+    },
+    {
+     "detached": 16459.0,
+     "attached": 1728.0,
+     "housing_units": 24625.0,
+     "tracts": 13
+    },
+    {
+     "detached": 17139.0,
+     "attached": 1213.0,
+     "housing_units": 25559.0,
+     "tracts": 14
+    },
+    {
+     "detached": 15928.0,
+     "attached": 751.0,
+     "housing_units": 25684.0,
+     "tracts": 18
+    },
+    {
+     "detached": 1733.0,
+     "attached": 91.0,
+     "housing_units": 5820.0,
+     "tracts": 5
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 120.0,
+     "v1": 44386661.0,
+     "u2": 6.0,
+     "v2": 500000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 76.0,
+     "v5": 10873000.0
+    },
+    "2024": {
+     "u1": 174.0,
+     "v1": 59724268.0,
+     "u2": 2.0,
+     "v2": 341127.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 188.0,
+     "v5": 27129617.0
+    },
+    "2025": {
+     "u1": 198.0,
+     "v1": 60994136.0,
+     "u2": 2.0,
+     "v2": 341127.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 58.0,
+     "v5": 14000000.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 945,
+    "fmr_2br": 1212
+   }
+  },
+  {
+   "fips": "42051",
+   "name": "Fayette County",
+   "land_sqmi": 790.758,
+   "lat": 39.918911,
+   "lon": -79.640253,
+   "acs": {
+    "housing_units": {
+     "e": 62158.0,
+     "m": 136.0
+    },
+    "units_total": {
+     "e": 62158.0,
+     "m": 136.0
+    },
+    "detached": {
+     "e": 45500.0,
+     "m": 817.0
+    },
+    "attached": {
+     "e": 2476.0,
+     "m": 417.0
+    },
+    "rent_1br": {
+     "e": 596.0,
+     "m": 53.0
+    },
+    "rent_2br": {
+     "e": 828.0,
+     "m": 30.0
+    },
+    "median_value": {
+     "e": 143200.0,
+     "m": 5445.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 8066.0,
+     "attached": 225.0,
+     "housing_units": 11016.0,
+     "tracts": 6
+    },
+    {
+     "detached": 17657.0,
+     "attached": 1051.0,
+     "housing_units": 22647.0,
+     "tracts": 13
+    },
+    {
+     "detached": 5343.0,
+     "attached": 489.0,
+     "housing_units": 6864.0,
+     "tracts": 5
+    },
+    {
+     "detached": 4285.0,
+     "attached": 214.0,
+     "housing_units": 6065.0,
+     "tracts": 3
+    },
+    {
+     "detached": 1476.0,
+     "attached": 11.0,
+     "housing_units": 2106.0,
+     "tracts": 1
+    },
+    {
+     "detached": 5476.0,
+     "attached": 420.0,
+     "housing_units": 7910.0,
+     "tracts": 5
+    },
+    {
+     "detached": 3197.0,
+     "attached": 66.0,
+     "housing_units": 5550.0,
+     "tracts": 3
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 188.0,
+     "v1": 47871974.0,
+     "u2": 2.0,
+     "v2": 550000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 5.0,
+     "v5": 762833.0
+    },
+    "2024": {
+     "u1": 191.0,
+     "v1": 49029937.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 10.0,
+     "v5": 1525666.0
+    },
+    "2025": {
+     "u1": 190.0,
+     "v1": 49874637.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1077,
+    "fmr_2br": 1299
+   }
+  },
+  {
+   "fips": "42053",
+   "name": "Forest County",
+   "land_sqmi": 427.259,
+   "lat": 41.513304,
+   "lon": -79.249705,
+   "acs": {
+    "housing_units": {
+     "e": 6937.0,
+     "m": 43.0
+    },
+    "units_total": {
+     "e": 6937.0,
+     "m": 43.0
+    },
+    "detached": {
+     "e": 5784.0,
+     "m": 103.0
+    },
+    "attached": {
+     "e": 6.0,
+     "m": 18.0
+    },
+    "rent_1br": {
+     "e": 425.0,
+     "m": 108.0
+    },
+    "rent_2br": {
+     "e": 803.0,
+     "m": 77.0
+    },
+    "median_value": {
+     "e": 115300.0,
+     "m": 8976.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 5784.0,
+     "attached": 6.0,
+     "housing_units": 6937.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 0.0,
+     "v1": 0.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 6.0,
+     "v1": 793101.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 2.0,
+     "v1": 700000.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 888,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42055",
+   "name": "Franklin County",
+   "land_sqmi": 772.279,
+   "lat": 39.926772,
+   "lon": -77.724521,
+   "acs": {
+    "housing_units": {
+     "e": 67157.0,
+     "m": 54.0
+    },
+    "units_total": {
+     "e": 67157.0,
+     "m": 54.0
+    },
+    "detached": {
+     "e": 46231.0,
+     "m": 979.0
+    },
+    "attached": {
+     "e": 7760.0,
+     "m": 610.0
+    },
+    "rent_1br": {
+     "e": 837.0,
+     "m": 26.0
+    },
+    "rent_2br": {
+     "e": 1078.0,
+     "m": 34.0
+    },
+    "median_value": {
+     "e": 249800.0,
+     "m": 5492.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 6472.0,
+     "attached": 221.0,
+     "housing_units": 8163.0,
+     "tracts": 4
+    },
+    {
+     "detached": 10528.0,
+     "attached": 822.0,
+     "housing_units": 13543.0,
+     "tracts": 7
+    },
+    {
+     "detached": 17097.0,
+     "attached": 1827.0,
+     "housing_units": 21227.0,
+     "tracts": 10
+    },
+    {
+     "detached": 4565.0,
+     "attached": 879.0,
+     "housing_units": 6983.0,
+     "tracts": 3
+    },
+    {
+     "detached": 701.0,
+     "attached": 136.0,
+     "housing_units": 1245.0,
+     "tracts": 1
+    },
+    {
+     "detached": 6079.0,
+     "attached": 3504.0,
+     "housing_units": 14484.0,
+     "tracts": 7
+    },
+    {
+     "detached": 789.0,
+     "attached": 371.0,
+     "housing_units": 1512.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 306.0,
+     "v1": 87614876.0,
+     "u2": 24.0,
+     "v2": 4480000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 80.0,
+     "v5": 7719895.0
+    },
+    "2024": {
+     "u1": 491.0,
+     "v1": 158005624.0,
+     "u2": 30.0,
+     "v2": 6138044.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 112.0,
+     "v5": 8030062.0
+    },
+    "2025": {
+     "u1": 572.0,
+     "v1": 189560105.0,
+     "u2": 74.0,
+     "v2": 12070000.0,
+     "u34": 20.0,
+     "v34": 4210000.0,
+     "u5": 327.0,
+     "v5": 24231689.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1119,
+    "fmr_2br": 1379
+   }
+  },
+  {
+   "fips": "42057",
+   "name": "Fulton County",
+   "land_sqmi": 437.551,
+   "lat": 39.91075,
+   "lon": -78.122617,
+   "acs": {
+    "housing_units": {
+     "e": 7157.0,
+     "m": 43.0
+    },
+    "units_total": {
+     "e": 7157.0,
+     "m": 43.0
+    },
+    "detached": {
+     "e": 5595.0,
+     "m": 150.0
+    },
+    "attached": {
+     "e": 105.0,
+     "m": 40.0
+    },
+    "rent_1br": {
+     "e": 568.0,
+     "m": 73.0
+    },
+    "rent_2br": {
+     "e": 824.0,
+     "m": 35.0
+    },
+    "median_value": {
+     "e": 208500.0,
+     "m": 7342.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 5595.0,
+     "attached": 105.0,
+     "housing_units": 7157.0,
+     "tracts": 3
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 29.0,
+     "v1": 7493425.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 18.0,
+     "v1": 4600650.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 24.0,
+     "v1": 6364125.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 751,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42059",
+   "name": "Greene County",
+   "land_sqmi": 575.932,
+   "lat": 39.847707,
+   "lon": -80.225655,
+   "acs": {
+    "housing_units": {
+     "e": 16201.0,
+     "m": 62.0
+    },
+    "units_total": {
+     "e": 16201.0,
+     "m": 62.0
+    },
+    "detached": {
+     "e": 11458.0,
+     "m": 388.0
+    },
+    "attached": {
+     "e": 445.0,
+     "m": 183.0
+    },
+    "rent_1br": {
+     "e": 613.0,
+     "m": 103.0
+    },
+    "rent_2br": {
+     "e": 911.0,
+     "m": 70.0
+    },
+    "median_value": {
+     "e": 153900.0,
+     "m": 8195.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 6816.0,
+     "attached": 138.0,
+     "housing_units": 9283.0,
+     "tracts": 6
+    },
+    {
+     "detached": 1980.0,
+     "attached": 13.0,
+     "housing_units": 2544.0,
+     "tracts": 2
+    },
+    {
+     "detached": 1702.0,
+     "attached": 286.0,
+     "housing_units": 2768.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 960.0,
+     "attached": 8.0,
+     "housing_units": 1606.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 33.0,
+     "v1": 7365456.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 30.0,
+     "v1": 8071523.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 27.0,
+     "v1": 6502060.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 835,
+    "fmr_2br": 1096
+   }
+  },
+  {
+   "fips": "42061",
+   "name": "Huntingdon County",
+   "land_sqmi": 874.592,
+   "lat": 40.422311,
+   "lon": -77.968595,
+   "acs": {
+    "housing_units": {
+     "e": 20984.0,
+     "m": 120.0
+    },
+    "units_total": {
+     "e": 20984.0,
+     "m": 120.0
+    },
+    "detached": {
+     "e": 16152.0,
+     "m": 334.0
+    },
+    "attached": {
+     "e": 408.0,
+     "m": 106.0
+    },
+    "rent_1br": {
+     "e": 512.0,
+     "m": 104.0
+    },
+    "rent_2br": {
+     "e": 726.0,
+     "m": 88.0
+    },
+    "median_value": {
+     "e": 183200.0,
+     "m": 9133.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 13522.0,
+     "attached": 150.0,
+     "housing_units": 16705.0,
+     "tracts": 11
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 1908.0,
+     "attached": 193.0,
+     "housing_units": 3082.0,
+     "tracts": 1
+    },
+    {
+     "detached": 722.0,
+     "attached": 65.0,
+     "housing_units": 1197.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 83.0,
+     "v1": 23934364.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 70.0,
+     "v1": 20541822.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 56.0,
+     "v1": 15965377.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 833,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42063",
+   "name": "Indiana County",
+   "land_sqmi": 827.394,
+   "lat": 40.651432,
+   "lon": -79.087545,
+   "acs": {
+    "housing_units": {
+     "e": 37626.0,
+     "m": 92.0
+    },
+    "units_total": {
+     "e": 37626.0,
+     "m": 92.0
+    },
+    "detached": {
+     "e": 25112.0,
+     "m": 504.0
+    },
+    "attached": {
+     "e": 1877.0,
+     "m": 384.0
+    },
+    "rent_1br": {
+     "e": 676.0,
+     "m": 18.0
+    },
+    "rent_2br": {
+     "e": 833.0,
+     "m": 29.0
+    },
+    "median_value": {
+     "e": 152800.0,
+     "m": 4162.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 15616.0,
+     "attached": 381.0,
+     "housing_units": 19308.0,
+     "tracts": 13
+    },
+    {
+     "detached": 1060.0,
+     "attached": 18.0,
+     "housing_units": 1874.0,
+     "tracts": 1
+    },
+    {
+     "detached": 2442.0,
+     "attached": 367.0,
+     "housing_units": 3642.0,
+     "tracts": 2
+    },
+    {
+     "detached": 840.0,
+     "attached": 685.0,
+     "housing_units": 2846.0,
+     "tracts": 1
+    },
+    {
+     "detached": 135.0,
+     "attached": 0.0,
+     "housing_units": 1515.0,
+     "tracts": 1
+    },
+    {
+     "detached": 1817.0,
+     "attached": 125.0,
+     "housing_units": 2567.0,
+     "tracts": 2
+    },
+    {
+     "detached": 1980.0,
+     "attached": 95.0,
+     "housing_units": 2807.0,
+     "tracts": 2
+    },
+    {
+     "detached": 1222.0,
+     "attached": 206.0,
+     "housing_units": 3067.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 33.0,
+     "v1": 9859267.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 44.0,
+     "v1": 15293197.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 40.0,
+     "v1": 12757020.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 851,
+    "fmr_2br": 981
+   }
+  },
+  {
+   "fips": "42065",
+   "name": "Jefferson County",
+   "land_sqmi": 652.44,
+   "lat": 41.138028,
+   "lon": -79.012419,
+   "acs": {
+    "housing_units": {
+     "e": 22085.0,
+     "m": 68.0
+    },
+    "units_total": {
+     "e": 22085.0,
+     "m": 68.0
+    },
+    "detached": {
+     "e": 17253.0,
+     "m": 289.0
+    },
+    "attached": {
+     "e": 251.0,
+     "m": 74.0
+    },
+    "rent_1br": {
+     "e": 568.0,
+     "m": 97.0
+    },
+    "rent_2br": {
+     "e": 756.0,
+     "m": 48.0
+    },
+    "median_value": {
+     "e": 139700.0,
+     "m": 6702.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 10941.0,
+     "attached": 91.0,
+     "housing_units": 13006.0,
+     "tracts": 6
+    },
+    {
+     "detached": 1546.0,
+     "attached": 31.0,
+     "housing_units": 1804.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 3633.0,
+     "attached": 78.0,
+     "housing_units": 5645.0,
+     "tracts": 5
+    },
+    {
+     "detached": 1133.0,
+     "attached": 51.0,
+     "housing_units": 1630.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 43.0,
+     "v1": 7045424.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 41.0,
+     "v1": 7076139.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 0.0,
+     "v1": 0.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 768,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42067",
+   "name": "Juniata County",
+   "land_sqmi": 391.391,
+   "lat": 40.530673,
+   "lon": -77.400438,
+   "acs": {
+    "housing_units": {
+     "e": 10506.0,
+     "m": 46.0
+    },
+    "units_total": {
+     "e": 10506.0,
+     "m": 46.0
+    },
+    "detached": {
+     "e": 8077.0,
+     "m": 217.0
+    },
+    "attached": {
+     "e": 284.0,
+     "m": 70.0
+    },
+    "rent_1br": {
+     "e": 604.0,
+     "m": 54.0
+    },
+    "rent_2br": {
+     "e": 785.0,
+     "m": 29.0
+    },
+    "median_value": {
+     "e": 217000.0,
+     "m": 8293.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 6921.0,
+     "attached": 215.0,
+     "housing_units": 8646.0,
+     "tracts": 5
+    },
+    {
+     "detached": 1156.0,
+     "attached": 69.0,
+     "housing_units": 1860.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 54.0,
+     "v1": 14413803.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 46.0,
+     "v1": 11717939.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 33.0,
+     "v1": 9177959.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 742,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42069",
+   "name": "Lackawanna County",
+   "land_sqmi": 458.886,
+   "lat": 41.436636,
+   "lon": -75.608768,
+   "acs": {
+    "housing_units": {
+     "e": 100177.0,
+     "m": 75.0
+    },
+    "units_total": {
+     "e": 100177.0,
+     "m": 75.0
+    },
+    "detached": {
+     "e": 64480.0,
+     "m": 1058.0
+    },
+    "attached": {
+     "e": 6969.0,
+     "m": 651.0
+    },
+    "rent_1br": {
+     "e": 776.0,
+     "m": 64.0
+    },
+    "rent_2br": {
+     "e": 988.0,
+     "m": 22.0
+    },
+    "median_value": {
+     "e": 201800.0,
+     "m": 3927.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 6502.0,
+     "attached": 27.0,
+     "housing_units": 7261.0,
+     "tracts": 4
+    },
+    {
+     "detached": 10410.0,
+     "attached": 192.0,
+     "housing_units": 12199.0,
+     "tracts": 6
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 16952.0,
+     "attached": 1828.0,
+     "housing_units": 25001.0,
+     "tracts": 12
+    },
+    {
+     "detached": 7056.0,
+     "attached": 595.0,
+     "housing_units": 10431.0,
+     "tracts": 5
+    },
+    {
+     "detached": 12605.0,
+     "attached": 1216.0,
+     "housing_units": 19609.0,
+     "tracts": 14
+    },
+    {
+     "detached": 8339.0,
+     "attached": 2147.0,
+     "housing_units": 16916.0,
+     "tracts": 12
+    },
+    {
+     "detached": 2616.0,
+     "attached": 964.0,
+     "housing_units": 8760.0,
+     "tracts": 7
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 165.0,
+     "v1": 55128247.0,
+     "u2": 30.0,
+     "v2": 6350000.0,
+     "u34": 9.0,
+     "v34": 954837.0,
+     "u5": 20.0,
+     "v5": 2735040.0
+    },
+    "2024": {
+     "u1": 213.0,
+     "v1": 84354965.0,
+     "u2": 30.0,
+     "v2": 7030000.0,
+     "u34": 8.0,
+     "v34": 663176.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 223.0,
+     "v1": 90983456.0,
+     "u2": 40.0,
+     "v2": 6260000.0,
+     "u34": 12.0,
+     "v34": 1000000.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1028,
+    "fmr_2br": 1252
+   }
+  },
+  {
+   "fips": "42071",
+   "name": "Lancaster County",
+   "land_sqmi": 943.924,
+   "lat": 40.041992,
+   "lon": -76.250198,
+   "acs": {
+    "housing_units": {
+     "e": 219224.0,
+     "m": 92.0
+    },
+    "units_total": {
+     "e": 219224.0,
+     "m": 92.0
+    },
+    "detached": {
+     "e": 121493.0,
+     "m": 1942.0
+    },
+    "attached": {
+     "e": 45880.0,
+     "m": 1592.0
+    },
+    "rent_1br": {
+     "e": 1124.0,
+     "m": 34.0
+    },
+    "rent_2br": {
+     "e": 1381.0,
+     "m": 37.0
+    },
+    "median_value": {
+     "e": 301100.0,
+     "m": 4176.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 2416.0,
+     "attached": 276.0,
+     "housing_units": 3066.0,
+     "tracts": 2
+    },
+    {
+     "detached": 20014.0,
+     "attached": 1713.0,
+     "housing_units": 25429.0,
+     "tracts": 17
+    },
+    {
+     "detached": 27538.0,
+     "attached": 5534.0,
+     "housing_units": 40142.0,
+     "tracts": 19
+    },
+    {
+     "detached": 24632.0,
+     "attached": 5976.0,
+     "housing_units": 40455.0,
+     "tracts": 19
+    },
+    {
+     "detached": 20564.0,
+     "attached": 6786.0,
+     "housing_units": 33641.0,
+     "tracts": 18
+    },
+    {
+     "detached": 21062.0,
+     "attached": 11425.0,
+     "housing_units": 45753.0,
+     "tracts": 23
+    },
+    {
+     "detached": 3833.0,
+     "attached": 6341.0,
+     "housing_units": 14619.0,
+     "tracts": 8
+    },
+    {
+     "detached": 897.0,
+     "attached": 4948.0,
+     "housing_units": 9391.0,
+     "tracts": 6
+    },
+    {
+     "detached": 537.0,
+     "attached": 2881.0,
+     "housing_units": 6728.0,
+     "tracts": 4
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 713.0,
+     "v1": 204530608.0,
+     "u2": 14.0,
+     "v2": 2330424.0,
+     "u34": 10.0,
+     "v34": 2160917.0,
+     "u5": 629.0,
+     "v5": 119447459.0
+    },
+    "2024": {
+     "u1": 845.0,
+     "v1": 276800341.0,
+     "u2": 16.0,
+     "v2": 2195902.0,
+     "u34": 31.0,
+     "v34": 2213861.0,
+     "u5": 201.0,
+     "v5": 26930590.0
+    },
+    "2025": {
+     "u1": 819.0,
+     "v1": 269866178.0,
+     "u2": 18.0,
+     "v2": 2664000.0,
+     "u34": 30.0,
+     "v34": 5768061.0,
+     "u5": 474.0,
+     "v5": 80354619.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1220,
+    "fmr_2br": 1526
+   }
+  },
+  {
+   "fips": "42073",
+   "name": "Lawrence County",
+   "land_sqmi": 357.39,
+   "lat": 40.992735,
+   "lon": -80.334446,
+   "acs": {
+    "housing_units": {
+     "e": 39591.0,
+     "m": 59.0
+    },
+    "units_total": {
+     "e": 39591.0,
+     "m": 59.0
+    },
+    "detached": {
+     "e": 30806.0,
+     "m": 560.0
+    },
+    "attached": {
+     "e": 1475.0,
+     "m": 251.0
+    },
+    "rent_1br": {
+     "e": 620.0,
+     "m": 22.0
+    },
+    "rent_2br": {
+     "e": 849.0,
+     "m": 51.0
+    },
+    "median_value": {
+     "e": 147200.0,
+     "m": 6024.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 6099.0,
+     "attached": 143.0,
+     "housing_units": 7548.0,
+     "tracts": 5
+    },
+    {
+     "detached": 4223.0,
+     "attached": 88.0,
+     "housing_units": 5316.0,
+     "tracts": 4
+    },
+    {
+     "detached": 4162.0,
+     "attached": 348.0,
+     "housing_units": 5354.0,
+     "tracts": 3
+    },
+    {
+     "detached": 4247.0,
+     "attached": 321.0,
+     "housing_units": 5438.0,
+     "tracts": 3
+    },
+    {
+     "detached": 2842.0,
+     "attached": 122.0,
+     "housing_units": 3545.0,
+     "tracts": 4
+    },
+    {
+     "detached": 5454.0,
+     "attached": 348.0,
+     "housing_units": 7213.0,
+     "tracts": 6
+    },
+    {
+     "detached": 3779.0,
+     "attached": 105.0,
+     "housing_units": 5177.0,
+     "tracts": 3
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 49.0,
+     "v1": 13148178.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 51.0,
+     "v1": 18375894.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 64.0,
+     "v1": 23254189.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 6.0,
+     "v5": 400000.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 780,
+    "fmr_2br": 1023
+   }
+  },
+  {
+   "fips": "42075",
+   "name": "Lebanon County",
+   "land_sqmi": 361.835,
+   "lat": 40.371448,
+   "lon": -76.464819,
+   "acs": {
+    "housing_units": {
+     "e": 59921.0,
+     "m": 86.0
+    },
+    "units_total": {
+     "e": 59921.0,
+     "m": 86.0
+    },
+    "detached": {
+     "e": 36901.0,
+     "m": 936.0
+    },
+    "attached": {
+     "e": 10768.0,
+     "m": 781.0
+    },
+    "rent_1br": {
+     "e": 866.0,
+     "m": 52.0
+    },
+    "rent_2br": {
+     "e": 1109.0,
+     "m": 47.0
+    },
+    "median_value": {
+     "e": 242000.0,
+     "m": 5362.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 2117.0,
+     "attached": 84.0,
+     "housing_units": 2605.0,
+     "tracts": 2
+    },
+    {
+     "detached": 5850.0,
+     "attached": 383.0,
+     "housing_units": 7284.0,
+     "tracts": 5
+    },
+    {
+     "detached": 9905.0,
+     "attached": 1890.0,
+     "housing_units": 13403.0,
+     "tracts": 6
+    },
+    {
+     "detached": 8543.0,
+     "attached": 1100.0,
+     "housing_units": 11835.0,
+     "tracts": 5
+    },
+    {
+     "detached": 2920.0,
+     "attached": 894.0,
+     "housing_units": 4520.0,
+     "tracts": 3
+    },
+    {
+     "detached": 3826.0,
+     "attached": 2484.0,
+     "housing_units": 8589.0,
+     "tracts": 6
+    },
+    {
+     "detached": 3740.0,
+     "attached": 3933.0,
+     "housing_units": 11685.0,
+     "tracts": 6
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 202.0,
+     "v1": 28270706.0,
+     "u2": 2.0,
+     "v2": 341127.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 49.0,
+     "v5": 7681892.0
+    },
+    "2024": {
+     "u1": 277.0,
+     "v1": 63247075.0,
+     "u2": 2.0,
+     "v2": 185000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 36.0,
+     "v5": 6400000.0
+    },
+    "2025": {
+     "u1": 272.0,
+     "v1": 116505573.0,
+     "u2": 8.0,
+     "v2": 720000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 226.0,
+     "v5": 27334000.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1112,
+    "fmr_2br": 1411
+   }
+  },
+  {
+   "fips": "42077",
+   "name": "Lehigh County",
+   "land_sqmi": 345.336,
+   "lat": 40.614241,
+   "lon": -75.590627,
+   "acs": {
+    "housing_units": {
+     "e": 151220.0,
+     "m": 109.0
+    },
+    "units_total": {
+     "e": 151220.0,
+     "m": 109.0
+    },
+    "detached": {
+     "e": 75046.0,
+     "m": 1255.0
+    },
+    "attached": {
+     "e": 37248.0,
+     "m": 1469.0
+    },
+    "rent_1br": {
+     "e": 1137.0,
+     "m": 29.0
+    },
+    "rent_2br": {
+     "e": 1468.0,
+     "m": 35.0
+    },
+    "median_value": {
+     "e": 300400.0,
+     "m": 5846.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 1396.0,
+     "attached": 145.0,
+     "housing_units": 1809.0,
+     "tracts": 1
+    },
+    {
+     "detached": 5132.0,
+     "attached": 170.0,
+     "housing_units": 5611.0,
+     "tracts": 4
+    },
+    {
+     "detached": 9763.0,
+     "attached": 698.0,
+     "housing_units": 11393.0,
+     "tracts": 6
+    },
+    {
+     "detached": 13428.0,
+     "attached": 3918.0,
+     "housing_units": 19624.0,
+     "tracts": 11
+    },
+    {
+     "detached": 12383.0,
+     "attached": 2313.0,
+     "housing_units": 17283.0,
+     "tracts": 9
+    },
+    {
+     "detached": 17085.0,
+     "attached": 9333.0,
+     "housing_units": 37049.0,
+     "tracts": 19
+    },
+    {
+     "detached": 13346.0,
+     "attached": 11263.0,
+     "housing_units": 36212.0,
+     "tracts": 18
+    },
+    {
+     "detached": 1407.0,
+     "attached": 3880.0,
+     "housing_units": 9361.0,
+     "tracts": 5
+    },
+    {
+     "detached": 1106.0,
+     "attached": 5528.0,
+     "housing_units": 12878.0,
+     "tracts": 8
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 450.0,
+     "v1": 122664323.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 63.0,
+     "v5": 16115219.0
+    },
+    "2024": {
+     "u1": 469.0,
+     "v1": 151800487.0,
+     "u2": 2.0,
+     "v2": 337022.0,
+     "u34": 8.0,
+     "v34": 212000.0,
+     "u5": 286.0,
+     "v5": 46249419.0
+    },
+    "2025": {
+     "u1": 466.0,
+     "v1": 149485283.0,
+     "u2": 8.0,
+     "v2": 1562870.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 145.0,
+     "v5": 12273241.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1341,
+    "fmr_2br": 1634
+   }
+  },
+  {
+   "fips": "42079",
+   "name": "Luzerne County",
+   "land_sqmi": 889.807,
+   "lat": 41.173078,
+   "lon": -75.976053,
+   "acs": {
+    "housing_units": {
+     "e": 151287.0,
+     "m": 105.0
+    },
+    "units_total": {
+     "e": 151287.0,
+     "m": 105.0
+    },
+    "detached": {
+     "e": 96926.0,
+     "m": 1408.0
+    },
+    "attached": {
+     "e": 19829.0,
+     "m": 1107.0
+    },
+    "rent_1br": {
+     "e": 752.0,
+     "m": 39.0
+    },
+    "rent_2br": {
+     "e": 1016.0,
+     "m": 33.0
+    },
+    "median_value": {
+     "e": 174100.0,
+     "m": 3161.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 11953.0,
+     "attached": 706.0,
+     "housing_units": 14619.0,
+     "tracts": 10
+    },
+    {
+     "detached": 11630.0,
+     "attached": 498.0,
+     "housing_units": 13493.0,
+     "tracts": 10
+    },
+    {
+     "detached": 14664.0,
+     "attached": 2513.0,
+     "housing_units": 20248.0,
+     "tracts": 11
+    },
+    {
+     "detached": 13519.0,
+     "attached": 1393.0,
+     "housing_units": 17858.0,
+     "tracts": 10
+    },
+    {
+     "detached": 11550.0,
+     "attached": 2621.0,
+     "housing_units": 18403.0,
+     "tracts": 13
+    },
+    {
+     "detached": 12425.0,
+     "attached": 3268.0,
+     "housing_units": 22359.0,
+     "tracts": 16
+    },
+    {
+     "detached": 13758.0,
+     "attached": 5315.0,
+     "housing_units": 28080.0,
+     "tracts": 21
+    },
+    {
+     "detached": 7427.0,
+     "attached": 3515.0,
+     "housing_units": 16227.0,
+     "tracts": 10
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 226.0,
+     "v1": 61952838.0,
+     "u2": 4.0,
+     "v2": 996000.0,
+     "u34": 12.0,
+     "v34": 2551152.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 325.0,
+     "v1": 99053866.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 8.0,
+     "v34": 995576.0,
+     "u5": 16.0,
+     "v5": 1742918.0
+    },
+    "2025": {
+     "u1": 289.0,
+     "v1": 88896122.0,
+     "u2": 4.0,
+     "v2": 600000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 5.0,
+     "v5": 93750.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1028,
+    "fmr_2br": 1252
+   }
+  },
+  {
+   "fips": "42081",
+   "name": "Lycoming County",
+   "land_sqmi": 1228.92,
+   "lat": 41.343882,
+   "lon": -77.055262,
+   "acs": {
+    "housing_units": {
+     "e": 52715.0,
+     "m": 77.0
+    },
+    "units_total": {
+     "e": 52715.0,
+     "m": 77.0
+    },
+    "detached": {
+     "e": 36302.0,
+     "m": 745.0
+    },
+    "attached": {
+     "e": 3458.0,
+     "m": 423.0
+    },
+    "rent_1br": {
+     "e": 772.0,
+     "m": 47.0
+    },
+    "rent_2br": {
+     "e": 936.0,
+     "m": 27.0
+    },
+    "median_value": {
+     "e": 202200.0,
+     "m": 5768.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 12550.0,
+     "attached": 100.0,
+     "housing_units": 14566.0,
+     "tracts": 10
+    },
+    {
+     "detached": 6583.0,
+     "attached": 347.0,
+     "housing_units": 9067.0,
+     "tracts": 5
+    },
+    {
+     "detached": 1765.0,
+     "attached": 67.0,
+     "housing_units": 2450.0,
+     "tracts": 1
+    },
+    {
+     "detached": 3760.0,
+     "attached": 224.0,
+     "housing_units": 5201.0,
+     "tracts": 3
+    },
+    {
+     "detached": 5042.0,
+     "attached": 1033.0,
+     "housing_units": 7997.0,
+     "tracts": 4
+    },
+    {
+     "detached": 4757.0,
+     "attached": 669.0,
+     "housing_units": 7294.0,
+     "tracts": 6
+    },
+    {
+     "detached": 1376.0,
+     "attached": 732.0,
+     "housing_units": 3710.0,
+     "tracts": 2
+    },
+    {
+     "detached": 469.0,
+     "attached": 286.0,
+     "housing_units": 2430.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 67.0,
+     "v1": 18610433.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 20.0,
+     "v5": 2453488.0
+    },
+    "2024": {
+     "u1": 58.0,
+     "v1": 16282383.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 15.0,
+     "v5": 1840116.0
+    },
+    "2025": {
+     "u1": 73.0,
+     "v1": 22498506.0,
+     "u2": 2.0,
+     "v2": 440000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 995,
+    "fmr_2br": 1195
+   }
+  },
+  {
+   "fips": "42083",
+   "name": "McKean County",
+   "land_sqmi": 979.694,
+   "lat": 41.81459,
+   "lon": -78.572463,
+   "acs": {
+    "housing_units": {
+     "e": 19465.0,
+     "m": 57.0
+    },
+    "units_total": {
+     "e": 19465.0,
+     "m": 57.0
+    },
+    "detached": {
+     "e": 15431.0,
+     "m": 340.0
+    },
+    "attached": {
+     "e": 160.0,
+     "m": 97.0
+    },
+    "rent_1br": {
+     "e": 675.0,
+     "m": 84.0
+    },
+    "rent_2br": {
+     "e": 820.0,
+     "m": 32.0
+    },
+    "median_value": {
+     "e": 104500.0,
+     "m": 4707.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 12873.0,
+     "attached": 128.0,
+     "housing_units": 15888.0,
+     "tracts": 9
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 1045.0,
+     "attached": 0.0,
+     "housing_units": 1225.0,
+     "tracts": 1
+    },
+    {
+     "detached": 1513.0,
+     "attached": 32.0,
+     "housing_units": 2352.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 41.0,
+     "v1": 7942885.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 29.0,
+     "v1": 5828562.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 30.0,
+     "v1": 7611207.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 832,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42085",
+   "name": "Mercer County",
+   "land_sqmi": 672.538,
+   "lat": 41.300014,
+   "lon": -80.252786,
+   "acs": {
+    "housing_units": {
+     "e": 50930.0,
+     "m": 117.0
+    },
+    "units_total": {
+     "e": 50930.0,
+     "m": 117.0
+    },
+    "detached": {
+     "e": 38199.0,
+     "m": 511.0
+    },
+    "attached": {
+     "e": 1374.0,
+     "m": 251.0
+    },
+    "rent_1br": {
+     "e": 632.0,
+     "m": 42.0
+    },
+    "rent_2br": {
+     "e": 847.0,
+     "m": 32.0
+    },
+    "median_value": {
+     "e": 164000.0,
+     "m": 3160.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 11818.0,
+     "attached": 232.0,
+     "housing_units": 14764.0,
+     "tracts": 10
+    },
+    {
+     "detached": 7522.0,
+     "attached": 160.0,
+     "housing_units": 9609.0,
+     "tracts": 6
+    },
+    {
+     "detached": 1753.0,
+     "attached": 81.0,
+     "housing_units": 2072.0,
+     "tracts": 2
+    },
+    {
+     "detached": 3682.0,
+     "attached": 284.0,
+     "housing_units": 5160.0,
+     "tracts": 4
+    },
+    {
+     "detached": 3325.0,
+     "attached": 168.0,
+     "housing_units": 5565.0,
+     "tracts": 3
+    },
+    {
+     "detached": 7151.0,
+     "attached": 283.0,
+     "housing_units": 9859.0,
+     "tracts": 7
+    },
+    {
+     "detached": 2948.0,
+     "attached": 166.0,
+     "housing_units": 3901.0,
+     "tracts": 3
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 75.0,
+     "v1": 21770595.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 62.0,
+     "v1": 18724324.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 72.0,
+     "v1": 22623655.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 10.0,
+     "v5": 1250000.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 792,
+    "fmr_2br": 996
+   }
+  },
+  {
+   "fips": "42087",
+   "name": "Mifflin County",
+   "land_sqmi": 411.037,
+   "lat": 40.601615,
+   "lon": -77.651832,
+   "acs": {
+    "housing_units": {
+     "e": 21468.0,
+     "m": 52.0
+    },
+    "units_total": {
+     "e": 21468.0,
+     "m": 52.0
+    },
+    "detached": {
+     "e": 15097.0,
+     "m": 429.0
+    },
+    "attached": {
+     "e": 2085.0,
+     "m": 304.0
+    },
+    "rent_1br": {
+     "e": 615.0,
+     "m": 43.0
+    },
+    "rent_2br": {
+     "e": 790.0,
+     "m": 55.0
+    },
+    "median_value": {
+     "e": 156700.0,
+     "m": 4766.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 6881.0,
+     "attached": 387.0,
+     "housing_units": 8464.0,
+     "tracts": 5
+    },
+    {
+     "detached": 2966.0,
+     "attached": 413.0,
+     "housing_units": 4107.0,
+     "tracts": 2
+    },
+    {
+     "detached": 2591.0,
+     "attached": 226.0,
+     "housing_units": 3443.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 671.0,
+     "attached": 76.0,
+     "housing_units": 932.0,
+     "tracts": 1
+    },
+    {
+     "detached": 765.0,
+     "attached": 154.0,
+     "housing_units": 1389.0,
+     "tracts": 1
+    },
+    {
+     "detached": 1223.0,
+     "attached": 829.0,
+     "housing_units": 3133.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 82.0,
+     "v1": 22411700.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 58.0,
+     "v1": 16350429.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 62.0,
+     "v1": 19882010.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 786,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42089",
+   "name": "Monroe County",
+   "land_sqmi": 608.361,
+   "lat": 41.05624,
+   "lon": -75.329065,
+   "acs": {
+    "housing_units": {
+     "e": 79607.0,
+     "m": 57.0
+    },
+    "units_total": {
+     "e": 79607.0,
+     "m": 57.0
+    },
+    "detached": {
+     "e": 66553.0,
+     "m": 908.0
+    },
+    "attached": {
+     "e": 3908.0,
+     "m": 530.0
+    },
+    "rent_1br": {
+     "e": 982.0,
+     "m": 90.0
+    },
+    "rent_2br": {
+     "e": 1344.0,
+     "m": 78.0
+    },
+    "median_value": {
+     "e": 267600.0,
+     "m": 6401.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 2738.0,
+     "attached": 138.0,
+     "housing_units": 3316.0,
+     "tracts": 2
+    },
+    {
+     "detached": 15794.0,
+     "attached": 363.0,
+     "housing_units": 17200.0,
+     "tracts": 11
+    },
+    {
+     "detached": 22854.0,
+     "attached": 1429.0,
+     "housing_units": 27369.0,
+     "tracts": 17
+    },
+    {
+     "detached": 16831.0,
+     "attached": 741.0,
+     "housing_units": 19271.0,
+     "tracts": 12
+    },
+    {
+     "detached": 3089.0,
+     "attached": 70.0,
+     "housing_units": 3409.0,
+     "tracts": 3
+    },
+    {
+     "detached": 4879.0,
+     "attached": 867.0,
+     "housing_units": 7477.0,
+     "tracts": 5
+    },
+    {
+     "detached": 368.0,
+     "attached": 300.0,
+     "housing_units": 1565.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 239.0,
+     "v1": 84130647.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 226.0,
+     "v1": 76639605.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 52.0,
+     "v5": 4680000.0
+    },
+    "2025": {
+     "u1": 222.0,
+     "v1": 71340009.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 16.0,
+     "v5": 4713728.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1165,
+    "fmr_2br": 1529
+   }
+  },
+  {
+   "fips": "42091",
+   "name": "Montgomery County",
+   "land_sqmi": 482.936,
+   "lat": 40.209999,
+   "lon": -75.370201,
+   "acs": {
+    "housing_units": {
+     "e": 350351.0,
+     "m": 250.0
+    },
+    "units_total": {
+     "e": 350351.0,
+     "m": 250.0
+    },
+    "detached": {
+     "e": 185742.0,
+     "m": 2075.0
+    },
+    "attached": {
+     "e": 70292.0,
+     "m": 1863.0
+    },
+    "rent_1br": {
+     "e": 1467.0,
+     "m": 26.0
+    },
+    "rent_2br": {
+     "e": 1781.0,
+     "m": 24.0
+    },
+    "median_value": {
+     "e": 436700.0,
+     "m": 2838.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 1923.0,
+     "attached": 4.0,
+     "housing_units": 1985.0,
+     "tracts": 2
+    },
+    {
+     "detached": 6888.0,
+     "attached": 1293.0,
+     "housing_units": 8871.0,
+     "tracts": 5
+    },
+    {
+     "detached": 37621.0,
+     "attached": 9878.0,
+     "housing_units": 52948.0,
+     "tracts": 31
+    },
+    {
+     "detached": 59553.0,
+     "attached": 18849.0,
+     "housing_units": 98377.0,
+     "tracts": 58
+    },
+    {
+     "detached": 50882.0,
+     "attached": 16631.0,
+     "housing_units": 100923.0,
+     "tracts": 63
+    },
+    {
+     "detached": 25624.0,
+     "attached": 14805.0,
+     "housing_units": 64212.0,
+     "tracts": 42
+    },
+    {
+     "detached": 3081.0,
+     "attached": 8093.0,
+     "housing_units": 20549.0,
+     "tracts": 13
+    },
+    {
+     "detached": 170.0,
+     "attached": 739.0,
+     "housing_units": 2486.0,
+     "tracts": 1
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 1438.0,
+     "v1": 434753987.0,
+     "u2": 20.0,
+     "v2": 4581489.0,
+     "u34": 22.0,
+     "v34": 3544927.0,
+     "u5": 170.0,
+     "v5": 32866099.0
+    },
+    "2024": {
+     "u1": 1372.0,
+     "v1": 458758122.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 34.0,
+     "v34": 6481890.0,
+     "u5": 530.0,
+     "v5": 99690458.0
+    },
+    "2025": {
+     "u1": 1121.0,
+     "v1": 427663374.0,
+     "u2": 22.0,
+     "v2": 3707242.0,
+     "u34": 18.0,
+     "v34": 3445288.0,
+     "u5": 1206.0,
+     "v5": 180304962.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1520,
+    "fmr_2br": 1810
+   }
+  },
+  {
+   "fips": "42093",
+   "name": "Montour County",
+   "land_sqmi": 130.331,
+   "lat": 41.029284,
+   "lon": -76.665225,
+   "acs": {
+    "housing_units": {
+     "e": 8144.0,
+     "m": 46.0
+    },
+    "units_total": {
+     "e": 8144.0,
+     "m": 46.0
+    },
+    "detached": {
+     "e": 5532.0,
+     "m": 281.0
+    },
+    "attached": {
+     "e": 857.0,
+     "m": 187.0
+    },
+    "rent_1br": {
+     "e": 842.0,
+     "m": 126.0
+    },
+    "rent_2br": {
+     "e": 1213.0,
+     "m": 87.0
+    },
+    "median_value": {
+     "e": 248100.0,
+     "m": 12746.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 3208.0,
+     "attached": 43.0,
+     "housing_units": 3894.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 1253.0,
+     "attached": 205.0,
+     "housing_units": 1762.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 1071.0,
+     "attached": 609.0,
+     "housing_units": 2488.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 20.0,
+     "v1": 4891072.0,
+     "u2": 4.0,
+     "v2": 519500.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 27.0,
+     "v1": 9838164.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 21.0,
+     "v1": 9008606.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1046,
+    "fmr_2br": 1372
+   }
+  },
+  {
+   "fips": "42095",
+   "name": "Northampton County",
+   "land_sqmi": 369.787,
+   "lat": 40.752791,
+   "lon": -75.307447,
+   "acs": {
+    "housing_units": {
+     "e": 129448.0,
+     "m": 166.0
+    },
+    "units_total": {
+     "e": 129448.0,
+     "m": 166.0
+    },
+    "detached": {
+     "e": 75171.0,
+     "m": 1301.0
+    },
+    "attached": {
+     "e": 25884.0,
+     "m": 1125.0
+    },
+    "rent_1br": {
+     "e": 1116.0,
+     "m": 45.0
+    },
+    "rent_2br": {
+     "e": 1457.0,
+     "m": 51.0
+    },
+    "median_value": {
+     "e": 308600.0,
+     "m": 5192.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 6798.0,
+     "attached": 242.0,
+     "housing_units": 8125.0,
+     "tracts": 5
+    },
+    {
+     "detached": 17159.0,
+     "attached": 1377.0,
+     "housing_units": 21319.0,
+     "tracts": 10
+    },
+    {
+     "detached": 9373.0,
+     "attached": 3111.0,
+     "housing_units": 15195.0,
+     "tracts": 10
+    },
+    {
+     "detached": 13856.0,
+     "attached": 2770.0,
+     "housing_units": 19449.0,
+     "tracts": 10
+    },
+    {
+     "detached": 15583.0,
+     "attached": 5310.0,
+     "housing_units": 25661.0,
+     "tracts": 17
+    },
+    {
+     "detached": 10573.0,
+     "attached": 9686.0,
+     "housing_units": 28287.0,
+     "tracts": 16
+    },
+    {
+     "detached": 1829.0,
+     "attached": 3388.0,
+     "housing_units": 11412.0,
+     "tracts": 6
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 514.0,
+     "v1": 123947236.0,
+     "u2": 20.0,
+     "v2": 2888000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 133.0,
+     "v5": 12503333.0
+    },
+    "2024": {
+     "u1": 390.0,
+     "v1": 114285318.0,
+     "u2": 20.0,
+     "v2": 3716000.0,
+     "u34": 6.0,
+     "v34": 1624600.0,
+     "u5": 151.0,
+     "v5": 21557142.0
+    },
+    "2025": {
+     "u1": 327.0,
+     "v1": 93780429.0,
+     "u2": 30.0,
+     "v2": 5392500.0,
+     "u34": 4.0,
+     "v34": 935000.0,
+     "u5": 655.0,
+     "v5": 76630202.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1341,
+    "fmr_2br": 1634
+   }
+  },
+  {
+   "fips": "42097",
+   "name": "Northumberland County",
+   "land_sqmi": 457.678,
+   "lat": 40.851524,
+   "lon": -76.709877,
+   "acs": {
+    "housing_units": {
+     "e": 43395.0,
+     "m": 52.0
+    },
+    "units_total": {
+     "e": 43395.0,
+     "m": 52.0
+    },
+    "detached": {
+     "e": 26965.0,
+     "m": 602.0
+    },
+    "attached": {
+     "e": 8835.0,
+     "m": 570.0
+    },
+    "rent_1br": {
+     "e": 642.0,
+     "m": 57.0
+    },
+    "rent_2br": {
+     "e": 787.0,
+     "m": 50.0
+    },
+    "median_value": {
+     "e": 162400.0,
+     "m": 5611.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 8504.0,
+     "attached": 300.0,
+     "housing_units": 9615.0,
+     "tracts": 5
+    },
+    {
+     "detached": 9054.0,
+     "attached": 1275.0,
+     "housing_units": 12473.0,
+     "tracts": 6
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 800.0,
+     "attached": 468.0,
+     "housing_units": 1762.0,
+     "tracts": 1
+    },
+    {
+     "detached": 4003.0,
+     "attached": 1659.0,
+     "housing_units": 7470.0,
+     "tracts": 5
+    },
+    {
+     "detached": 1808.0,
+     "attached": 720.0,
+     "housing_units": 2981.0,
+     "tracts": 2
+    },
+    {
+     "detached": 2796.0,
+     "attached": 4413.0,
+     "housing_units": 9094.0,
+     "tracts": 6
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 77.0,
+     "v1": 21188395.0,
+     "u2": 6.0,
+     "v2": 761659.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 71.0,
+     "v1": 21394104.0,
+     "u2": 10.0,
+     "v2": 1239658.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 42.0,
+     "v1": 13057804.0,
+     "u2": 2.0,
+     "v2": 250000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 843,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42099",
+   "name": "Perry County",
+   "land_sqmi": 551.449,
+   "lat": 40.39778,
+   "lon": -77.266328,
+   "acs": {
+    "housing_units": {
+     "e": 20049.0,
+     "m": 65.0
+    },
+    "units_total": {
+     "e": 20049.0,
+     "m": 65.0
+    },
+    "detached": {
+     "e": 16166.0,
+     "m": 317.0
+    },
+    "attached": {
+     "e": 799.0,
+     "m": 136.0
+    },
+    "rent_1br": {
+     "e": 763.0,
+     "m": 28.0
+    },
+    "rent_2br": {
+     "e": 877.0,
+     "m": 38.0
+    },
+    "median_value": {
+     "e": 236400.0,
+     "m": 6133.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 7776.0,
+     "attached": 180.0,
+     "housing_units": 9106.0,
+     "tracts": 5
+    },
+    {
+     "detached": 6873.0,
+     "attached": 515.0,
+     "housing_units": 8791.0,
+     "tracts": 4
+    },
+    {
+     "detached": 1517.0,
+     "attached": 104.0,
+     "housing_units": 2152.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 100.0,
+     "v1": 29511802.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 107.0,
+     "v1": 31579930.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 112.0,
+     "v1": 32692688.0,
+     "u2": 8.0,
+     "v2": 1330625.0,
+     "u34": 7.0,
+     "v34": 1242135.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1212,
+    "fmr_2br": 1493
+   }
+  },
+  {
+   "fips": "42101",
+   "name": "Philadelphia County",
+   "land_sqmi": 134.325,
+   "lat": 40.009376,
+   "lon": -75.133346,
+   "acs": {
+    "housing_units": {
+     "e": 748270.0,
+     "m": 241.0
+    },
+    "units_total": {
+     "e": 748270.0,
+     "m": 241.0
+    },
+    "detached": {
+     "e": 63292.0,
+     "m": 2279.0
+    },
+    "attached": {
+     "e": 416326.0,
+     "m": 3999.0
+    },
+    "rent_1br": {
+     "e": 1242.0,
+     "m": 25.0
+    },
+    "rent_2br": {
+     "e": 1471.0,
+     "m": 24.0
+    },
+    "median_value": {
+     "e": 243100.0,
+     "m": 2641.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 60.0,
+     "attached": 10.0,
+     "housing_units": 86.0,
+     "tracts": 4
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 476.0,
+     "attached": 617.0,
+     "housing_units": 1278.0,
+     "tracts": 3
+    },
+    {
+     "detached": 748.0,
+     "attached": 1599.0,
+     "housing_units": 3118.0,
+     "tracts": 3
+    },
+    {
+     "detached": 2876.0,
+     "attached": 3762.0,
+     "housing_units": 10870.0,
+     "tracts": 11
+    },
+    {
+     "detached": 14644.0,
+     "attached": 38982.0,
+     "housing_units": 78928.0,
+     "tracts": 48
+    },
+    {
+     "detached": 18633.0,
+     "attached": 106012.0,
+     "housing_units": 184549.0,
+     "tracts": 98
+    },
+    {
+     "detached": 25855.0,
+     "attached": 265344.0,
+     "housing_units": 469441.0,
+     "tracts": 223
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 405.0,
+     "v1": 131680839.0,
+     "u2": 180.0,
+     "v2": 31963620.0,
+     "u34": 251.0,
+     "v34": 35584440.0,
+     "u5": 3027.0,
+     "v5": 387750320.0
+    },
+    "2024": {
+     "u1": 539.0,
+     "v1": 182494169.0,
+     "u2": 240.0,
+     "v2": 36161052.0,
+     "u34": 335.0,
+     "v34": 48939613.0,
+     "u5": 1848.0,
+     "v5": 230304090.0
+    },
+    "2025": {
+     "u1": 656.0,
+     "v1": 231407980.0,
+     "u2": 148.0,
+     "v2": 21469258.0,
+     "u34": 383.0,
+     "v34": 45232620.0,
+     "u5": 2179.0,
+     "v5": 243398386.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1520,
+    "fmr_2br": 1810
+   }
+  },
+  {
+   "fips": "42103",
+   "name": "Pike County",
+   "land_sqmi": 544.896,
+   "lat": 41.325949,
+   "lon": -75.031514,
+   "acs": {
+    "housing_units": {
+     "e": 40177.0,
+     "m": 42.0
+    },
+    "units_total": {
+     "e": 40177.0,
+     "m": 42.0
+    },
+    "detached": {
+     "e": 34755.0,
+     "m": 412.0
+    },
+    "attached": {
+     "e": 1435.0,
+     "m": 242.0
+    },
+    "rent_1br": {
+     "e": 1050.0,
+     "m": 71.0
+    },
+    "rent_2br": {
+     "e": 1292.0,
+     "m": 75.0
+    },
+    "median_value": {
+     "e": 272600.0,
+     "m": 7781.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 4863.0,
+     "attached": 26.0,
+     "housing_units": 5068.0,
+     "tracts": 4
+    },
+    {
+     "detached": 15472.0,
+     "attached": 855.0,
+     "housing_units": 18614.0,
+     "tracts": 11
+    },
+    {
+     "detached": 8357.0,
+     "attached": 194.0,
+     "housing_units": 9283.0,
+     "tracts": 5
+    },
+    {
+     "detached": 2781.0,
+     "attached": 112.0,
+     "housing_units": 3017.0,
+     "tracts": 2
+    },
+    {
+     "detached": 2000.0,
+     "attached": 221.0,
+     "housing_units": 2277.0,
+     "tracts": 1
+    },
+    {
+     "detached": 1282.0,
+     "attached": 27.0,
+     "housing_units": 1918.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 142.0,
+     "v1": 44326319.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 213.0,
+     "v1": 74145292.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 170.0,
+     "v1": 62835178.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1205,
+    "fmr_2br": 1496
+   }
+  },
+  {
+   "fips": "42105",
+   "name": "Potter County",
+   "land_sqmi": 1081.249,
+   "lat": 41.748587,
+   "lon": -77.894436,
+   "acs": {
+    "housing_units": {
+     "e": 12397.0,
+     "m": 63.0
+    },
+    "units_total": {
+     "e": 12397.0,
+     "m": 63.0
+    },
+    "detached": {
+     "e": 10017.0,
+     "m": 153.0
+    },
+    "attached": {
+     "e": 58.0,
+     "m": 24.0
+    },
+    "rent_1br": {
+     "e": 621.0,
+     "m": 134.0
+    },
+    "rent_2br": {
+     "e": 830.0,
+     "m": 98.0
+    },
+    "median_value": {
+     "e": 153100.0,
+     "m": 6434.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 10017.0,
+     "attached": 58.0,
+     "housing_units": 12397.0,
+     "tracts": 7
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 28.0,
+     "v1": 6889558.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 24.0,
+     "v1": 4637987.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 15.0,
+     "v1": 3415277.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 742,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42107",
+   "name": "Schuylkill County",
+   "land_sqmi": 778.579,
+   "lat": 40.703682,
+   "lon": -76.217788,
+   "acs": {
+    "housing_units": {
+     "e": 67295.0,
+     "m": 128.0
+    },
+    "units_total": {
+     "e": 67295.0,
+     "m": 128.0
+    },
+    "detached": {
+     "e": 39046.0,
+     "m": 744.0
+    },
+    "attached": {
+     "e": 17189.0,
+     "m": 593.0
+    },
+    "rent_1br": {
+     "e": 625.0,
+     "m": 24.0
+    },
+    "rent_2br": {
+     "e": 910.0,
+     "m": 41.0
+    },
+    "median_value": {
+     "e": 153000.0,
+     "m": 3473.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 12452.0,
+     "attached": 2328.0,
+     "housing_units": 16729.0,
+     "tracts": 11
+    },
+    {
+     "detached": 8828.0,
+     "attached": 528.0,
+     "housing_units": 10431.0,
+     "tracts": 5
+    },
+    {
+     "detached": 6139.0,
+     "attached": 1636.0,
+     "housing_units": 8709.0,
+     "tracts": 5
+    },
+    {
+     "detached": 1217.0,
+     "attached": 823.0,
+     "housing_units": 2611.0,
+     "tracts": 2
+    },
+    {
+     "detached": 3970.0,
+     "attached": 3265.0,
+     "housing_units": 9186.0,
+     "tracts": 7
+    },
+    {
+     "detached": 1446.0,
+     "attached": 1623.0,
+     "housing_units": 4037.0,
+     "tracts": 3
+    },
+    {
+     "detached": 4192.0,
+     "attached": 4775.0,
+     "housing_units": 11575.0,
+     "tracts": 7
+    },
+    {
+     "detached": 802.0,
+     "attached": 2211.0,
+     "housing_units": 4017.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 146.0,
+     "v1": 39520941.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 169.0,
+     "v1": 47246518.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 155.0,
+     "v1": 43866654.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 51.0,
+     "v5": 4958332.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 786,
+    "fmr_2br": 1030
+   }
+  },
+  {
+   "fips": "42109",
+   "name": "Snyder County",
+   "land_sqmi": 328.784,
+   "lat": 40.755412,
+   "lon": -77.07302,
+   "acs": {
+    "housing_units": {
+     "e": 16053.0,
+     "m": 78.0
+    },
+    "units_total": {
+     "e": 16053.0,
+     "m": 78.0
+    },
+    "detached": {
+     "e": 12049.0,
+     "m": 281.0
+    },
+    "attached": {
+     "e": 860.0,
+     "m": 146.0
+    },
+    "rent_1br": {
+     "e": 619.0,
+     "m": 49.0
+    },
+    "rent_2br": {
+     "e": 927.0,
+     "m": 62.0
+    },
+    "median_value": {
+     "e": 215300.0,
+     "m": 6119.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 6768.0,
+     "attached": 202.0,
+     "housing_units": 8388.0,
+     "tracts": 5
+    },
+    {
+     "detached": 2283.0,
+     "attached": 238.0,
+     "housing_units": 3371.0,
+     "tracts": 1
+    },
+    {
+     "detached": 2078.0,
+     "attached": 186.0,
+     "housing_units": 2553.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 920.0,
+     "attached": 234.0,
+     "housing_units": 1741.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 48.0,
+     "v1": 11312583.0,
+     "u2": 2.0,
+     "v2": 483700.0,
+     "u34": 6.0,
+     "v34": 450000.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 48.0,
+     "v1": 14514173.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 62.0,
+     "v1": 19688121.0,
+     "u2": 4.0,
+     "v2": 685936.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 894,
+    "fmr_2br": 1059
+   }
+  },
+  {
+   "fips": "42111",
+   "name": "Somerset County",
+   "land_sqmi": 1075.047,
+   "lat": 39.981297,
+   "lon": -79.028486,
+   "acs": {
+    "housing_units": {
+     "e": 37863.0,
+     "m": 144.0
+    },
+    "units_total": {
+     "e": 37863.0,
+     "m": 144.0
+    },
+    "detached": {
+     "e": 28009.0,
+     "m": 488.0
+    },
+    "attached": {
+     "e": 1961.0,
+     "m": 216.0
+    },
+    "rent_1br": {
+     "e": 566.0,
+     "m": 40.0
+    },
+    "rent_2br": {
+     "e": 724.0,
+     "m": 36.0
+    },
+    "median_value": {
+     "e": 150600.0,
+     "m": 5309.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 18017.0,
+     "attached": 1448.0,
+     "housing_units": 23470.0,
+     "tracts": 15
+    },
+    {
+     "detached": 3910.0,
+     "attached": 145.0,
+     "housing_units": 5418.0,
+     "tracts": 4
+    },
+    {
+     "detached": 1924.0,
+     "attached": 99.0,
+     "housing_units": 2451.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 4158.0,
+     "attached": 269.0,
+     "housing_units": 6524.0,
+     "tracts": 4
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 81.0,
+     "v1": 18679962.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 78.0,
+     "v1": 20983112.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 71.0,
+     "v1": 23144320.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 835,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42113",
+   "name": "Sullivan County",
+   "land_sqmi": 449.939,
+   "lat": 41.439285,
+   "lon": -76.511717,
+   "acs": {
+    "housing_units": {
+     "e": 5584.0,
+     "m": 27.0
+    },
+    "units_total": {
+     "e": 5584.0,
+     "m": 27.0
+    },
+    "detached": {
+     "e": 4870.0,
+     "m": 87.0
+    },
+    "attached": {
+     "e": 52.0,
+     "m": 24.0
+    },
+    "rent_1br": {
+     "e": 596.0,
+     "m": 85.0
+    },
+    "rent_2br": {
+     "e": 787.0,
+     "m": 29.0
+    },
+    "median_value": {
+     "e": 197100.0,
+     "m": 13363.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 4870.0,
+     "attached": 52.0,
+     "housing_units": 5584.0,
+     "tracts": 4
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 21.0,
+     "v1": 5891335.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 12.0,
+     "v1": 4222444.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 16.0,
+     "v1": 6598795.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 775,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42115",
+   "name": "Susquehanna County",
+   "land_sqmi": 823.494,
+   "lat": 41.819665,
+   "lon": -75.800969,
+   "acs": {
+    "housing_units": {
+     "e": 21348.0,
+     "m": 49.0
+    },
+    "units_total": {
+     "e": 21348.0,
+     "m": 49.0
+    },
+    "detached": {
+     "e": 16869.0,
+     "m": 285.0
+    },
+    "attached": {
+     "e": 201.0,
+     "m": 76.0
+    },
+    "rent_1br": {
+     "e": 598.0,
+     "m": 60.0
+    },
+    "rent_2br": {
+     "e": 903.0,
+     "m": 46.0
+    },
+    "median_value": {
+     "e": 216400.0,
+     "m": 6105.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 16253.0,
+     "attached": 170.0,
+     "housing_units": 20414.0,
+     "tracts": 11
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 616.0,
+     "attached": 31.0,
+     "housing_units": 934.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 52.0,
+     "v1": 14689369.0,
+     "u2": 6.0,
+     "v2": 1023876.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 73.0,
+     "v1": 21305186.0,
+     "u2": 2.0,
+     "v2": 341292.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 5.0,
+     "v5": 230000.0
+    },
+    "2025": {
+     "u1": 72.0,
+     "v1": 21854245.0,
+     "u2": 2.0,
+     "v2": 265336.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 805,
+    "fmr_2br": 1045
+   }
+  },
+  {
+   "fips": "42117",
+   "name": "Tioga County",
+   "land_sqmi": 1133.892,
+   "lat": 41.766858,
+   "lon": -77.257288,
+   "acs": {
+    "housing_units": {
+     "e": 21571.0,
+     "m": 52.0
+    },
+    "units_total": {
+     "e": 21571.0,
+     "m": 52.0
+    },
+    "detached": {
+     "e": 15537.0,
+     "m": 290.0
+    },
+    "attached": {
+     "e": 217.0,
+     "m": 71.0
+    },
+    "rent_1br": {
+     "e": 612.0,
+     "m": 60.0
+    },
+    "rent_2br": {
+     "e": 872.0,
+     "m": 50.0
+    },
+    "median_value": {
+     "e": 181100.0,
+     "m": 8125.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 14361.0,
+     "attached": 123.0,
+     "housing_units": 19880.0,
+     "tracts": 9
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 1176.0,
+     "attached": 94.0,
+     "housing_units": 1691.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 36.0,
+     "v1": 9823767.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 32.0,
+     "v1": 8249852.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 34.0,
+     "v1": 10468612.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 826,
+    "fmr_2br": 1051
+   }
+  },
+  {
+   "fips": "42119",
+   "name": "Union County",
+   "land_sqmi": 315.957,
+   "lat": 40.962179,
+   "lon": -77.055475,
+   "acs": {
+    "housing_units": {
+     "e": 16205.0,
+     "m": 140.0
+    },
+    "units_total": {
+     "e": 16205.0,
+     "m": 140.0
+    },
+    "detached": {
+     "e": 11650.0,
+     "m": 442.0
+    },
+    "attached": {
+     "e": 926.0,
+     "m": 216.0
+    },
+    "rent_1br": {
+     "e": 822.0,
+     "m": 88.0
+    },
+    "rent_2br": {
+     "e": 890.0,
+     "m": 59.0
+    },
+    "median_value": {
+     "e": 240100.0,
+     "m": 8080.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 4261.0,
+     "attached": 164.0,
+     "housing_units": 5345.0,
+     "tracts": 6
+    },
+    {
+     "detached": 3297.0,
+     "attached": 414.0,
+     "housing_units": 4614.0,
+     "tracts": 2
+    },
+    {
+     "detached": 2154.0,
+     "attached": 71.0,
+     "housing_units": 2486.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 1098.0,
+     "attached": 146.0,
+     "housing_units": 1805.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 840.0,
+     "attached": 131.0,
+     "housing_units": 1955.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 43.0,
+     "v1": 14033696.0,
+     "u2": 2.0,
+     "v2": 350000.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 44.0,
+     "v5": 8283371.0
+    },
+    "2024": {
+     "u1": 43.0,
+     "v1": 16370632.0,
+     "u2": 6.0,
+     "v2": 912828.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 56.0,
+     "v1": 25082125.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 913,
+    "fmr_2br": 1001
+   }
+  },
+  {
+   "fips": "42121",
+   "name": "Venango County",
+   "land_sqmi": 674.265,
+   "lat": 41.400714,
+   "lon": -79.765813,
+   "acs": {
+    "housing_units": {
+     "e": 26244.0,
+     "m": 179.0
+    },
+    "units_total": {
+     "e": 26244.0,
+     "m": 179.0
+    },
+    "detached": {
+     "e": 20505.0,
+     "m": 404.0
+    },
+    "attached": {
+     "e": 184.0,
+     "m": 64.0
+    },
+    "rent_1br": {
+     "e": 526.0,
+     "m": 40.0
+    },
+    "rent_2br": {
+     "e": 792.0,
+     "m": 30.0
+    },
+    "median_value": {
+     "e": 119800.0,
+     "m": 3729.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 12174.0,
+     "attached": 96.0,
+     "housing_units": 15235.0,
+     "tracts": 8
+    },
+    {
+     "detached": 3022.0,
+     "attached": 12.0,
+     "housing_units": 3385.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 492.0,
+     "attached": 32.0,
+     "housing_units": 760.0,
+     "tracts": 1
+    },
+    {
+     "detached": 3178.0,
+     "attached": 44.0,
+     "housing_units": 4674.0,
+     "tracts": 4
+    },
+    {
+     "detached": 908.0,
+     "attached": 0.0,
+     "housing_units": 1125.0,
+     "tracts": 1
+    },
+    {
+     "detached": 731.0,
+     "attached": 0.0,
+     "housing_units": 1065.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 35.0,
+     "v1": 9230261.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 42.0,
+     "v1": 11041203.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 54.0,
+     "v1": 15257874.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 6.0,
+     "v5": 973000.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 742,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42123",
+   "name": "Warren County",
+   "land_sqmi": 884.282,
+   "lat": 41.834298,
+   "lon": -79.298182,
+   "acs": {
+    "housing_units": {
+     "e": 21629.0,
+     "m": 60.0
+    },
+    "units_total": {
+     "e": 21629.0,
+     "m": 60.0
+    },
+    "detached": {
+     "e": 16855.0,
+     "m": 302.0
+    },
+    "attached": {
+     "e": 322.0,
+     "m": 121.0
+    },
+    "rent_1br": {
+     "e": 540.0,
+     "m": 85.0
+    },
+    "rent_2br": {
+     "e": 785.0,
+     "m": 35.0
+    },
+    "median_value": {
+     "e": 127500.0,
+     "m": 4970.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 12449.0,
+     "attached": 86.0,
+     "housing_units": 15105.0,
+     "tracts": 9
+    },
+    {
+     "detached": 1191.0,
+     "attached": 36.0,
+     "housing_units": 1594.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 3215.0,
+     "attached": 200.0,
+     "housing_units": 4930.0,
+     "tracts": 3
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 28.0,
+     "v1": 5566730.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 23.0,
+     "v1": 5755017.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 30.0,
+     "v5": 7500000.0
+    },
+    "2025": {
+     "u1": 31.0,
+     "v1": 6958313.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 25.0,
+     "v5": 6250000.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 814,
+    "fmr_2br": 973
+   }
+  },
+  {
+   "fips": "42125",
+   "name": "Washington County",
+   "land_sqmi": 857.01,
+   "lat": 40.200005,
+   "lon": -80.252132,
+   "acs": {
+    "housing_units": {
+     "e": 97923.0,
+     "m": 105.0
+    },
+    "units_total": {
+     "e": 97923.0,
+     "m": 105.0
+    },
+    "detached": {
+     "e": 72027.0,
+     "m": 1054.0
+    },
+    "attached": {
+     "e": 7091.0,
+     "m": 494.0
+    },
+    "rent_1br": {
+     "e": 780.0,
+     "m": 28.0
+    },
+    "rent_2br": {
+     "e": 978.0,
+     "m": 28.0
+    },
+    "median_value": {
+     "e": 228500.0,
+     "m": 4629.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 13046.0,
+     "attached": 381.0,
+     "housing_units": 15577.0,
+     "tracts": 9
+    },
+    {
+     "detached": 8060.0,
+     "attached": 285.0,
+     "housing_units": 10066.0,
+     "tracts": 6
+    },
+    {
+     "detached": 11659.0,
+     "attached": 794.0,
+     "housing_units": 14097.0,
+     "tracts": 8
+    },
+    {
+     "detached": 16878.0,
+     "attached": 2937.0,
+     "housing_units": 24843.0,
+     "tracts": 13
+    },
+    {
+     "detached": 7993.0,
+     "attached": 1700.0,
+     "housing_units": 10720.0,
+     "tracts": 6
+    },
+    {
+     "detached": 5564.0,
+     "attached": 434.0,
+     "housing_units": 9469.0,
+     "tracts": 9
+    },
+    {
+     "detached": 7797.0,
+     "attached": 477.0,
+     "housing_units": 11289.0,
+     "tracts": 10
+    },
+    {
+     "detached": 1030.0,
+     "attached": 83.0,
+     "housing_units": 1862.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 388.0,
+     "v1": 127611463.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 50.0,
+     "v34": 8398215.0,
+     "u5": 16.0,
+     "v5": 2890570.0
+    },
+    "2024": {
+     "u1": 430.0,
+     "v1": 143861670.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 29.0,
+     "v34": 4149444.0,
+     "u5": 30.0,
+     "v5": 3654630.0
+    },
+    "2025": {
+     "u1": 352.0,
+     "v1": 122212268.0,
+     "u2": 4.0,
+     "v2": 414648.0,
+     "u34": 21.0,
+     "v34": 1888228.0,
+     "u5": 20.0,
+     "v5": 3612650.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1077,
+    "fmr_2br": 1299
+   }
+  },
+  {
+   "fips": "42127",
+   "name": "Wayne County",
+   "land_sqmi": 725.769,
+   "lat": 41.646602,
+   "lon": -75.292493,
+   "acs": {
+    "housing_units": {
+     "e": 32171.0,
+     "m": 60.0
+    },
+    "units_total": {
+     "e": 32171.0,
+     "m": 60.0
+    },
+    "detached": {
+     "e": 27039.0,
+     "m": 486.0
+    },
+    "attached": {
+     "e": 231.0,
+     "m": 104.0
+    },
+    "rent_1br": {
+     "e": 930.0,
+     "m": 117.0
+    },
+    "rent_2br": {
+     "e": 1023.0,
+     "m": 69.0
+    },
+    "median_value": {
+     "e": 242100.0,
+     "m": 7213.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 12364.0,
+     "attached": 86.0,
+     "housing_units": 14694.0,
+     "tracts": 8
+    },
+    {
+     "detached": 3234.0,
+     "attached": 62.0,
+     "housing_units": 4018.0,
+     "tracts": 3
+    },
+    {
+     "detached": 4863.0,
+     "attached": 67.0,
+     "housing_units": 5754.0,
+     "tracts": 3
+    },
+    {
+     "detached": 5144.0,
+     "attached": 16.0,
+     "housing_units": 5282.0,
+     "tracts": 2
+    },
+    {
+     "detached": 1434.0,
+     "attached": 0.0,
+     "housing_units": 2423.0,
+     "tracts": 1
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 134.0,
+     "v1": 42911485.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 177.0,
+     "v1": 54831625.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 158.0,
+     "v1": 61094361.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 927,
+    "fmr_2br": 1132
+   }
+  },
+  {
+   "fips": "42129",
+   "name": "Westmoreland County",
+   "land_sqmi": 1027.71,
+   "lat": 40.311068,
+   "lon": -79.466688,
+   "acs": {
+    "housing_units": {
+     "e": 168812.0,
+     "m": 160.0
+    },
+    "units_total": {
+     "e": 168812.0,
+     "m": 160.0
+    },
+    "detached": {
+     "e": 129771.0,
+     "m": 1192.0
+    },
+    "attached": {
+     "e": 8972.0,
+     "m": 702.0
+    },
+    "rent_1br": {
+     "e": 653.0,
+     "m": 32.0
+    },
+    "rent_2br": {
+     "e": 912.0,
+     "m": 20.0
+    },
+    "median_value": {
+     "e": 203500.0,
+     "m": 2976.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 12389.0,
+     "attached": 282.0,
+     "housing_units": 15088.0,
+     "tracts": 9
+    },
+    {
+     "detached": 11137.0,
+     "attached": 476.0,
+     "housing_units": 13856.0,
+     "tracts": 11
+    },
+    {
+     "detached": 28038.0,
+     "attached": 1694.0,
+     "housing_units": 35667.0,
+     "tracts": 21
+    },
+    {
+     "detached": 25327.0,
+     "attached": 2226.0,
+     "housing_units": 30987.0,
+     "tracts": 17
+    },
+    {
+     "detached": 14119.0,
+     "attached": 1136.0,
+     "housing_units": 17643.0,
+     "tracts": 13
+    },
+    {
+     "detached": 24673.0,
+     "attached": 1999.0,
+     "housing_units": 33577.0,
+     "tracts": 25
+    },
+    {
+     "detached": 12242.0,
+     "attached": 1008.0,
+     "housing_units": 19274.0,
+     "tracts": 14
+    },
+    {
+     "detached": 1846.0,
+     "attached": 151.0,
+     "housing_units": 2720.0,
+     "tracts": 3
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 392.0,
+     "v1": 117050629.0,
+     "u2": 2.0,
+     "v2": 265000.0,
+     "u34": 55.0,
+     "v34": 11367457.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2024": {
+     "u1": 363.0,
+     "v1": 123619898.0,
+     "u2": 4.0,
+     "v2": 837022.0,
+     "u34": 38.0,
+     "v34": 8669440.0,
+     "u5": 10.0,
+     "v5": 1611000.0
+    },
+    "2025": {
+     "u1": 397.0,
+     "v1": 130768261.0,
+     "u2": 8.0,
+     "v2": 2251015.0,
+     "u34": 23.0,
+     "v34": 5143812.0,
+     "u5": 15.0,
+     "v5": 2217990.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1077,
+    "fmr_2br": 1299
+   }
+  },
+  {
+   "fips": "42131",
+   "name": "Wyoming County",
+   "land_sqmi": 397.258,
+   "lat": 41.525167,
+   "lon": -76.008682,
+   "acs": {
+    "housing_units": {
+     "e": 12896.0,
+     "m": 60.0
+    },
+    "units_total": {
+     "e": 12896.0,
+     "m": 60.0
+    },
+    "detached": {
+     "e": 10100.0,
+     "m": 216.0
+    },
+    "attached": {
+     "e": 286.0,
+     "m": 56.0
+    },
+    "rent_1br": {
+     "e": 665.0,
+     "m": 69.0
+    },
+    "rent_2br": {
+     "e": 987.0,
+     "m": 65.0
+    },
+    "median_value": {
+     "e": 215400.0,
+     "m": 5689.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 6724.0,
+     "attached": 253.0,
+     "housing_units": 8930.0,
+     "tracts": 5
+    },
+    {
+     "detached": 3376.0,
+     "attached": 33.0,
+     "housing_units": 3966.0,
+     "tracts": 2
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    },
+    {
+     "detached": 0.0,
+     "attached": 0.0,
+     "housing_units": 0.0,
+     "tracts": 0
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 23.0,
+     "v1": 6103391.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 3.0,
+     "v34": 750000.0,
+     "u5": 5.0,
+     "v5": 1218750.0
+    },
+    "2024": {
+     "u1": 27.0,
+     "v1": 7465238.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 6.0,
+     "v34": 1097382.0,
+     "u5": 0.0,
+     "v5": 0.0
+    },
+    "2025": {
+     "u1": 23.0,
+     "v1": 7677633.0,
+     "u2": 0.0,
+     "v2": 0.0,
+     "u34": 0.0,
+     "v34": 0.0,
+     "u5": 0.0,
+     "v5": 0.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1028,
+    "fmr_2br": 1252
+   }
+  },
+  {
+   "fips": "42133",
+   "name": "York County",
+   "land_sqmi": 904.352,
+   "lat": 39.921751,
+   "lon": -76.728889,
+   "acs": {
+    "housing_units": {
+     "e": 189857.0,
+     "m": 264.0
+    },
+    "units_total": {
+     "e": 189857.0,
+     "m": 264.0
+    },
+    "detached": {
+     "e": 122089.0,
+     "m": 1342.0
+    },
+    "attached": {
+     "e": 32443.0,
+     "m": 1363.0
+    },
+    "rent_1br": {
+     "e": 919.0,
+     "m": 37.0
+    },
+    "rent_2br": {
+     "e": 1220.0,
+     "m": 33.0
+    },
+    "median_value": {
+     "e": 248600.0,
+     "m": 2723.0
+    }
+   },
+   "density_bins": [
+    {
+     "detached": 5168.0,
+     "attached": 112.0,
+     "housing_units": 5662.0,
+     "tracts": 4
+    },
+    {
+     "detached": 16655.0,
+     "attached": 498.0,
+     "housing_units": 19184.0,
+     "tracts": 12
+    },
+    {
+     "detached": 25044.0,
+     "attached": 3032.0,
+     "housing_units": 33037.0,
+     "tracts": 17
+    },
+    {
+     "detached": 39908.0,
+     "attached": 8201.0,
+     "housing_units": 55016.0,
+     "tracts": 28
+    },
+    {
+     "detached": 11702.0,
+     "attached": 4532.0,
+     "housing_units": 19334.0,
+     "tracts": 12
+    },
+    {
+     "detached": 16238.0,
+     "attached": 5205.0,
+     "housing_units": 27473.0,
+     "tracts": 14
+    },
+    {
+     "detached": 4927.0,
+     "attached": 5751.0,
+     "housing_units": 17206.0,
+     "tracts": 11
+    },
+    {
+     "detached": 2354.0,
+     "attached": 4608.0,
+     "housing_units": 11664.0,
+     "tracts": 9
+    },
+    {
+     "detached": 93.0,
+     "attached": 504.0,
+     "housing_units": 1281.0,
+     "tracts": 1
+    }
+   ],
+   "bps": {
+    "2023": {
+     "u1": 941.0,
+     "v1": 243366840.0,
+     "u2": 8.0,
+     "v2": 1102717.0,
+     "u34": 24.0,
+     "v34": 5060294.0,
+     "u5": 170.0,
+     "v5": 22448933.0
+    },
+    "2024": {
+     "u1": 953.0,
+     "v1": 277741433.0,
+     "u2": 26.0,
+     "v2": 4585408.0,
+     "u34": 11.0,
+     "v34": 1967099.0,
+     "u5": 338.0,
+     "v5": 40340892.0
+    },
+    "2025": {
+     "u1": 1054.0,
+     "v1": 313827542.0,
+     "u2": 8.0,
+     "v2": 1501352.0,
+     "u34": 8.0,
+     "v34": 1780182.0,
+     "u5": 554.0,
+     "v5": 63329141.0
+    }
+   },
+   "hud_fmr": {
+    "fmr_1br": 1060,
+    "fmr_2br": 1335
+   }
+  }
+ ]
+}

@@ -1,0 +1,82 @@
+# Pennsylvania zoning evidence for the Small Homes Policy Lab.
+#
+# Each rule records an OBSERVED legal status for one option family on a set of
+# single-family host lots. Lots no rule covers are UNKNOWN. Unknown is never
+# treated as allowed or as zero: the engine applies the prior in
+# config/lab/assumptions.yaml (prior_adu_prohibited, prior_mm_prohibited) and
+# reports the low-prior / high-prior bounds next to every result.
+#
+# status values:
+#   allowed               the benchmark option is legal by right today
+#   allowed_with_parking  legal by right, but the town may require parking
+#   prohibited            the benchmark option is not legal today
+# effective:  date the status took effect. A rule whose effective date plus the
+#             adoption lag falls after the end of the permit window (2025) is
+#             "post-window": its homes are added to Baseline, because the
+#             Building Permits Survey cannot contain them yet.
+# geography:  county (5-digit FIPS) and, optionally, a Census place whose share
+#             of the county's single-family stock comes from ACS B25024 at
+#             place level (data/sample/lab/PA.json -> places).
+#
+# This is a screening record, not a legal opinion.
+
+state: PA
+state_fips: "42"
+name: Pennsylvania
+as_of: "2026-10-31"
+statewide:
+  adu: unknown
+  mm: unknown
+  parking_cap_per_unit: null
+  note: >-
+    Pennsylvania has no statewide ADU or middle-housing law in effect. HB 2186
+    (statewide ADU by right) passed the House 139–62 on 2026-06-01 and is in
+    the Senate Urban Affairs and Housing Committee; companion SB 1346 had first
+    consideration 2026-07-12. Neither is modeled as law.
+  sources:
+    - https://www.palegis.us/legislation/bills/2025/hb2186/
+    - https://www.palegis.us/house/roll-calls/summary?rcNum=1075&sessInd=0&sessYr=2025
+    - https://www.palegis.us/legislation/bills/2025/sb1346
+
+rules:
+  - id: philadelphia_adu
+    label: Philadelphia ADU rules
+    option: adu
+    geography: {county: "42101"}
+    host_types: [detached, attached]
+    status: prohibited
+    effective: null
+    confidence: high
+    summary: >-
+      Philadelphia Code §14-604(11) allows an accessory dwelling unit only
+      inside an existing principal or accessory building, owner-occupied, at
+      most 800 sq ft, and only in listed districts or historic structures. A
+      new detached or semi-detached ADU of 600+ sq ft with no parking, as the
+      Handbook defines it, is not allowed. Bill 250042 would loosen this and
+      is still in committee.
+    sources:
+      - https://codelibrary.amlegal.com/codes/philadelphia/latest/philadelphia_pa/0-0-0-292755
+      - https://phila.gov/media/20220308130807/PZ_004_INF_Accessory-Dwelling-Unit-Checklist-rev-3.8.2022.pdf
+      - https://phila.legistar.com/LegislationDetail.aspx?GUID=7F77F4AC-EAE7-4EE9-9EFD-F7CC7C2DB05F&ID=7114074&Options=&Search=
+
+  - id: pittsburgh_adu_2026
+    label: Pittsburgh Council Bill 2025-1545
+    option: adu
+    geography: {county: "42003", place: "4261000", place_name: Pittsburgh city}
+    host_types: [detached, attached]
+    status: allowed
+    parking_spaces: 0
+    effective: "2026-10-29"
+    confidence: medium
+    summary: >-
+      Signed 2026-10-29. ADUs are permitted by right as an accessory use to a
+      residential use citywide, up to two per lot, at most 1,000 sq ft each and
+      30 ft tall, no owner-occupancy requirement, exempt from parking. The Lab
+      credits one ADU per lot, matching the Handbook benchmark. Confidence is
+      medium because the codified text was not yet published when this was
+      recorded; the source is the Planning Commission briefing and Council
+      record.
+    sources:
+      - https://www.pittsburghpa.gov/files/assets/city/v/1/dcp/documents/planning-commission/pc-may-19-2026/council-bill-2025-1545-pc-briefing-presentation-2026-05-19.pdf
+      - https://pittsburgh.legistar.com/View.ashx?GUID=26D186E7-EC0D-43BA-B627-F39BF8202189&ID=13781030&M=F
+      - https://engage.pittsburghpa.gov/implementing-housing-needs-assessment

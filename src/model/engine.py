@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from src.model.provenance import LEGEND, stamp_tree
 from src.model.equations import (
     adu_hazard,
     cumulative_hazard,
@@ -34,6 +35,8 @@ from src.model.equations import (
     share_at_least,
     walkshed_sqmi,
 )
+
+REFORM_IDS = ("adu", "missing_middle", "tod", "parking", "fees")
 
 SCENARIO_ORDER = (
     "baseline",
@@ -103,8 +106,16 @@ def _fmt(value: float, digits: int = 0) -> str:
     return f"{value:,.2f}"
 
 
-def _step(title: str, equation: str, substitution: str, result: float, unit: str, why: str) -> dict[str, Any]:
-    return {
+def _step(
+    title: str,
+    equation: str,
+    substitution: str,
+    result: float,
+    unit: str,
+    why: str,
+    inputs: list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
+    row = {
         "title": title,
         "equation": equation,
         "substitution": substitution,
@@ -112,9 +123,16 @@ def _step(title: str, equation: str, substitution: str, result: float, unit: str
         "unit": unit,
         "why": why,
     }
+    if inputs:
+        row["inputs"] = inputs
+    return row
 
 
-def lot_feasibility(state: dict[str, Any], params: dict[str, float], parcel_mode: str) -> tuple[float, str]:
+def _tagged(label: str, tag: str) -> dict[str, str]:
+    return {"label": label, "tag": tag}
+
+
+def lot_feasibility(state: dict[str, Any], params: dict[str, float], parcel_mode: str) -> tuple[float, str, str]:
     """Physical share of single-family lots that can hold a semi-detached ADU.
 
     Observed bins win when the state has them and the caller asked for the
@@ -125,12 +143,20 @@ def lot_feasibility(state: dict[str, Any], params: dict[str, float], parcel_mode
     cutoff = params["adu_semi_min_lot_sqft"]
     bins = tier1.get("lot_bins_sqft") if parcel_mode == "observed" else None
     if bins:
-        return share_at_least(bins, cutoff), "Observed lot-size bins from the statewide parcel extract"
+        return (
+            share_at_least(bins, cutoff),
+            "Observed lot-size bins from the statewide parcel extract",
+            "calculated",
+        )
     mean_lot = tier1.get("mean_lot_sqft") if parcel_mode == "observed" else None
     if mean_lot:
         share = lognormal_tail(float(mean_lot), params["lot_size_log_sigma"], cutoff)
-        return share, "Lognormal tail from the observed mean lot size (bins were not published)"
-    return params["imputed_lot_feasible_share"], "Imputed from the tier-1 screening share. This state has no lot-size extract in the model."
+        return share, "Lognormal tail from the observed mean lot size (bins were not published)", "calculated"
+    return (
+        params["imputed_lot_feasible_share"],
+        "Imputed from the tier-1 screening share. This state has no lot-size extract in the model.",
+        "assumed",
+    )
 
 
 def _context(county: dict[str, Any], params: dict[str, float]) -> str:
@@ -528,7 +554,129 @@ def _apply_absorption(row: dict[str, Any], which: str) -> dict[str, Any]:
     raise ValueError(which)
 
 
-def _combined_row(standalone: dict[str, Any], packaged: dict[str, Any]) -> dict[str, float]:
+def _reform_weights(weights: dict[str, Any] | None) -> dict[str, float]:
+    """Clamp a reform mix to the unit interval. Missing names stay fully on."""
+    resolved = {name: 1.0 for name in REFORM_IDS}
+    if not weights:
+        return resolved
+    for name in REFORM_IDS:
+        if name not in weights:
+            continue
+        try:
+            value = float(weights[name])
+        except (TypeError, ValueError):
+            value = 1.0
+        resolved[name] = min(1.0, max(0.0, value))
+    return resolved
+
+
+def _mix_note(weights: dict[str, float]) -> str:
+    if all(abs(weights[name] - 1.0) < 1e-12 for name in REFORM_IDS):
+        return ""
+    parts = []
+    for name in REFORM_IDS:
+        label = SCENARIO_LABELS[name].split(". ", 1)[-1]
+        weight = weights[name]
+        if weight <= 0:
+            parts.append(f"{label} off")
+        elif abs(weight - 1.0) < 1e-12:
+            parts.append(f"{label} on")
+        else:
+            parts.append(f"{label} at {weight:.0%}")
+    return "The package uses this mix: " + "; ".join(parts) + "."
+
+
+def _near_hurdle(row: dict[str, Any], threshold: float, sigma: float, name: str) -> tuple[bool, str]:
+    """True when a county margin sits near the feasibility hurdle."""
+    window = max(0.06, 0.35 * sigma)
+    checks = (
+        ("Owner margin", row["adu_margin"], 0.0),
+        ("Teardown margin", row["teardown_margin"], threshold),
+        ("Conversion margin", row["conversion_margin"], threshold),
+        ("Podium margin", row["tod_margin"], threshold),
+    )
+    reasons = []
+    for label, margin, hurdle in checks:
+        if abs(float(margin) - hurdle) <= window:
+            reasons.append(f"{label} in {name} is {float(margin):.2f}, near the hurdle at {hurdle:.2f}.")
+    if not reasons:
+        return False, ""
+    return True, "Close call: " + " ".join(reasons)
+
+
+def _scenario_close(
+    scenario_id: str,
+    focus: dict[str, Any],
+    params: dict[str, float],
+    incremental: float,
+    baseline: float,
+) -> tuple[bool, str]:
+    threshold = params["feasibility_threshold"]
+    sigma = params["feasibility_sigma"]
+    window = max(0.06, 0.35 * sigma)
+    checks = {
+        "adu": [("Owner margin", focus["adu_margin"], 0.0)],
+        "missing_middle": [
+            ("Teardown margin", focus["teardown_margin"], threshold),
+            ("Conversion margin", focus["conversion_margin"], threshold),
+        ],
+        "tod": [("Podium margin", focus["tod_margin"], threshold)],
+        "combined": [
+            ("Owner margin", focus["adu_margin"], 0.0),
+            ("Teardown margin", focus["teardown_margin"], threshold),
+            ("Conversion margin", focus["conversion_margin"], threshold),
+            ("Podium margin", focus["tod_margin"], threshold),
+        ],
+    }
+    reasons = []
+    for label, margin, hurdle in checks.get(scenario_id, []):
+        if abs(float(margin) - hurdle) <= window:
+            reasons.append(
+                f"{label} in {focus['name']} is {float(margin):.2f}, within {window:.2f} of the hurdle at {hurdle:.2f}."
+            )
+    if scenario_id != "baseline" and baseline > 0 and abs(incremental) < 0.01 * baseline:
+        reasons.append("The five-year increment is under 1 percent of baseline completions, near no effect.")
+    if not reasons:
+        return False, ""
+    return True, "Close call: " + " ".join(reasons)
+
+
+def _explanation(
+    state_name: str,
+    scenario_id: str,
+    incremental: float,
+    baseline: float,
+    level: float,
+    focus_name: str,
+    mix_note: str,
+) -> str:
+    base_n = f"{baseline:,.0f} (calculated)"
+    if scenario_id == "baseline":
+        return (
+            f"Under current rules, {state_name} completes about {base_n} homes over five years. "
+            "That extends the recent Building Permits Survey pace. It is not a new policy, "
+            "and it is not a forecast of the business cycle."
+        )
+    label = SCENARIO_LABELS[scenario_id]
+    lift = 0.0 if baseline <= 0 else 100.0 * incremental / baseline
+    text = (
+        f"{label} adds about {incremental:,.0f} (calculated) net completions in {state_name} over five years, "
+        f"{lift:.1f} percent (calculated) above the baseline of {base_n}. "
+        f"After the reform, five-year completions are about {level:,.0f} (calculated). "
+        f"The worked example is {focus_name}."
+    )
+    if scenario_id == "combined":
+        text += " The package removes overlap among the reforms that are switched on. It is not the sum of the five standalone totals."
+        if mix_note:
+            text += " " + mix_note
+    return text
+
+
+def _combined_row(
+    standalone: dict[str, Any],
+    packaged: dict[str, Any],
+    weights: dict[str, float] | None = None,
+) -> dict[str, float]:
     """Remove parcel overlap, then share the absorption cap.
 
     TOD keeps the walkshed. Missing middle keeps the rest of its county
@@ -538,21 +686,26 @@ def _combined_row(standalone: dict[str, Any], packaged: dict[str, Any]) -> dict[
     The fee increment on the baseline pipeline is kept: those are projects
     that are already legal and were not created by the zoning reforms.
     """
+    mix = _reform_weights(weights)
     homes = max(packaged["housing_units"], 1.0)
-    shed_share = min(1.0, packaged["walkshed_units"] / homes)
-    mm_completions = packaged["mm_completions"] * (1.0 - shed_share)
-    mm_permits = packaged["mm_permits"] * (1.0 - shed_share)
-    mm_homes = packaged["mm_homes_used"] * (1.0 - shed_share)
-    tod_completions = packaged["tod_completions"]
-    tod_permits = packaged["tod_permits"]
-    tod_homes = packaged["tod_homes_removed"]
+    shed_full = min(1.0, packaged["walkshed_units"] / homes)
+    # A partial TOD program claims only that share of the walkshed.
+    shed_share = shed_full * mix["tod"]
+    mm_factor = (1.0 - shed_share) * mix["missing_middle"]
+    tod_factor = mix["tod"]
+    mm_completions = packaged["mm_completions"] * mm_factor
+    mm_permits = packaged["mm_permits"] * mm_factor
+    mm_homes = packaged["mm_homes_used"] * mm_factor
+    tod_completions = packaged["tod_completions"] * tod_factor
+    tod_permits = packaged["tod_permits"] * tod_factor
+    tod_homes = packaged["tod_homes_removed"] * tod_factor
+    raw_mm = mm_completions
+    raw_tod = tod_completions
     mm_completions, tod_completions, merchant_binding = _cap_pair(
         mm_completions, tod_completions, packaged["merchant_cap"]
     )
     # Permits follow the same scale as completions when the cap binds.
     if merchant_binding:
-        raw_mm = packaged["mm_completions"] * (1.0 - shed_share)
-        raw_tod = packaged["tod_completions"]
         mm_permits *= mm_completions / raw_mm if raw_mm > 0 else 0.0
         tod_permits *= tod_completions / raw_tod if raw_tod > 0 else 0.0
         mm_homes *= mm_completions / raw_mm if raw_mm > 0 else 0.0
@@ -560,15 +713,16 @@ def _combined_row(standalone: dict[str, Any], packaged: dict[str, Any]) -> dict[
     consumed = mm_homes + tod_homes
     sf_stock = max(packaged["sf_stock"], 1.0)
     adu_scale = max(0.0, 1.0 - consumed / sf_stock)
-    adu_completions = packaged["adu_completions"] * adu_scale
-    adu_permits = packaged["adu_permits"] * adu_scale
-    parking_completions = standalone["parking_completions"] * (1.0 - shed_share)
-    parking_permits = standalone["parking_permits"] * (1.0 - shed_share)
+    adu_completions = packaged["adu_completions"] * adu_scale * mix["adu"]
+    adu_permits = packaged["adu_permits"] * adu_scale * mix["adu"]
+    parking_completions = standalone["parking_completions"] * (1.0 - shed_share) * mix["parking"]
+    parking_permits = standalone["parking_permits"] * (1.0 - shed_share) * mix["parking"]
     # Fees on the baseline pipeline do not rebuild the same parcels as TOD/MM.
-    fee_completions = standalone["fee_completions"]
-    fee_permits = standalone["fee_permits"]
+    fee_completions = standalone["fee_completions"] * mix["fees"]
+    fee_permits = standalone["fee_permits"] * mix["fees"]
     completions = adu_completions + mm_completions + tod_completions + parking_completions + fee_completions
     permits = adu_permits + mm_permits + tod_permits + parking_permits + fee_permits
+    adu_binding = mix["adu"] > 0 and packaged["adu_capped"]
     return {
         "completions": completions,
         "permits": permits,
@@ -577,7 +731,7 @@ def _combined_row(standalone: dict[str, Any], packaged: dict[str, Any]) -> dict[
         "tod": tod_completions,
         "parking": parking_completions,
         "fees": fee_completions,
-        "binding": merchant_binding or packaged["adu_capped"],
+        "binding": merchant_binding or adu_binding,
         "capacity": packaged["adu_completions"] + packaged["mm_completions"] + packaged["tod_completions"],
     }
 
@@ -586,7 +740,48 @@ def _sum(rows: list[dict[str, Any]], key: str) -> float:
     return sum(float(row[key]) for row in rows)
 
 
-def build_trace(kind: str, focus: dict[str, Any], params: dict[str, float], lot_note: str, state_total: float) -> list[dict[str, Any]]:
+def _trace_inputs(title: str, lot_tag: str) -> list[dict[str, str]]:
+    if title == "Eligible homes":
+        return [
+            _tagged("Single-family stock", "observed"),
+            _tagged("Legal and tenure shares", "assumed"),
+            _tagged("Lot screen", lot_tag),
+        ]
+    if title.startswith("Five-year"):
+        return [
+            _tagged("Building Permits Survey annual units", "observed"),
+            _tagged("Permit growth rate", "assumed"),
+        ]
+    if title.startswith("Completions") or title.startswith("Net") or title.startswith("Adoption"):
+        return [
+            _tagged("Permits or net units from the prior step", "calculated"),
+            _tagged("Completion ratio", "assumed"),
+        ]
+    if "margin" in title.lower() or "Margin" in title or "cost" in title.lower() or title.startswith("Value") or title.startswith("Podium") or title.startswith("Challenge") or title.startswith("Spaces"):
+        return [
+            _tagged("Local prices or rents", "observed"),
+            _tagged("Cost, fee, and ratio assumptions", "assumed"),
+        ]
+    if title.startswith("Official") or title.startswith("Where") or title.startswith("Overlap") or title.startswith("Homes inside"):
+        return [
+            _tagged("County measurements", "observed"),
+            _tagged("Published assumptions", "assumed"),
+            _tagged("Sum of county results", "calculated"),
+        ]
+    return [
+        _tagged("Observed inputs", "observed"),
+        _tagged("Published assumptions", "assumed"),
+    ]
+
+
+def build_trace(
+    kind: str,
+    focus: dict[str, Any],
+    params: dict[str, float],
+    lot_note: str,
+    state_total: float,
+    lot_tag: str = "assumed",
+) -> list[dict[str, Any]]:
     """Worked example for the largest county, then the state sum."""
     info = focus.get("trace_inputs") or {}
     name = focus["name"]
@@ -762,6 +957,8 @@ def build_trace(kind: str, focus: dict[str, Any], params: dict[str, float], lot_
             "Use this number. The county lines above are the proof, not a second estimate.",
         )
     )
+    for step in steps:
+        step["inputs"] = _trace_inputs(step["title"], lot_tag)
     return steps
 
 
@@ -775,6 +972,9 @@ def _scenario_shell(
     capacity: float,
     trace: list[dict[str, Any]],
     extra_drivers: list[str],
+    explanation: str,
+    close_call: bool,
+    close_call_reason: str,
 ) -> dict[str, Any]:
     level_c = baseline_completions + incremental_completions
     level_p = baseline_permits + incremental_permits
@@ -801,6 +1001,9 @@ def _scenario_shell(
         "trace": trace,
         "drivers": drivers,
         "cannot": CANNOT[scenario_id],
+        "explanation": explanation,
+        "close_call": close_call,
+        "close_call_reason": close_call_reason,
     }
 
 
@@ -813,6 +1016,7 @@ def simulate_state(
     resolution: str = "county",
     neutral: bool = False,
     sigma_scale: float = 1.0,
+    reform_weights: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Run baseline and all five reforms plus the package for one state.
 
@@ -844,7 +1048,7 @@ def simulate_state(
             "The tier-2 screen does not see Hawaii's State Land Use districts, "
             "so it treats the entire single-family stock as geographically eligible."
         )
-    lot_share, lot_note = lot_feasibility(state, params, parcel_mode)
+    lot_share, lot_note, lot_tag = lot_feasibility(state, params, parcel_mode)
     if geography_note:
         lot_note = lot_note + " " + geography_note
     indexes = {
@@ -908,7 +1112,9 @@ def simulate_state(
 
     baseline_completions = _sum_baseline(standalone_rows, "completions")
     baseline_permits = _sum_baseline(standalone_rows, "permits")
-    combined_bits = [_combined_row(left, right) for left, right in zip(standalone_rows, packaged_rows)]
+    weights = _reform_weights(reform_weights)
+    mix_note = _mix_note(weights)
+    combined_bits = [_combined_row(left, right, weights) for left, right in zip(standalone_rows, packaged_rows)]
     combined_c = sum(bit["completions"] for bit in combined_bits)
     combined_p = sum(bit["permits"] for bit in combined_bits)
     combined_binding = any(bit["binding"] for bit in combined_bits)
@@ -942,32 +1148,43 @@ def simulate_state(
         "combined": [bit["completions"] for bit in combined_bits],
     }
 
-    scenarios = {
-        "baseline": _scenario_shell(
-            "baseline",
+    def _shell(scenario_id: str, incremental_c: float, incremental_p: float, binding: bool, capacity: float, drivers: list[str]) -> dict[str, Any]:
+        level_c = baseline_completions + incremental_c
+        close, reason = _scenario_close(scenario_id, focus, params, incremental_c, baseline_completions)
+        return _scenario_shell(
+            scenario_id,
             baseline_completions,
             baseline_permits,
+            incremental_c,
+            incremental_p,
+            binding,
+            capacity,
+            build_trace(scenario_id, focus, params, lot_note, incremental_c if scenario_id != "baseline" else baseline_completions, lot_tag),
+            drivers,
+            _explanation(state["name"], scenario_id, incremental_c, baseline_completions, level_c, focus["name"], mix_note),
+            close,
+            reason,
+        )
+
+    scenarios = {
+        "baseline": _shell(
+            "baseline",
             0.0,
             0.0,
             False,
             baseline_completions,
-            build_trace("baseline", focus, params, lot_note, baseline_completions),
             ["Recent Building Permits Survey mix, extended five years at the trend slider."],
         )
     }
-    # Baseline shell double-counts because _scenario_shell adds incremental to baseline.
-    # Incremental is zero, so levels equal the baseline. Good.
+    # Baseline shell adds incremental to baseline. Incremental is zero, so levels equal the baseline.
     for scenario_id in ("adu", "missing_middle", "tod", "parking", "fees", "combined"):
         completions, permits, binding, capacity = metrics[scenario_id]
-        scenarios[scenario_id] = _scenario_shell(
+        scenarios[scenario_id] = _shell(
             scenario_id,
-            baseline_completions,
-            baseline_permits,
             completions,
             permits,
             binding,
             capacity,
-            build_trace(scenario_id, focus, params, lot_note, completions),
             top_counties(per_county[scenario_id]),
         )
 
@@ -981,6 +1198,10 @@ def simulate_state(
         int(round(baseline_completions)),
     )
     for index, county in enumerate(counties):
+        row = standalone_rows[index]
+        close, reason = _near_hurdle(
+            row, params["feasibility_threshold"], params["feasibility_sigma"], county["name"]
+        )
         county_table.append(
             {
                 "fips": county["fips"],
@@ -995,14 +1216,20 @@ def simulate_state(
                 "parking": integer_weights["parking"][index],
                 "fees": integer_weights["fees"][index],
                 "combined": integer_weights["combined"][index],
+                "adu_margin": row["adu_margin"],
+                "teardown_margin": row["teardown_margin"],
+                "conversion_margin": row["conversion_margin"],
+                "tod_margin": row["tod_margin"],
                 "value_imputed": county["value_imputed"],
                 "bps_reporting": county["bps_reporting"],
+                "close_call": close,
+                "close_call_reason": reason,
             }
         )
 
     hpi_2020 = state["fhfa_hpi_2020"]
     hpi_change = 0.0 if hpi_2020 == 0 else state["fhfa_hpi_latest"] / hpi_2020 - 1.0
-    return {
+    payload = {
         "state": state_code,
         "name": state["name"],
         "tier": state["tier"],
@@ -1012,9 +1239,19 @@ def simulate_state(
         "neutral": neutral,
         "lot_feasible_share": lot_share,
         "lot_feasible_note": lot_note,
+        "lot_feasible_tag": lot_tag,
+        "provenance_legend": LEGEND,
         "geography_eligible_share": params["geography_eligible_share"],
         "walkshed_sqmi": shed,
         "focus_county": focus["name"],
+        "focus_margins": {
+            "adu": focus["adu_margin"],
+            "teardown": focus["teardown_margin"],
+            "conversion": focus["conversion_margin"],
+            "tod": focus["tod_margin"],
+            "threshold": params["feasibility_threshold"],
+            "sigma": params["feasibility_sigma"],
+        },
         "housing_units": state["housing_units"],
         "median_value": state["median_value"],
         "median_rent": state["median_rent"],
@@ -1041,6 +1278,7 @@ def simulate_state(
             "standalone_fees": metrics["fees"][0],
         },
     }
+    return stamp_tree(payload)
 
 
 def _sum_baseline(rows: list[dict[str, Any]], kind: str) -> float:
