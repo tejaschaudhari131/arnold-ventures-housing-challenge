@@ -3,6 +3,14 @@
   "specVersion": "1.5",
   "version": 1,
   "metadata": {
+    "timestamp": "2026-10-31T06:30:00Z",
+    "tools": [
+      {
+        "vendor": "Stateframe",
+        "name": "hand-maintained CycloneDX for the direct pins in requirements.txt",
+        "version": "1.0.0"
+      }
+    ],
     "component": {
       "type": "application",
       "name": "stateframe",

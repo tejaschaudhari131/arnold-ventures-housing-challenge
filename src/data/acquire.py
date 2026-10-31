@@ -306,7 +306,7 @@ def load_growth() -> dict[str, float]:
     return growth
 
 
-def load_land() -> dict[str, float]:
+def load_land() -> tuple[dict[str, float], list[dict[str, Any]]]:
     print("  gazetteer", flush=True)
     blob = fetch_bytes(GAZETTEER_URL)
     with zipfile.ZipFile(io.BytesIO(blob)) as archive:
@@ -314,16 +314,31 @@ def load_land() -> dict[str, float]:
         text = archive.read(name).decode("latin1")
     reader = csv.DictReader(io.StringIO(text), delimiter="\t")
     land: dict[str, float] = {}
+    points: list[dict[str, Any]] = []
     for row in reader:
-        geoid = (row.get("GEOID") or "").strip()
+        cleaned = {str(key).strip(): (value.strip() if isinstance(value, str) else value) for key, value in row.items()}
+        geoid = (cleaned.get("GEOID") or "").strip()
         if len(geoid) != 5 or geoid[:2] not in TARGET_FIPS:
             continue
-        sqmi = _to_float(row.get("ALAND_SQMI"))
+        sqmi = _to_float(cleaned.get("ALAND_SQMI"))
         if sqmi is None:
-            aland = _to_float(row.get("ALAND")) or 0.0
+            aland = _to_float(cleaned.get("ALAND")) or 0.0
             sqmi = aland / 2_589_988.11
         land[geoid] = sqmi
-    return land
+        lat = _to_float(cleaned.get("INTPTLAT"))
+        lon = _to_float(cleaned.get("INTPTLONG"))
+        if lat is None or lon is None:
+            continue
+        points.append(
+            {
+                "fips": geoid,
+                "state": FIPS_TO_CODE[geoid[:2]],
+                "name": cleaned.get("NAME") or geoid,
+                "lat": lat,
+                "lon": lon,
+            }
+        )
+    return land, points
 
 
 def _column_index(ref: str) -> int:
@@ -428,12 +443,12 @@ def reconcile_segment(
         county[field] = residual * max(county[weight_field], 0.0) / weight
 
 
-def build_states() -> tuple[dict[str, Any], dict[str, float]]:
+def build_states() -> tuple[dict[str, Any], dict[str, float], list[dict[str, Any]]]:
     print("Downloading public sources...", flush=True)
     acs = load_acs()
     state_bps, county_bps = load_bps()
     growth = load_growth()
-    land = load_land()
+    land, points = load_land()
     fhfa = load_fhfa()
     tier1_doc = load_json(TIER1_PATH)
     national_sf = national_unit_value(state_bps, "sf_u", "sf_v")
@@ -550,7 +565,7 @@ def build_states() -> tuple[dict[str, Any], dict[str, float]]:
             f"completeness {states[code]['completeness']}",
             flush=True,
         )
-    return states, {"sf_permit_value": national_sf, "mf_permit_value": national_mf}
+    return states, {"sf_permit_value": national_sf, "mf_permit_value": national_mf}, points
 
 
 def _county_name(fips: str, land: dict[str, float]) -> str:
@@ -620,6 +635,21 @@ def build_payload(states: dict[str, Any], national: dict[str, float]) -> dict[st
     }
 
 
+def write_county_points(points: list[dict[str, Any]], path: Path) -> None:
+    """Interior points only. The national gazetteer zip is not committed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "source": "U.S. Census Bureau, 2024 Gazetteer Counties National, INTPTLAT and INTPTLONG",
+        "vintage": "2024",
+        "license": "Public domain, U.S. government work",
+        "url": GAZETTEER_URL,
+        "points": sorted(points, key=lambda item: item["fips"]),
+    }
+    with path.open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+        handle.write("\n")
+
+
 def write_fixtures(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
@@ -642,7 +672,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     output = Path(args.output) if args.output else ROOT / "data" / "cache" / "fixtures.json"
     try:
-        states, national = build_states()
+        states, national, points = build_states()
         payload = build_payload(states, national)
     except AcquireError as exc:
         print(f"Acquisition failed: {exc}", file=sys.stderr)
@@ -650,8 +680,12 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     write_fixtures(payload, output)
     print(f"Wrote {output}")
+    points_path = output.parent / "county_points.json"
+    write_county_points(points, points_path)
+    print(f"Wrote {points_path}")
     if args.write_sample:
         write_fixtures(payload, SAMPLE_FIXTURES)
+        write_county_points(points, SAMPLE_FIXTURES.parent / "county_points.json")
         print(f"Wrote {SAMPLE_FIXTURES}")
     return 0
 
