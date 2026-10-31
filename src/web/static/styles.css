@@ -124,6 +124,9 @@ main { padding: 18px 22px 48px; min-width: 0; }
 .stat .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .stat .v { font-family: var(--serif); font-size: 28px; margin-top: 2px; }
 .stat .s { font-size: 13px; color: var(--muted); }
+.stat .num, .ba .num { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.ba .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.ba .v { font-family: var(--serif); font-size: 22px; line-height: 1.15; }
 
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .tab, button {
@@ -201,4 +204,101 @@ footer p { margin: 0 0 6px; }
 @media (max-width: 640px) {
   .headline { grid-template-columns: 1fr; }
   .top, main, footer { padding-left: 14px; padding-right: 14px; }
+}
+
+.legend-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+.tag {
+  display: inline-block;
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 99px;
+  padding: 1px 6px;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+.tag.observed { background: #d9e6f5; color: var(--navy); }
+.tag.assumed { background: #f3e3c4; color: var(--tier2); }
+.tag.calculated { background: var(--green-soft); color: var(--green); }
+.badge-close {
+  display: inline-block;
+  background: #f8e6c8;
+  color: var(--copper);
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.scenario-card {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: left;
+  color: inherit;
+}
+.scenario-card.selected { outline: 2px solid var(--green); }
+.scenario-card.off { opacity: 0.62; }
+.scenario-card h3 { margin: 0; font-size: 16px; }
+.card-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.plain { font-size: 14px; color: var(--ink); margin: 8px 0; }
+.ba { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.ba .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.ba .v { font-family: var(--serif); font-size: 18px; line-height: 1.2; }
+.switch { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.map-wrap {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+#map-stage svg { width: 100%; height: auto; display: block; }
+#map-stage svg [role="button"]:focus { outline: 2px solid var(--copper); }
+.reform-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; align-items: center; margin: 8px 0 12px; font-size: 13px; }
+.reform-row input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: var(--navy); }
+.reform-mix { border-bottom: 1px solid var(--line); margin-bottom: 8px; padding-bottom: 8px; }
+.brief-sheet {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 20px;
+  max-width: 780px;
+}
+.brief-sheet h2 { font-size: 28px; }
+.brief-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; }
+.brief-sheet table { font-size: 13px; }
+.brief-sheet th, .brief-sheet td { white-space: normal; }
+.case-step { background: var(--paper-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.case-fields { display: grid; gap: 8px; margin-top: 10px; }
+.case-field { background: white; border-radius: 8px; padding: 8px 10px; }
+.case-field p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+
+@media print {
+  .top, .states, .assumptions, .tabs, .status, footer, .no-print,
+  #panel-compare, #panel-math, #panel-sensitivity, #panel-counties,
+  #panel-cross, #panel-case, #panel-limits {
+    display: none !important;
+  }
+  #panel-brief, #panel-brief[hidden] { display: block !important; }
+  .layout { display: block; }
+  .brief-sheet { border: 0; max-width: none; padding: 0; }
+  body { background: white; }
+  @page { margin: 0.55in; }
 }

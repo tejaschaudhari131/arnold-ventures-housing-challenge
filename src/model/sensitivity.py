@@ -14,6 +14,7 @@ import random
 from typing import Any
 
 from src.model.engine import simulate_state
+from src.model.provenance import stamp_tree
 
 
 def metric(result: dict[str, Any], scenario: str) -> float:
@@ -65,7 +66,7 @@ def tornado(
             }
         )
     rows.sort(key=lambda item: item["swing"], reverse=True)
-    return {"state": state, "scenario": scenario, "central": central, "parameters": rows}
+    return stamp_tree({"state": state, "scenario": scenario, "central": central, "parameters": rows})
 
 
 def monte_carlo(
@@ -112,16 +113,21 @@ def monte_carlo(
         index = min(len(samples) - 1, max(0, int(round(p * (len(samples) - 1)))))
         return samples[index]
 
-    return {
-        "state": state,
-        "scenario": scenario,
-        "draws": count,
-        "seed": assumptions.monte_carlo_seed if seed is None else seed,
-        "parcel_mode": parcel_mode,
-        "sigma_scale": sigma_scale,
-        "p10": percentile(0.10),
-        "p50": percentile(0.50),
-        "p90": percentile(0.90),
-        "min": samples[0] if samples else 0.0,
-        "max": samples[-1] if samples else 0.0,
-    }
+    p10 = percentile(0.10)
+    p90 = percentile(0.90)
+    return stamp_tree(
+        {
+            "state": state,
+            "scenario": scenario,
+            "draws": count,
+            "seed": assumptions.monte_carlo_seed if seed is None else seed,
+            "parcel_mode": parcel_mode,
+            "sigma_scale": sigma_scale,
+            "p10": p10,
+            "p50": percentile(0.50),
+            "p90": p90,
+            "min": samples[0] if samples else 0.0,
+            "max": samples[-1] if samples else 0.0,
+            "crosses_zero": bool(p10 < 0 < p90),
+        }
+    )

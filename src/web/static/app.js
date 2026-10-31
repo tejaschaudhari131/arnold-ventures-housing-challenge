@@ -4,17 +4,39 @@
   "use strict";
 
   var ORDER = ["baseline", "adu", "missing_middle", "tod", "parking", "fees", "combined"];
+  var REFORMS = ["adu", "missing_middle", "tod", "parking", "fees"];
+  var REFORM_LABELS = {
+    adu: "ADUs",
+    missing_middle: "Missing middle",
+    tod: "Transit-oriented density",
+    parking: "Parking reform",
+    fees: "Fee reduction",
+  };
+  var LEGEND = {
+    observed: "Measured in a public dataset from the official data list and stored for this place.",
+    assumed: "A published assumption or an imputation. It is not a measurement for this place.",
+    calculated: "Arithmetic in src/model/equations.py, using observed inputs and published assumptions.",
+  };
   var stateCode = "PA";
   var scenarioId = "adu";
   var parameters = [];
   var overrides = {};
+  var reformOn = { adu: true, missing_middle: true, tod: true, parking: true, fees: true };
+  var reformWeight = { adu: 1, missing_middle: 1, tod: 1, parking: 1, fees: 1 };
   var result = null;
+  var mapDoc = null;
+  var mapScope = "state";
+  var selectedFips = null;
+  var lastBand = null;
+  var caseStudy = null;
+  var caseStep = 0;
   var timer = null;
   var requestId = 0;
 
   var statusEl = document.getElementById("status");
   var stateList = document.getElementById("state-list");
   var headline = document.getElementById("headline");
+  var cards = document.getElementById("cards");
   var compareBody = document.querySelector("#compare-table tbody");
   var drivers = document.getElementById("drivers");
   var mathFocus = document.getElementById("math-focus");
@@ -25,6 +47,13 @@
   var crossOut = document.getElementById("cross-out");
   var limits = document.getElementById("limits");
   var sliders = document.getElementById("sliders");
+  var reformMix = document.getElementById("reform-mix");
+  var mapStage = document.getElementById("map-stage");
+  var mapTitle = document.getElementById("map-title");
+  var countyDetail = document.getElementById("county-detail");
+  var briefEl = document.getElementById("brief");
+  var caseBody = document.getElementById("case-body");
+  var caseProgress = document.getElementById("case-progress");
 
   function setStatus(text) {
     statusEl.textContent = text || "";
@@ -84,6 +113,28 @@
     return (n > 0 ? "+" : "") + body + "%";
   }
 
+  function escapeHtml(text) {
+    return String(text == null ? "" : text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function badge(tag) {
+    var key = tag === "observed" || tag === "assumed" || tag === "calculated" ? tag : "calculated";
+    return '<abbr class="tag ' + key + '" title="' + escapeHtml(LEGEND[key]) + '">' + key + "</abbr>";
+  }
+
+  function tagged(value, tag, formatter) {
+    return '<span class="num">' + formatter(value) + badge(tag) + "</span>";
+  }
+
+  function tagOf(node, key, fallback) {
+    if (node && node.provenance && node.provenance[key]) return node.provenance[key];
+    return fallback || "calculated";
+  }
+
   async function request(path, options) {
     var response = await fetch(path, options);
     var data = {};
@@ -105,6 +156,14 @@
     });
   }
 
+  function reformsPayload() {
+    var out = {};
+    REFORMS.forEach(function (id) {
+      out[id] = { on: !!reformOn[id], weight: Number(reformWeight[id]) };
+    });
+    return out;
+  }
+
   function renderStates(catalog) {
     stateList.innerHTML = "";
     catalog.forEach(function (state) {
@@ -114,11 +173,13 @@
       button.setAttribute("aria-pressed", state.code === stateCode ? "true" : "false");
       var score = Math.round(Number(state.completeness) * 100);
       button.innerHTML =
-        "<strong>" + state.name + "</strong>" +
+        "<strong>" + escapeHtml(state.name) + "</strong>" +
         '<span class="pill ' + (state.tier === 1 ? "t1" : "t2") + '">Tier ' + state.tier + "</span>" +
         "<span>" + integer(state.housing_units) + " homes · completeness " + score + "%</span>" +
         '<span class="meter" aria-hidden="true"><i style="width:' + score + '%"></i></span>';
       button.addEventListener("click", function () {
+        mapScope = "state";
+        selectedFips = null;
         selectState(state.code);
       });
       stateList.appendChild(button);
@@ -130,6 +191,57 @@
       return Number(overrides[spec.name]);
     }
     return Number(spec.central);
+  }
+
+  function renderReformMix() {
+    reformMix.innerHTML = "";
+    var wrap = document.createElement("div");
+    wrap.className = "reform-mix";
+    var title = document.createElement("p");
+    title.className = "aside-label";
+    title.textContent = "Reform mix";
+    wrap.appendChild(title);
+    var hint = document.createElement("p");
+    hint.className = "hint";
+    hint.textContent = "Turn a reform off, or give it a weight below 100 percent, to see the combined package without that piece. Standalone cards stay visible so the before-and-after is still readable.";
+    wrap.appendChild(hint);
+    REFORMS.forEach(function (id) {
+      var row = document.createElement("div");
+      row.className = "reform-row";
+      var label = document.createElement("label");
+      label.className = "switch";
+      var box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = !!reformOn[id];
+      box.setAttribute("aria-label", "Include " + REFORM_LABELS[id] + " in the package");
+      label.appendChild(box);
+      label.appendChild(document.createTextNode(REFORM_LABELS[id]));
+      var value = document.createElement("span");
+      value.textContent = Math.round(reformWeight[id] * 100) + "%";
+      var range = document.createElement("input");
+      range.type = "range";
+      range.min = "0";
+      range.max = "1";
+      range.step = "0.05";
+      range.value = String(reformWeight[id]);
+      range.disabled = !reformOn[id];
+      range.setAttribute("aria-label", REFORM_LABELS[id] + " weight in the package");
+      box.addEventListener("change", function () {
+        reformOn[id] = box.checked;
+        range.disabled = !box.checked;
+        schedule();
+      });
+      range.addEventListener("input", function () {
+        reformWeight[id] = Number(range.value);
+        value.textContent = Math.round(reformWeight[id] * 100) + "%";
+        schedule();
+      });
+      row.appendChild(label);
+      row.appendChild(value);
+      row.appendChild(range);
+      wrap.appendChild(row);
+    });
+    reformMix.appendChild(wrap);
   }
 
   function renderSliders() {
@@ -151,14 +263,14 @@
       summary.textContent = group;
       details.appendChild(summary);
       groups[group].forEach(function (spec) {
-        var wrap = document.createElement("div");
-        wrap.className = "slider";
+        var item = document.createElement("div");
+        item.className = "slider";
         var label = document.createElement("label");
         var title = document.createElement("span");
         title.textContent = spec.label;
         var value = document.createElement("span");
         var current = sliderValue(spec);
-        value.textContent = formatSetting(spec, current);
+        value.innerHTML = escapeHtml(formatSetting(spec, current)) + badge("assumed");
         label.appendChild(title);
         label.appendChild(value);
         var input = document.createElement("input");
@@ -170,7 +282,7 @@
         input.setAttribute("aria-label", spec.label);
         function onSlide() {
           var next = Number(input.value);
-          value.textContent = formatSetting(spec, next);
+          value.innerHTML = escapeHtml(formatSetting(spec, next)) + badge("assumed");
           if (Math.abs(next - Number(spec.central)) < Number(input.step) / 2) {
             delete overrides[spec.name];
           } else {
@@ -180,13 +292,13 @@
         }
         input.addEventListener("input", onSlide);
         input.addEventListener("change", onSlide);
-        var hint = document.createElement("p");
-        hint.className = "hint";
-        hint.textContent = spec.help || ("Published band " + oneDecimal(spec.low) + " to " + oneDecimal(spec.high) + ".");
-        wrap.appendChild(label);
-        wrap.appendChild(input);
-        wrap.appendChild(hint);
-        details.appendChild(wrap);
+        var note = document.createElement("p");
+        note.className = "hint";
+        note.textContent = spec.help || ("Published band " + oneDecimal(spec.low) + " to " + oneDecimal(spec.high) + ".");
+        item.appendChild(label);
+        item.appendChild(input);
+        item.appendChild(note);
+        details.appendChild(item);
       });
       sliders.appendChild(details);
     });
@@ -211,15 +323,114 @@
 
   function renderHeadline() {
     var lift = result.scenarios.combined.lift_pct;
+    var lotTag = tagOf(result, "lot_feasible_share", "assumed");
     headline.innerHTML =
-      card("Baseline completions", integer(result.baseline_completions_5yr), "Five-year units added under current rules") +
-      card("Package, net new", integer(result.scenarios.combined.incremental_completions), signedPercent(lift) + " versus baseline") +
-      card("Walkshed", oneDecimal(result.walkshed_sqmi) + " sq mi", "Major transit stops, after overlap") +
-      card("Lot screen", Math.round(result.lot_feasible_share * 100) + "%", "Single-family lots that can hold a 600 sq ft ADU");
+      card(
+        "Baseline completions",
+        tagged(result.baseline_completions_5yr, tagOf(result, "baseline_completions_5yr"), integer),
+        "Five-year homes completed if today's permit pace continues. This is calculated from observed permits and assumed completion ratios."
+      ) +
+      card(
+        "Package, net new",
+        tagged(result.scenarios.combined.incremental_completions, "calculated", integer),
+        signedPercent(lift) + " versus baseline. Overlap among the reforms that are switched on is removed."
+      ) +
+      card(
+        "Walkshed",
+        tagged(result.walkshed_sqmi, tagOf(result, "walkshed_sqmi"), function (value) { return oneDecimal(value) + " sq mi"; }),
+        "Calculated area around major transit stops, after an assumed overlap discount."
+      ) +
+      card(
+        "Lot screen",
+        tagged(result.lot_feasible_share, lotTag, function (value) { return Math.round(value * 100) + "%"; }),
+        result.lot_feasible_note || "Share of single-family lots that can hold a 600 sq ft ADU."
+      );
   }
 
-  function card(label, value, sub) {
-    return '<article class="stat"><div class="k">' + label + '</div><div class="v">' + value + '</div><div class="s">' + sub + "</div></article>";
+  function card(label, valueHtml, sub) {
+    return '<article class="stat"><div class="k">' + escapeHtml(label) + '</div><div class="v">' + valueHtml + '</div><div class="s">' + escapeHtml(sub) + "</div></article>";
+  }
+
+  function scenarioColumn(id) {
+    return id === "baseline" ? "baseline_completions" : id;
+  }
+
+  function closeCallFor(id) {
+    var chosen = result.scenarios[id];
+    if (chosen.close_call) return chosen.close_call_reason;
+    if (lastBand && lastBand.scenario === id && lastBand.crosses_zero) {
+      return "Close call: the p10–p90 band crosses zero, so the published assumption range includes both a gain and a loss.";
+    }
+    return "";
+  }
+
+  function renderCards() {
+    cards.innerHTML = "";
+    ORDER.forEach(function (id) {
+      var row = result.scenarios[id];
+      var article = document.createElement("article");
+      var off = id !== "baseline" && id !== "combined" && !reformOn[id];
+      article.className = "scenario-card" + (id === scenarioId ? " selected" : "") + (off ? " off" : "");
+      var before = result.baseline_completions_5yr;
+      var after = row.completions_5yr;
+      var net = id === "baseline" ? 0 : row.incremental_completions;
+      var close = closeCallFor(id);
+      var top = document.createElement("div");
+      top.className = "card-top";
+      var title = document.createElement("h3");
+      title.textContent = row.label;
+      top.appendChild(title);
+      if (REFORMS.indexOf(id) !== -1) {
+        var label = document.createElement("label");
+        label.className = "switch";
+        var box = document.createElement("input");
+        box.type = "checkbox";
+        box.checked = !!reformOn[id];
+        box.setAttribute("aria-label", "Include " + row.label + " in the package");
+        box.addEventListener("click", function (event) { event.stopPropagation(); });
+        box.addEventListener("change", function () {
+          reformOn[id] = box.checked;
+          renderReformMix();
+          schedule();
+        });
+        label.appendChild(box);
+        label.appendChild(document.createTextNode("In package"));
+        top.appendChild(label);
+      }
+      article.appendChild(top);
+      if (close) {
+        var flag = document.createElement("p");
+        flag.innerHTML = '<span class="badge-close">Close call</span> ' + escapeHtml(close);
+        article.appendChild(flag);
+      }
+      var plain = document.createElement("p");
+      plain.className = "plain";
+      plain.textContent = row.explanation;
+      article.appendChild(plain);
+      var grid = document.createElement("div");
+      grid.className = "ba";
+      grid.innerHTML =
+        "<div><div class='k'>Before</div><div class='v'>" + tagged(before, "calculated", integer) + "</div></div>" +
+        "<div><div class='k'>After</div><div class='v'>" + tagged(after, "calculated", integer) + "</div></div>" +
+        "<div><div class='k'>Net new</div><div class='v'>" + tagged(net, "calculated", integer) + "</div></div>";
+      article.appendChild(grid);
+      title.tabIndex = 0;
+      title.setAttribute("role", "button");
+      title.setAttribute("aria-pressed", id === scenarioId ? "true" : "false");
+      function choose() { selectScenario(id); }
+      title.addEventListener("click", function (event) {
+        event.stopPropagation();
+        choose();
+      });
+      title.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          choose();
+        }
+      });
+      title.style.cursor = "pointer";
+      cards.appendChild(article);
+    });
   }
 
   function renderCompare() {
@@ -233,13 +444,19 @@
       tr.setAttribute("aria-pressed", id === scenarioId ? "true" : "false");
       var net = id === "baseline" ? "—" : integer(row.incremental_completions);
       var lift = id === "baseline" ? "—" : signedPercent(row.lift_pct);
+      var flag = "";
+      if (row.close_call || (lastBand && lastBand.scenario === id && lastBand.crosses_zero)) {
+        flag = ' <span class="badge-close">Close call</span>';
+      }
       tr.innerHTML =
-        "<td>" + row.label + (row.cap_binding ? " · capped" : "") + "</td>" +
-        "<td>" + integer(row.permits_5yr) + "</td>" +
-        "<td>" + integer(row.completions_5yr) + "</td>" +
-        "<td>" + net + "</td>" +
-        "<td>" + integer(row.annualized_completions) + "</td>" +
-        "<td>" + lift + "</td>";
+        "<td>" + escapeHtml(row.label) + (row.cap_binding ? " · capped" : "") + flag + "</td>" +
+        "<td>" + tagged(row.permits_5yr, "calculated", integer) + "</td>" +
+        "<td>" + tagged(row.completions_5yr, "calculated", integer) + "</td>" +
+        "<td>" + (id === "baseline" ? "—" : tagged(row.incremental_completions, "calculated", integer)) + "</td>" +
+        "<td>" + tagged(row.annualized_completions, "calculated", integer) + "</td>" +
+        "<td>" + (id === "baseline" ? "—" : tagged(row.lift_pct, "calculated", signedPercent)) + "</td>";
+      void net;
+      void lift;
       function choose() { selectScenario(id); }
       tr.addEventListener("click", choose);
       tr.addEventListener("keydown", function (event) {
@@ -252,37 +469,45 @@
     });
     var chosen = result.scenarios[scenarioId];
     var parts = chosen.drivers.map(function (line) { return "<li>" + escapeHtml(line) + "</li>"; }).join("");
-    var extra = "";
+    var extra = "<p class='plain'>" + escapeHtml(chosen.explanation) + "</p>";
     if (scenarioId === "combined") {
       var c = result.components;
-      extra = "<p>Inside the package: ADUs " + integer(c.combined_adu) +
-        ", missing middle " + integer(c.combined_mm) +
-        ", TOD " + integer(c.combined_tod) +
-        ", parking " + integer(c.combined_parking) +
-        ", fees " + integer(c.combined_fees) +
+      extra += "<p>Inside the package: ADUs " + tagged(c.combined_adu, "calculated", integer) +
+        ", missing middle " + tagged(c.combined_mm, "calculated", integer) +
+        ", TOD " + tagged(c.combined_tod, "calculated", integer) +
+        ", parking " + tagged(c.combined_parking, "calculated", integer) +
+        ", fees " + tagged(c.combined_fees, "calculated", integer) +
         ". Those five parts add to the package total. Fee and parking savings inside the zoning pro formas can make the package larger than the sum of the five reforms run alone.</p>";
     }
     if (chosen.cap_binding) {
-      extra += "<p>Feasible capacity is " + integer(chosen.capacity_completions) +
+      extra += "<p>Feasible capacity is " + tagged(chosen.capacity_completions, "calculated", integer) +
         " completions. The five-year figure is the portion the absorption or adoption ceiling lets through.</p>";
     }
-    drivers.className = "callout" + (chosen.cap_binding ? " warn" : "");
-    drivers.innerHTML = "<strong>" + chosen.label + "</strong><ul>" + parts + "</ul>" + extra;
+    if (chosen.close_call_reason) {
+      extra += "<p><span class='badge-close'>Close call</span> " + escapeHtml(chosen.close_call_reason) + "</p>";
+    }
+    drivers.className = "callout" + (chosen.cap_binding || chosen.close_call ? " warn" : "");
+    drivers.innerHTML = "<strong>" + escapeHtml(chosen.label) + "</strong><ul>" + parts + "</ul>" + extra;
   }
 
   function renderMath() {
     var chosen = result.scenarios[scenarioId];
     mathFocus.textContent = chosen.label + " in " + result.name +
-      ". The steps use " + result.focus_county + " as a worked example. The last step is the official state total, the sum of every county.";
+      ". The steps use " + result.focus_county + " as a worked example. The last step is the official state total, the sum of every county. Each result is calculated. The tags under a step name the inputs.";
     mathSteps.innerHTML = "";
     (chosen.trace || []).forEach(function (step, index) {
       var article = document.createElement("article");
       article.className = "step";
+      var resultTag = (step.provenance && step.provenance.result) || "calculated";
+      var inputs = (step.inputs || []).map(function (item) {
+        return "<li>" + escapeHtml(item.label) + " " + badge(item.tag) + "</li>";
+      }).join("");
       article.innerHTML =
         "<h3>" + (index + 1) + ". " + escapeHtml(step.title) + "</h3>" +
         '<p class="eq">' + escapeHtml(step.equation) + "</p>" +
         '<p class="eq">' + escapeHtml(step.substitution) + "</p>" +
-        '<p class="result">' + integer(step.result) + " " + escapeHtml(step.unit) + "</p>" +
+        '<p class="result">' + tagged(step.result, resultTag, integer) + " " + escapeHtml(step.unit) + "</p>" +
+        (inputs ? "<ul>" + inputs + "</ul>" : "") +
         '<p class="why">' + escapeHtml(step.why) + "</p>";
       mathSteps.appendChild(article);
     });
@@ -297,28 +522,36 @@
     rows.forEach(function (county) {
       Object.keys(totals).forEach(function (key) { totals[key] += county[key]; });
       var tr = document.createElement("tr");
+      var valueTag = county.value_imputed ? "assumed" : "observed";
+      var flag = county.close_call ? ' <span class="badge-close">Close call</span>' : "";
       tr.innerHTML =
-        "<td>" + escapeHtml(county.name) + (county.value_imputed ? " *" : "") + "</td>" +
+        "<td>" + escapeHtml(county.name) + (county.value_imputed ? " *" : "") + flag + "</td>" +
         "<td>" + escapeHtml(county.context) + "</td>" +
-        "<td>" + integer(county.baseline_completions) + "</td>" +
-        "<td>" + integer(county.adu) + "</td>" +
-        "<td>" + integer(county.missing_middle) + "</td>" +
-        "<td>" + integer(county.tod) + "</td>" +
-        "<td>" + integer(county.parking) + "</td>" +
-        "<td>" + integer(county.fees) + "</td>" +
-        "<td>" + integer(county.combined) + "</td>";
+        "<td>" + tagged(county.baseline_completions, "calculated", integer) + "</td>" +
+        "<td>" + tagged(county.adu, "calculated", integer) + "</td>" +
+        "<td>" + tagged(county.missing_middle, "calculated", integer) + "</td>" +
+        "<td>" + tagged(county.tod, "calculated", integer) + "</td>" +
+        "<td>" + tagged(county.parking, "calculated", integer) + "</td>" +
+        "<td>" + tagged(county.fees, "calculated", integer) + "</td>" +
+        "<td>" + tagged(county.combined, "calculated", integer) + "</td>";
+      tr.title = county.name + " median value is " + valueTag + ". " + (county.close_call_reason || "");
+      tr.addEventListener("click", function () {
+        selectedFips = county.fips;
+        mapScope = "state";
+        renderMap();
+      });
       countyBody.appendChild(tr);
     });
     var foot = document.createElement("tr");
     foot.innerHTML =
       "<td>Sum (equals rounded state total)</td><td></td>" +
-      "<td>" + integer(totals.baseline_completions) + "</td>" +
-      "<td>" + integer(totals.adu) + "</td>" +
-      "<td>" + integer(totals.missing_middle) + "</td>" +
-      "<td>" + integer(totals.tod) + "</td>" +
-      "<td>" + integer(totals.parking) + "</td>" +
-      "<td>" + integer(totals.fees) + "</td>" +
-      "<td>" + integer(totals.combined) + "</td>";
+      "<td>" + tagged(totals.baseline_completions, "calculated", integer) + "</td>" +
+      "<td>" + tagged(totals.adu, "calculated", integer) + "</td>" +
+      "<td>" + tagged(totals.missing_middle, "calculated", integer) + "</td>" +
+      "<td>" + tagged(totals.tod, "calculated", integer) + "</td>" +
+      "<td>" + tagged(totals.parking, "calculated", integer) + "</td>" +
+      "<td>" + tagged(totals.fees, "calculated", integer) + "</td>" +
+      "<td>" + tagged(totals.combined, "calculated", integer) + "</td>";
     countyBody.appendChild(foot);
   }
 
@@ -340,12 +573,322 @@
     limits.appendChild(note);
   }
 
+  function renderBrief() {
+    var chosen = result.scenarios[scenarioId];
+    var before = result.baseline_completions_5yr;
+    var after = chosen.completions_5yr;
+    var net = scenarioId === "baseline" ? 0 : chosen.incremental_completions;
+    var assumptionRows = parameters.slice(0, 6).map(function (spec) {
+      var current = sliderValue(spec);
+      return "<tr><td>" + escapeHtml(spec.label) + "</td><td>" +
+        escapeHtml(formatSetting(spec, current)) + badge("assumed") + "</td><td>" +
+        escapeHtml(oneDecimal(spec.low) + " – " + oneDecimal(spec.high)) + "</td></tr>";
+    }).join("");
+    var close = closeCallFor(scenarioId);
+    briefEl.innerHTML =
+      '<div class="brief-sheet">' +
+      "<p class='eyebrow'>Stateframe one-page brief</p>" +
+      "<h2>" + escapeHtml(result.name) + " · " + escapeHtml(chosen.label) + "</h2>" +
+      "<p>" + escapeHtml(chosen.explanation) + "</p>" +
+      '<div class="brief-grid">' +
+      "<div><div class='k'>Before</div><div class='v'>" + tagged(before, "calculated", integer) + "</div><p>Five-year completions, current rules.</p></div>" +
+      "<div><div class='k'>After</div><div class='v'>" + tagged(after, "calculated", integer) + "</div><p>Baseline plus this scenario.</p></div>" +
+      "<div><div class='k'>Net new</div><div class='v'>" + tagged(net, "calculated", integer) + "</div><p>Calculated addition over five years.</p></div>" +
+      "</div>" +
+      (close ? "<p><span class='badge-close'>Close call</span> " + escapeHtml(close) + "</p>" : "") +
+      "<h3>Assumptions in this run</h3>" +
+      "<table><thead><tr><th>Assumption</th><th>Value</th><th>Published band</th></tr></thead><tbody>" +
+      assumptionRows +
+      "<tr><td>Lot screen</td><td>" + tagged(result.lot_feasible_share, tagOf(result, "lot_feasible_share"), function (value) { return Math.round(Number(value) * 100) + "%"; }) +
+      "</td><td>" + escapeHtml(result.lot_feasible_note || "") + "</td></tr>" +
+      "</tbody></table>" +
+      "<h3>Provenance</h3>" +
+      "<p>" + badge("observed") + " " + escapeHtml(LEGEND.observed) + "</p>" +
+      "<p>" + badge("assumed") + " " + escapeHtml(LEGEND.assumed) + "</p>" +
+      "<p>" + badge("calculated") + " " + escapeHtml(LEGEND.calculated) + "</p>" +
+      "<p><strong>What this cannot tell you.</strong> " + escapeHtml((chosen.cannot && chosen.cannot[0]) || "") + "</p>" +
+      "<p>Housing stock and prices are Census ACS figures. Permits are the Building Permits Survey. The map uses Census gazetteer interior points. County integers sum to the rounded state total. Tejas Chaudhari, Yoon Yik Ng, and Christopher Severns, Carnegie Mellon University. Apache-2.0.</p>" +
+      "</div>";
+  }
+
+  function pointsFor(code) {
+    if (!mapDoc || !mapDoc.points) return [];
+    return mapDoc.points.filter(function (point) { return point.state === code; });
+  }
+
+  function boundsOf(points) {
+    var minLat = Infinity;
+    var maxLat = -Infinity;
+    var minLon = Infinity;
+    var maxLon = -Infinity;
+    points.forEach(function (point) {
+      minLat = Math.min(minLat, point.lat);
+      maxLat = Math.max(maxLat, point.lat);
+      minLon = Math.min(minLon, point.lon);
+      maxLon = Math.max(maxLon, point.lon);
+    });
+    var padLat = Math.max(0.15, (maxLat - minLat) * 0.08);
+    var padLon = Math.max(0.15, (maxLon - minLon) * 0.08);
+    return { minLat: minLat - padLat, maxLat: maxLat + padLat, minLon: minLon - padLon, maxLon: maxLon + padLon };
+  }
+
+  function project(point, box, width, height) {
+    var x = ((point.lon - box.minLon) / (box.maxLon - box.minLon)) * width;
+    var y = ((box.maxLat - point.lat) / (box.maxLat - box.minLat)) * height;
+    return [x, y];
+  }
+
+  function convexHull(coords) {
+    var pts = coords.slice().sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    if (pts.length < 3) return pts;
+    function cross(o, a, b) {
+      return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    }
+    var lower = [];
+    pts.forEach(function (p) {
+      while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+      lower.push(p);
+    });
+    var upper = [];
+    pts.slice().reverse().forEach(function (p) {
+      while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+      upper.push(p);
+    });
+    upper.pop();
+    lower.pop();
+    return lower.concat(upper);
+  }
+
+  function countyByFips(fips) {
+    if (!result) return null;
+    for (var i = 0; i < result.counties.length; i += 1) {
+      if (result.counties[i].fips === fips) return result.counties[i];
+    }
+    return null;
+  }
+
+  function metricOf(county) {
+    if (!county) return 0;
+    return Number(county[scenarioColumn(scenarioId)] || 0);
+  }
+
+  function colorFor(value, max) {
+    var t = max > 0 ? Math.max(0, value) / max : 0;
+    var r = Math.round(244 - t * 220);
+    var g = Math.round(240 - t * 140);
+    var b = Math.round(230 - t * 160);
+    return "rgb(" + r + "," + g + "," + b + ")";
+  }
+
+  function renderCountyDetail(county) {
+    if (!county) {
+      countyDetail.hidden = true;
+      countyDetail.innerHTML = "";
+      return;
+    }
+    var valueTag = county.value_imputed ? "assumed" : "observed";
+    var column = scenarioColumn(scenarioId);
+    countyDetail.hidden = false;
+    countyDetail.innerHTML =
+      "<strong>" + escapeHtml(county.name) + "</strong> " +
+      (county.close_call ? '<span class="badge-close">Close call</span> ' : "") +
+      "<p class='plain'>" + escapeHtml(county.name) + " rolls into " + escapeHtml(result.name) +
+      " through the same county pro forma as every other county. The state total is the sum, not a separate model. " +
+      (county.close_call_reason || "This county is not sitting on the feasibility hurdle.") + "</p>" +
+      "<p>Homes " + tagged(county.housing_units, "observed", integer) +
+      ". Median value " + tagged(county.median_value, valueTag, function (value) { return "$" + integer(value); }) +
+      ". Selected scenario " + tagged(county[column], "calculated", integer) + ".</p>";
+  }
+
+  function renderMap() {
+    if (!mapDoc || !result) {
+      mapStage.textContent = "County interior points are still loading.";
+      return;
+    }
+    if (mapScope === "nation") renderNationMap();
+    else renderStateMap();
+  }
+
+  function renderStateMap() {
+    var points = pointsFor(stateCode);
+    mapTitle.textContent = result.name + " counties";
+    if (!points.length) {
+      mapStage.textContent = "No gazetteer points for this state.";
+      return;
+    }
+    var box = boundsOf(points);
+    var width = 800;
+    var height = 520;
+    var maxMetric = 0;
+    points.forEach(function (point) {
+      maxMetric = Math.max(maxMetric, metricOf(countyByFips(point.fips)));
+    });
+    var hull = convexHull(points.map(function (point) { return project(point, box, width, height); }));
+    var hullPath = hull.map(function (pair, index) {
+      return (index === 0 ? "M" : "L") + pair[0].toFixed(1) + " " + pair[1].toFixed(1);
+    }).join(" ") + " Z";
+    var circles = points.map(function (point) {
+      var county = countyByFips(point.fips);
+      var xy = project(point, box, width, height);
+      var value = metricOf(county);
+      var radius = 5 + 9 * Math.sqrt((county ? county.housing_units : 1) / result.housing_units);
+      var selected = point.fips === selectedFips;
+      var label = (county ? county.name : point.name) + ", " + integer(value);
+      return '<circle role="button" tabindex="0" data-fips="' + point.fips + '" cx="' + xy[0].toFixed(1) +
+        '" cy="' + xy[1].toFixed(1) + '" r="' + radius.toFixed(1) + '" fill="' + colorFor(value, maxMetric) +
+        '" stroke="' + (selected ? "#9a4e24" : "#1c2430") + '" stroke-width="' + (selected ? 2.5 : 0.6) +
+        '"><title>' + escapeHtml(label) + "</title></circle>";
+    }).join("");
+    mapStage.innerHTML =
+      '<svg viewBox="0 0 ' + width + " " + height + '" role="img" aria-label="Map of ' + escapeHtml(result.name) + ' counties, colored by the selected scenario">' +
+      '<rect width="100%" height="100%" fill="#f7f3ea"></rect>' +
+      '<path d="' + hullPath + '" fill="#e7f0e4" stroke="#0f6b4e" stroke-width="1.5"></path>' +
+      circles +
+      "</svg>";
+    bindMapKeys();
+    renderCountyDetail(selectedFips ? countyByFips(selectedFips) : null);
+  }
+
+  function stateShape(code, pts, localBox, originX, originY, drawW, drawH) {
+    var hull = convexHull(pts.map(function (point) { return project(point, localBox, drawW, drawH); }));
+    if (hull.length < 3) return "";
+    var path = hull.map(function (pair, index) {
+      var x = pair[0] + originX;
+      var y = pair[1] + originY;
+      return (index === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1);
+    }).join(" ") + " Z";
+    var cx = 0;
+    var cy = 0;
+    hull.forEach(function (pair) { cx += pair[0] + originX; cy += pair[1] + originY; });
+    cx /= hull.length;
+    cy /= hull.length;
+    var active = code === stateCode;
+    return '<g role="button" tabindex="0" data-state="' + code + '">' +
+      '<path d="' + path + '" fill="' + (active ? "#cfe6d8" : "#e4ecf5") + '" stroke="#1e3a5f" stroke-width="1.4"></path>' +
+      '<text x="' + cx.toFixed(1) + '" y="' + (cy + 4).toFixed(1) + '" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1c2430">' + code + "</text>" +
+      "<title>" + code + "</title></g>";
+  }
+
+  function renderNationMap() {
+    mapTitle.textContent = "Eleven states";
+    var groups = {};
+    mapDoc.points.forEach(function (point) {
+      if (!groups[point.state]) groups[point.state] = [];
+      groups[point.state].push(point);
+    });
+    var insetCodes = { HI: true, CT: true, RI: true, NH: true };
+    var mainland = mapDoc.points.filter(function (point) { return !insetCodes[point.state]; });
+    var box = boundsOf(mainland);
+    var width = 800;
+    var height = 460;
+    var shapes = Object.keys(groups).filter(function (code) { return !insetCodes[code]; }).map(function (code) {
+      return stateShape(code, groups[code], box, 0, 0, width, height);
+    }).join("");
+    var hiBox = boundsOf(groups.HI || []);
+    shapes += stateShape("HI", groups.HI || [], hiBox, 28, 330, 136, 100);
+    [
+      { code: "CT", x: 620, y: 40, w: 52, h: 136 },
+      { code: "RI", x: 676, y: 40, w: 52, h: 136 },
+      { code: "NH", x: 732, y: 40, w: 50, h: 136 },
+    ].forEach(function (cell) {
+      var pts = groups[cell.code] || [];
+      if (!pts.length) return;
+      shapes += stateShape(cell.code, pts, boundsOf(pts), cell.x, cell.y, cell.w, cell.h);
+    });
+    mapStage.innerHTML =
+      '<svg viewBox="0 0 800 460" role="img" aria-label="Map of the eleven challenge states. Hawaii and southern New England are inset so the small states stay clickable.">' +
+      '<rect width="100%" height="100%" fill="#f7f3ea"></rect>' +
+      '<rect x="16" y="300" width="160" height="144" fill="#fffdf8" stroke="#d9d0c2"></rect>' +
+      '<text x="24" y="316" font-size="12" font-family="sans-serif" fill="#5c6570">Hawaii</text>' +
+      '<rect x="612" y="12" width="176" height="176" fill="#fffdf8" stroke="#d9d0c2"></rect>' +
+      '<text x="620" y="28" font-size="11" font-family="sans-serif" fill="#5c6570">CT, RI, NH</text>' +
+      shapes +
+      "</svg>";
+    bindMapKeys();
+    countyDetail.hidden = true;
+  }
+
+  function bindMapKeys() {
+    mapStage.querySelectorAll("[data-fips]").forEach(function (node) {
+      function choose() {
+        selectedFips = node.getAttribute("data-fips");
+        renderStateMap();
+      }
+      node.addEventListener("click", choose);
+      node.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          choose();
+        }
+      });
+    });
+    mapStage.querySelectorAll("[data-state]").forEach(function (node) {
+      function choose() {
+        mapScope = "state";
+        selectedFips = null;
+        selectState(node.getAttribute("data-state"));
+      }
+      node.addEventListener("click", choose);
+      node.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          choose();
+        }
+      });
+    });
+  }
+
+  function renderCase() {
+    if (!caseStudy) {
+      caseBody.innerHTML = "<p>Loading the Allegheny County walkthrough…</p>";
+      return;
+    }
+    var steps = caseStudy.steps || [];
+    var step = steps[caseStep] || steps[0];
+    caseProgress.textContent = "Step " + (caseStep + 1) + " of " + steps.length + ". Allegheny County to Pennsylvania.";
+    var related = (caseStudy.fields || []).filter(function (field) {
+      if (step.id === "observed") return field.tag === "observed";
+      if (step.id === "imputed") return field.tag === "assumed";
+      if (step.id === "county" || step.id === "rollup") return field.tag === "calculated";
+      return false;
+    });
+    var fieldHtml = related.map(function (field) {
+      var formatter = Math.abs(field.value) >= 100 ? integer : oneDecimal;
+      return '<article class="case-field"><strong>' + escapeHtml(field.label) + "</strong> " +
+        tagged(field.value, field.tag, formatter) +
+        "<p>" + escapeHtml(field.plain) + " Source: " + escapeHtml(field.source) + ".</p></article>";
+    }).join("");
+    caseBody.innerHTML =
+      '<article class="case-step"><h3>' + escapeHtml(step.title) + "</h3><p class='plain'>" +
+      escapeHtml(step.body) + "</p><div class='case-fields'>" + fieldHtml + "</div></article>";
+  }
+
+  function loadCaseStudy() {
+    setStatus("Opening the Pennsylvania case study…");
+    return post("/api/case-study", { overrides: overrides, reforms: reformsPayload() })
+      .then(function (payload) {
+        caseStudy = payload;
+        renderCase();
+        setStatus("");
+      })
+      .catch(fail);
+  }
+
   function render() {
+    if (result.provenance_legend) {
+      LEGEND.observed = result.provenance_legend.observed || LEGEND.observed;
+      LEGEND.assumed = result.provenance_legend.assumed || LEGEND.assumed;
+      LEGEND.calculated = result.provenance_legend.calculated || LEGEND.calculated;
+    }
     renderHeadline();
+    renderCards();
     renderCompare();
     renderMath();
     renderCounties();
     renderLimits();
+    renderBrief();
+    renderMap();
+    if (!document.getElementById("panel-case").hidden) renderCase();
   }
 
   function renderTornado(payload) {
@@ -362,7 +905,7 @@
     });
     var span = max - min || 1;
     function pos(value) { return ((value - min) / span) * 100; }
-    tornado.innerHTML = "";
+    tornado.innerHTML = "<p class='help'>Bar endpoints are calculated outcomes. The low and high inputs that produce them are assumed.</p>";
     rows.forEach(function (row) {
       var line = document.createElement("div");
       line.className = "tornado-row";
@@ -370,7 +913,7 @@
       var highLeft = Math.min(pos(row.high), pos(row.central));
       line.innerHTML =
         "<span>" + escapeHtml(row.label) + "</span>" +
-        '<div class="tornado-track" title="Low ' + integer(row.low) + " · central " + integer(row.central) + " · high " + integer(row.high) + '">' +
+        '<div class="tornado-track" title="Low ' + integer(row.low) + " calculated · central " + integer(row.central) + " calculated · high " + integer(row.high) + ' calculated">' +
         '<i class="axis" style="left:' + pos(row.central) + '%"></i>' +
         '<i class="low" style="left:' + lowLeft + "%;width:" + Math.abs(pos(row.low) - pos(row.central)) + '%"></i>' +
         '<i class="high" style="left:' + highLeft + "%;width:" + Math.abs(pos(row.high) - pos(row.central)) + '%"></i>' +
@@ -380,18 +923,20 @@
   }
 
   function renderBand(mc) {
-    band.className = "callout";
-    band.innerHTML = "<strong>Seeded band, " + mc.draws + " draws, seed " + mc.seed + ".</strong> " +
-      "The 10th percentile is " + integer(mc.p10) +
-      ", the median is " + integer(mc.p50) +
-      ", and the 90th percentile is " + integer(mc.p90) +
-      ". Draws are triangular on every published slider. The central case is " + integer(mc.p50 ? result.scenarios[scenarioId].incremental_completions : 0) +
-      " only when the scenario is not the baseline; the band itself is the outcome the tornado uses.";
+    lastBand = mc;
     var central = scenarioId === "baseline" ? result.baseline_completions_5yr : result.scenarios[scenarioId].incremental_completions;
-    band.innerHTML = "<strong>Seeded band, " + mc.draws + " draws, seed " + mc.seed + ".</strong> " +
-      "p10 " + integer(mc.p10) + " · p50 " + integer(mc.p50) + " · p90 " + integer(mc.p90) +
-      ". The central point, with sliders at their published values, is " + integer(central) +
-      ". Each draw samples every slider from a triangle on its low / central / high band.";
+    var flag = mc.crosses_zero ? ' <span class="badge-close">Close call</span> The p10–p90 band crosses zero.' : "";
+    band.className = "callout" + (mc.crosses_zero ? " warn" : "");
+    band.innerHTML = "<strong>Seeded band, " + tagged(mc.draws, tagOf(mc, "draws", "assumed"), integer) +
+      " draws, seed " + tagged(mc.seed, tagOf(mc, "seed", "assumed"), integer) + ".</strong> " +
+      "p10 " + tagged(mc.p10, "calculated", integer) +
+      " · p50 " + tagged(mc.p50, "calculated", integer) +
+      " · p90 " + tagged(mc.p90, "calculated", integer) +
+      ". The central point, with sliders at their published values, is " + tagged(central, "calculated", integer) +
+      ". Each draw samples every slider from a triangle on its low / central / high band." + flag;
+    renderCards();
+    renderCompare();
+    renderBrief();
   }
 
   function renderCross(payload) {
@@ -412,70 +957,52 @@
     }
     Object.keys(payload.states || {}).forEach(function (code) {
       var item = payload.states[code];
-      var card = document.createElement("article");
-      card.className = "cross-card";
+      var cardEl = document.createElement("article");
+      cardEl.className = "cross-card";
       var ratio = item.band_width_ratio == null ? "—" : Number(item.band_width_ratio).toFixed(2) + "×";
-      var html = "<h3>" + code + " · tier " + item.tier + "</h3>" +
-        "<p>Lot feasibility " + Math.round(item.lot_full * 100) + "% with the extract, " +
-        Math.round(item.lot_imputed * 100) + "% when the extract is hidden. " +
-        "Package band width " + integer(item.band_width_full) + " full versus " +
-        integer(item.band_width_imputed) + " imputed (" + ratio + ").</p>" +
+      var html = "<h3>" + code + " · tier " + item.tier + " " + badge(tagOf(item, "tier", "observed")) + "</h3>" +
+        "<p>Lot feasibility " + tagged(item.lot_full, tagOf(item, "lot_full"), function (value) { return Math.round(value * 100) + "%"; }) +
+        " with the extract, " +
+        tagged(item.lot_imputed, tagOf(item, "lot_imputed", "assumed"), function (value) { return Math.round(value * 100) + "%"; }) +
+        " when the extract is hidden. Package band width " +
+        tagged(item.band_width_full, "calculated", integer) + " full versus " +
+        tagged(item.band_width_imputed, "calculated", integer) + " imputed (" + escapeHtml(ratio) + ").</p>" +
         "<table><thead><tr><th>Scenario</th><th>Full</th><th>Hidden parcels</th><th>Error</th><th>State median screen</th><th>Error</th></tr></thead><tbody>";
       Object.keys(names).forEach(function (id) {
         var block = item.scenarios[id];
-        html += "<tr><td>" + names[id] + "</td><td>" + integer(block.imputed_parcels.full) +
-          "</td><td>" + integer(block.imputed_parcels.other) +
+        html += "<tr><td>" + names[id] + "</td><td>" + tagged(block.imputed_parcels.full, "calculated", integer) +
+          "</td><td>" + tagged(block.imputed_parcels.other, "calculated", integer) +
           "</td><td>" + errorText(block.imputed_parcels) +
-          "</td><td>" + integer(block.state_screen.other) +
+          "</td><td>" + tagged(block.state_screen.other, "calculated", integer) +
           "</td><td>" + errorText(block.state_screen) + "</td></tr>";
       });
       html += "</tbody></table>";
-      card.innerHTML = html;
-      crossOut.appendChild(card);
+      cardEl.innerHTML = html;
+      crossOut.appendChild(cardEl);
     });
   }
 
   function errorText(block) {
     if (block.percent_error == null) return integer(block.gap) + " (small base)";
-    return signedPercent(block.percent_error);
-  }
-
-  function escapeHtml(text) {
-    return String(text == null ? "" : text)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    return signedPercent(block.percent_error) + " calculated";
   }
 
   function selectScenario(id) {
     scenarioId = id;
+    lastBand = null;
     if (result) {
+      renderCards();
       renderCompare();
       renderMath();
       renderLimits();
+      renderBrief();
+      renderMap();
     }
     tornado.innerHTML = "";
     band.textContent = "Run the tornado to see which published assumptions move " + id.replace(/_/g, " ") + ".";
   }
 
-  async function selectState(code) {
-    stateCode = code;
-    overrides = {};
-    tornado.innerHTML = "";
-    band.textContent = "";
-    crossOut.innerHTML = "";
-    document.querySelectorAll(".state-btn").forEach(function (button, index) {
-      var pressed = button.querySelector("strong") && result ? false : false;
-      button.classList.toggle("active", false);
-      button.setAttribute("aria-pressed", "false");
-      if (pressed) button.classList.add("active");
-      void index;
-    });
-    setStatus("Loading " + code + "…");
-    var spec = await request("/api/assumptions?state=" + encodeURIComponent(code));
-    parameters = spec.parameters;
-    renderSliders();
-    await simulate();
+  function markActiveState() {
     document.querySelectorAll("#state-list .state-btn").forEach(function (button) {
       var name = button.querySelector("strong").textContent;
       var active = result && name === result.name;
@@ -484,14 +1011,36 @@
     });
   }
 
+  async function selectState(code) {
+    stateCode = code;
+    overrides = {};
+    tornado.innerHTML = "";
+    band.textContent = "";
+    crossOut.innerHTML = "";
+    lastBand = null;
+    setStatus("Loading " + code + "…");
+    var spec = await request("/api/assumptions?state=" + encodeURIComponent(code));
+    parameters = spec.parameters;
+    renderSliders();
+    await simulate();
+    markActiveState();
+  }
+
   async function simulate() {
     var id = ++requestId;
     setStatus("Calculating " + stateCode + "…");
-    var next = await post("/api/simulate", { state: stateCode, overrides: overrides });
+    var next = await post("/api/simulate", {
+      state: stateCode,
+      overrides: overrides,
+      reforms: reformsPayload(),
+    });
     if (id !== requestId) return;
     result = next;
     setStatus("");
     render();
+    if (caseStudy && stateCode === "PA") {
+      caseStudy = null;
+    }
   }
 
   function fail(error) {
@@ -508,18 +1057,56 @@
         panel.hidden = !on;
         panel.classList.toggle("active", on);
       });
+      if (tab.getAttribute("data-tab") === "case" && !caseStudy) {
+        loadCaseStudy();
+      }
+      if (tab.getAttribute("data-tab") === "brief" && result) renderBrief();
     });
   });
 
   document.getElementById("reset").addEventListener("click", function () {
     overrides = {};
+    REFORMS.forEach(function (id) {
+      reformOn[id] = true;
+      reformWeight[id] = 1;
+    });
+    renderReformMix();
     renderSliders();
     simulate().catch(fail);
+  });
+
+  document.getElementById("map-back").addEventListener("click", function () {
+    mapScope = "nation";
+    selectedFips = null;
+    renderMap();
   });
 
   document.getElementById("export-csv").addEventListener("click", function () { download("csv"); });
   document.getElementById("export-json").addEventListener("click", function () { download("json"); });
   document.getElementById("export-md").addEventListener("click", function () { download("md"); });
+  document.getElementById("print-brief").addEventListener("click", function () { window.print(); });
+
+  document.getElementById("case-prev").addEventListener("click", function () {
+    if (!caseStudy) return;
+    caseStep = Math.max(0, caseStep - 1);
+    renderCase();
+  });
+  document.getElementById("case-next").addEventListener("click", function () {
+    if (!caseStudy) return;
+    caseStep = Math.min(caseStudy.steps.length - 1, caseStep + 1);
+    if (caseStep >= 1 && stateCode !== "PA") {
+      mapScope = "state";
+      selectedFips = "42003";
+      selectState("PA").then(function () { renderCase(); }).catch(fail);
+      return;
+    }
+    if (caseStep >= 3) {
+      selectedFips = "42003";
+      mapScope = "state";
+      if (result) renderMap();
+    }
+    renderCase();
+  });
 
   document.getElementById("run-sensitivity").addEventListener("click", function () {
     setStatus("Running the tornado and the seeded band…");
@@ -562,9 +1149,11 @@
     setStatus("");
   }
 
-  request("/api/states")
-    .then(function (payload) {
-      renderStates(payload.states);
+  renderReformMix();
+  Promise.all([request("/api/states"), request("/api/map")])
+    .then(function (payloads) {
+      mapDoc = payloads[1];
+      renderStates(payloads[0].states);
       return selectState("PA");
     })
     .catch(fail);
