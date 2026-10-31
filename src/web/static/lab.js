@@ -179,7 +179,7 @@
     var pair = sw.top_benchmark_pair;
     var cover = (live && live.coverage) || locked.coverage;
     var badge = pair.close_call
-      ? '<span class="badge-close">Close call — ' + escapeHtml(pair.leader) + " vs " + escapeHtml(pair.trailer) + "</span>"
+      ? '<span class="badge-close">Close call — ' + escapeHtml(scenarioLabel(pair.leader)) + " vs " + escapeHtml(scenarioLabel(pair.trailer)) + "</span>"
       : '<span class="badge-unknown">Ranking holds</span>';
     headline.innerHTML =
       stat("Selected increment", signed(row.central), "calculated") +
@@ -220,10 +220,12 @@
   }
 
   function colorFor(value, maxAbs) {
-    if (!maxAbs) return "#d9d0c2";
+    if (!maxAbs) return "#d4cbb8";
     var t = Math.max(-1, Math.min(1, value / maxAbs));
-    if (t >= 0) return "rgb(" + Math.round(244 - 196 * t) + "," + Math.round(240 - 52 * t) + "," + Math.round(230 - 146 * t) + ")";
-    return "rgb(" + Math.round(244 + 11 * t) + "," + Math.round(240 + 80 * t) + "," + Math.round(230 + 50 * t) + ")";
+    if (t >= 0) {
+      return "rgb(" + Math.round(228 - 213 * t) + "," + Math.round(224 - 117 * t) + "," + Math.round(208 - 130 * t) + ")";
+    }
+    return "rgb(" + Math.round(228 + 26 * t) + "," + Math.round(224 + 140 * t) + "," + Math.round(208 + 80 * t) + ")";
   }
 
   function projectBounds(counties) {
@@ -301,11 +303,12 @@
     var env = lockedCell(row.fips, scenarioId);
     var pair = row.top_benchmark_pair || locked.counties.filter(function (c) { return c.fips === row.fips; })[0].top_benchmark_pair;
     var close = pair && pair.close_call
-      ? '<span class="badge-close">Close call</span> ' + escapeHtml(pair.leader) + " vs " + escapeHtml(pair.trailer)
+      ? '<span class="badge-close">Close call</span> ' + escapeHtml(scenarioLabel(pair.leader)) + " vs " + escapeHtml(scenarioLabel(pair.trailer))
       : "Ranking holds";
+    var countyName = row.name.replace(/ County$/i, "");
     countyDetail.hidden = false;
     countyDetail.innerHTML =
-      "<p><strong>" + escapeHtml(row.name) + " County</strong> — " +
+      "<p><strong>" + escapeHtml(countyName) + " County</strong> — " +
       scenarioLabel(scenarioId) + " " + signed(current.central) + tag("calculated") +
       ". Eligible " + integer(current.eligible) + ", feasible " + integer(current.feasible) +
       ". Envelope " + integer(env.p10) + "–" + integer(env.p90) +
