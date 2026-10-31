@@ -1,0 +1,304 @@
+# Small Homes Policy Lab — assumption bands.
+#
+# Locked for milestone 1 (2026-11-07). This file is the only place the Lab sets
+# a default parameter value. Every parameter carries Low / Central / High, a
+# unit, a group, and a rationale. `ui: true` parameters are the ones the
+# Monte Carlo envelope draws (triangular low/central/high) and the browser lets
+# a reader change. `locked: true` parameters are fixed by the Participant
+# Handbook and never move.
+#
+# Every value here is ASSUMED. Observed inputs (ACS, BPS, Census geography,
+# local ordinances) come from data/ and config/lab/evidence/, never from here.
+
+version: 1
+locked: "2026-11-07"
+window_start: "2027-01-01"     # reforms are assumed adopted on this date
+horizon_years: 5
+monte_carlo_draws: 200
+monte_carlo_seed: 20261107
+close_call_flip_share: 0.10    # a ranking flips in >= this share of draws
+
+# Building Permits Survey window used for the baseline run-rate.
+bps_years: [2023, 2024, 2025]
+
+# Tract context classes, by housing units per square mile of land
+# (ACS B25001 / gazetteer ALAND_SQMI). Used to give each host a context.
+context_density:
+  urban_min: 2000
+  suburban_min: 200
+
+params:
+  # ---------------------------------------------------------------- timing
+  adoption_lag_years:
+    {low: 0.5, central: 1.0, high: 2.0, unit: years, group: timing, ui: true,
+     label: Adoption and rulemaking lag,
+     rationale: "Time between a reform taking effect and the first permits under it: local code amendments, forms, staff guidance."}
+  build_lag_adu_years:
+    {low: 0.5, central: 0.75, high: 1.25, unit: years, group: timing, ui: true,
+     label: ADU permit-to-completion,
+     rationale: "California HCD annual progress reports show most ADUs finish within a year of permit."}
+  build_lag_conversion_years:
+    {low: 0.75, central: 1.0, high: 1.5, unit: years, group: timing, ui: true,
+     label: Conversion / addition permit-to-completion,
+     rationale: "Interior conversions and small additions are faster than ground-up builds but need more design than an ADU kit."}
+  build_lag_newbuild_years:
+    {low: 1.0, central: 1.5, high: 2.25, unit: years, group: timing, ui: true,
+     label: Small multifamily permit-to-completion,
+     rationale: "Census Survey of Construction: 2–4 unit buildings average roughly 15–20 months from permit to completion."}
+  build_lag_sf_years:
+    {low: 0.6, central: 0.75, high: 1.0, unit: years, group: timing, ui: false,
+     label: Single-family permit-to-completion,
+     rationale: "Census Survey of Construction: single-family homes average about 8–9 months from permit to completion."}
+  pipeline_response_lag_years:
+    {low: 0.5, central: 0.75, high: 1.25, unit: years, group: timing, ui: true,
+     label: Pipeline response lag,
+     rationale: "Time for fee or parking savings to change which already-legal projects reach permit."}
+
+  # ---------------------------------------------------------------- uptake
+  hazard_homeowner:
+    {low: 0.003, central: 0.006, high: 0.012, unit: per year, group: uptake, ui: true,
+     label: Homeowner uptake hazard (feasible lots),
+     rationale: "Share of financially feasible owner-occupied lots that start an ADU or conversion each year. California built about 0.3 percent of its single-family stock per year as ADUs after statewide legalization, with roughly half of lots feasible, so about 0.6 percent of feasible lots."}
+  hazard_developer:
+    {low: 0.0015, central: 0.003, high: 0.006, unit: per year, group: uptake, ui: true,
+     label: Developer rebuild hazard (feasible lots),
+     rationale: "Teardown-and-rebuild requires buying an occupied house. Half the homeowner rate: lots must come to market and be assembled."}
+
+  # ----------------------------------------------------------- feasibility
+  host_margin_sigma:
+    {low: 0.15, central: 0.25, high: 0.40, unit: margin, group: feasibility, ui: true,
+     label: Lot-to-lot margin spread,
+     rationale: "Standard deviation of each lot's margin around its county-context pro forma: site costs, access, unit mix, owner skill."}
+  hurdle_owner:
+    {low: -0.05, central: 0.0, high: 0.10, unit: margin, group: feasibility, ui: true,
+     label: Homeowner hurdle margin,
+     rationale: "Homeowners build when value covers cost; some accept a small loss for family use, some want a return."}
+  hurdle_developer:
+    {low: 0.10, central: 0.15, high: 0.20, unit: margin, group: feasibility, ui: true,
+     label: Developer hurdle margin,
+     rationale: "Typical small-developer profit-on-cost target."}
+  cap_rate:
+    {low: 0.05, central: 0.06, high: 0.075, unit: share, group: feasibility, ui: true,
+     label: Capitalization rate,
+     rationale: "Small-property cap rates in Pennsylvania and New England, 2024–2026."}
+  opex_share:
+    {low: 0.25, central: 0.30, high: 0.40, unit: share of rent, group: feasibility, ui: true,
+     label: Operating cost share,
+     rationale: "Taxes, insurance, maintenance, vacancy for one to six rental homes."}
+  new_unit_rent_premium:
+    {low: 1.0, central: 1.10, high: 1.25, unit: ratio, group: feasibility, ui: true,
+     label: New-home rent premium over ACS median,
+     rationale: "ACS B25031 median gross rent covers all vintages; a new home rents above it."}
+
+  # ----------------------------------------------------------------- costs
+  adu_sqft:
+    {low: 600, central: 600, high: 800, unit: sq ft, group: costs, ui: true,
+     label: ADU size,
+     rationale: "Handbook floor is 600 sq ft; some owners build larger."}
+  adu_stories:
+    {low: 1.0, central: 1.25, high: 2.0, unit: stories, group: costs, ui: false,
+     label: Average ADU stories,
+     rationale: "Mix of one-story cottages and units over garages; sets the ADU footprint."}
+  adu_cost_psf:
+    {low: 210, central: 275, high: 350, unit: $ per sq ft, group: costs, ui: true,
+     label: ADU hard cost,
+     rationale: "Detached ADU builds in the Northeast, including utility connections."}
+  conversion_cost_per_unit:
+    {low: 120000, central: 160000, high: 220000, unit: $ per home, group: costs, ui: true,
+     label: Conversion / addition hard cost per added home,
+     rationale: "Splitting a house or adding a second home: new kitchen, bath, egress, separate utilities."}
+  newbuild_cost_psf:
+    {low: 185, central: 225, high: 275, unit: $ per sq ft, group: costs, ui: true,
+     label: Small multifamily hard cost,
+     rationale: "Wood-frame 3-story 4–6 unit buildings, Pennsylvania and New England 2025."}
+  mm_unit_sqft:
+    {low: 800, central: 950, high: 1100, unit: sq ft, group: costs, ui: false,
+     label: Missing-middle home size,
+     rationale: "Two-bedroom flat."}
+  soft_cost_share:
+    {low: 0.12, central: 0.18, high: 0.25, unit: share of hard, group: costs, ui: true,
+     label: Soft costs,
+     rationale: "Design, engineering, financing, insurance, excluding development fees."}
+  demolition_cost:
+    {low: 15000, central: 25000, high: 40000, unit: $ per lot, group: costs, ui: false,
+     label: Demolition,
+     rationale: "Single-family teardown including abatement and haul-off."}
+  teardown_value_factor:
+    {low: 0.5, central: 0.70, high: 0.9, unit: ratio to median value, group: costs, ui: true,
+     label: Teardown lot price / county median home value,
+     rationale: "Rebuild candidates are older, cheaper houses; ACS B25077 is the county median value."}
+  fee_per_unit:
+    {low: 50000, central: 50000, high: 50000, unit: $ per home, group: costs, locked: true,
+     label: Development fees today,
+     rationale: "Handbook benchmark 5: assume $50,000 per unit across all fee categories."}
+  fee_cut_share:
+    {low: 0.5, central: 0.5, high: 0.5, unit: share, group: costs, locked: true,
+     label: Fee cut,
+     rationale: "Handbook benchmark 5: reduce total development fees by 50 percent."}
+  stall_cost_surface:
+    {low: 4000, central: 6000, high: 10000, unit: $ per space, group: parking, ui: true,
+     label: Surface space cost,
+     rationale: "Driveway pad or small lot, grading and paving."}
+  stall_cost_structured:
+    {low: 20000, central: 30000, high: 45000, unit: $ per space, group: parking, ui: false,
+     label: Tuck-under / structured space cost,
+     rationale: "Tuck-under garage space in a 3-story building."}
+  structured_share_urban:
+    {low: 0.25, central: 0.5, high: 0.75, unit: share, group: parking, ui: false,
+     label: Urban rebuild spaces tucked under,
+     rationale: "Urban 4–6 home rebuilds put some spaces under the building; suburban and rural use surface."}
+  stall_area_sqft:
+    {low: 325, central: 325, high: 325, unit: sq ft, group: parking, ui: false,
+     label: Land per surface space incl. aisle,
+     rationale: "Standard 9x18 space plus share of aisle or driveway."}
+
+  # --------------------------------------------------------------- parking
+  parking_min_urban:
+    {low: 1.0, central: 1.0, high: 1.0, unit: spaces per home, group: parking, ui: false,
+     label: Current minimum, urban,
+     rationale: "Typical Pennsylvania city code for small multifamily."}
+  parking_min_suburban:
+    {low: 1.75, central: 1.75, high: 1.75, unit: spaces per home, group: parking, ui: false,
+     label: Current minimum, suburban,
+     rationale: "Typical township code: 1.5–2 per home."}
+  parking_min_rural:
+    {low: 2.0, central: 2.0, high: 2.0, unit: spaces per home, group: parking, ui: false,
+     label: Current minimum, rural,
+     rationale: "Typical rural code: 2 per home."}
+  parking_market_urban:
+    {low: 0.25, central: 0.5, high: 0.8, unit: spaces per home, group: parking, ui: true,
+     label: Developer-provided parking without mandates, urban,
+     rationale: "Handbook benchmark 4 asks teams to specify this. Studies of minimum-parking repeal (Buffalo, Seattle) find new urban projects provide roughly 0.3–0.8 spaces per home."}
+  parking_market_suburban:
+    {low: 1.0, central: 1.25, high: 1.6, unit: spaces per home, group: parking, ui: true,
+     label: Developer-provided parking without mandates, suburban,
+     rationale: "Lenders and renters still expect most suburban homes to have a space."}
+  parking_market_rural:
+    {low: 1.5, central: 1.75, high: 2.0, unit: spaces per home, group: parking, ui: true,
+     label: Developer-provided parking without mandates, rural,
+     rationale: "Without transit, rural builders provide nearly what codes require."}
+  parking_sf_gap_share:
+    {low: 0.0, central: 0.0, high: 0.5, unit: share, group: parking, ui: true,
+     label: Single-family parking dropped without mandates,
+     rationale: "Share of the single-family mandate builders stop providing. Central 0: single-family buyers expect a driveway."}
+  parking_constrained_share_urban:
+    {low: 0.15, central: 0.30, high: 0.45, unit: share, group: parking, ui: true,
+     label: Urban multifamily sites where parking caps units,
+     rationale: "Share of urban 2+ home pipeline on lots where the parking mandate, not the envelope, sets unit count."}
+  parking_constrained_share_suburban:
+    {low: 0.05, central: 0.10, high: 0.20, unit: share, group: parking, ui: false,
+     label: Suburban multifamily sites where parking caps units,
+     rationale: "Larger suburban lots are rarely parking-capped."}
+  parking_constrained_share_rural:
+    {low: 0.0, central: 0.03, high: 0.08, unit: share, group: parking, ui: false,
+     label: Rural multifamily sites where parking caps units,
+     rationale: "Rural lots are almost never parking-capped."}
+
+  # ---------------------------------------------------------- lots / fit
+  lot_median_detached_urban:
+    {low: 3000, central: 3500, high: 4500, unit: sq ft, group: lots, ui: false,
+     label: Median lot, detached, urban,
+     rationale: "Pittsburgh and Philadelphia twin and detached lots. Allegheny uses observed WPRDC bins when present."}
+  lot_median_detached_suburban:
+    {low: 7500, central: 10000, high: 13000, unit: sq ft, group: lots, ui: false,
+     label: Median lot, detached, suburban,
+     rationale: "Quarter-acre township subdivisions."}
+  lot_median_detached_rural:
+    {low: 20000, central: 30000, high: 43560, unit: sq ft, group: lots, ui: false,
+     label: Median lot, detached, rural,
+     rationale: "Half to one acre."}
+  lot_median_attached_urban:
+    {low: 1100, central: 1400, high: 1800, unit: sq ft, group: lots, ui: false,
+     label: Median lot, attached, urban,
+     rationale: "Philadelphia and Pittsburgh rowhouse lots, 14–16 ft frontage."}
+  lot_median_attached_suburban:
+    {low: 2000, central: 2600, high: 3500, unit: sq ft, group: lots, ui: false,
+     label: Median lot, attached, suburban,
+     rationale: "Townhouse lots."}
+  lot_median_attached_rural:
+    {low: 3500, central: 5000, high: 7000, unit: sq ft, group: lots, ui: false,
+     label: Median lot, attached, rural,
+     rationale: "Small-town rowhouse and duplex-half lots."}
+  lot_log_sigma:
+    {low: 0.45, central: 0.6, high: 0.8, unit: log sq ft, group: lots, ui: false,
+     label: Lot size spread (lognormal sigma),
+     rationale: "Allegheny single-family lots fit a lognormal with sigma near 0.6 inside a context."}
+  footprint_detached:
+    {low: 1100, central: 1100, high: 1100, unit: sq ft, group: lots, ui: false,
+     label: Existing house footprint, detached,
+     rationale: "1,600–1,800 sq ft two-story house."}
+  footprint_attached:
+    {low: 700, central: 700, high: 700, unit: sq ft, group: lots, ui: false,
+     label: Existing house footprint, attached,
+     rationale: "Two-story rowhouse, 14x50 ft."}
+  adu_open_space_sqft:
+    {low: 400, central: 400, high: 400, unit: sq ft, group: lots, ui: false,
+     label: Yard kept after an ADU,
+     rationale: "Access path and minimum yard. Setback relief in the Handbook applies to missing middle, not ADUs."}
+
+  # ----------------------------------------------------------- legal priors
+  prior_adu_prohibited:
+    {low: 0.70, central: 0.85, high: 0.95, unit: probability, group: zoning, ui: true, zoning_bound: true,
+     label: Benchmark ADU prohibited where zoning is unknown,
+     rationale: "Share of single-family lots with no observed ordinance where a detached 600+ sq ft ADU without parking is not allowed today. Most Pennsylvania municipal codes allow, at most, family-only or attached in-law suites with parking."}
+  prior_mm_prohibited:
+    {low: 0.80, central: 0.90, high: 0.97, unit: probability, group: zoning, ui: true, zoning_bound: true,
+     label: 2–6 homes prohibited where zoning is unknown,
+     rationale: "Share of single-family lots with no observed ordinance where 2–6 homes are not allowed today. Pennsylvania and New Hampshire single-family districts cover most residential land."}
+
+  prior_adu_parking_required:
+    {low: 0.6, central: 0.85, high: 1.0, unit: probability, group: zoning, ui: false, zoning_bound: true,
+     label: Towns requiring the optional ADU parking space,
+     rationale: "Applies where a law lets towns require one added space per ADU (New Hampshire RSA 674:72). Most town codes kept a parking rule."}
+
+  # ------------------------------------------------------ existing pipeline
+  pipeline_f0:
+    {low: 0.3, central: 0.5, high: 0.7, unit: share, group: pipeline, ui: true,
+     label: Share of candidate projects that pencil today,
+     rationale: "Position of today's marginal project in the margin distribution. 0.5 puts the pipeline at the median."}
+  pipeline_sigma:
+    {low: 0.25, central: 0.40, high: 0.60, unit: margin, group: pipeline, ui: true,
+     label: Project-to-project margin spread,
+     rationale: "Sets the supply response to cost savings. Implied cost elasticity is reported with every result; literature range is about 1 to 3."}
+  land_share:
+    {low: 0.12, central: 0.20, high: 0.30, unit: share of total cost, group: pipeline, ui: false,
+     label: Land share of total project cost,
+     rationale: "BPS valuation excludes land; this grosses it up."}
+  bps_value_shrink_units:
+    {low: 50, central: 50, high: 50, unit: permitted homes per year, group: pipeline, ui: false,
+     label: Permit valuation shrink threshold,
+     rationale: "A county segment with fewer permitted homes than this per year is blended toward the state valuation per home, in proportion, so a handful of projects cannot set its cost."}
+  permit_trend:
+    {low: -0.03, central: 0.0, high: 0.03, unit: per year, group: pipeline, ui: true,
+     label: Baseline permit trend,
+     rationale: "Annual change in the permit run-rate across the window. Central: the 2023–2025 average holds."}
+  completion_share_1:
+    {low: 0.90, central: 0.93, high: 0.96, unit: share, group: pipeline, ui: false,
+     label: Single-family permits completed,
+     rationale: "Census New Residential Construction: about 93 percent of permitted single-family homes are completed."}
+  completion_share_2to4:
+    {low: 0.85, central: 0.90, high: 0.94, unit: share, group: pipeline, ui: false,
+     label: 2–4 home permits completed,
+     rationale: "Census New Residential Construction."}
+  completion_share_5plus:
+    {low: 0.78, central: 0.84, high: 0.90, unit: share, group: pipeline, ui: false,
+     label: 5+ home permits completed,
+     rationale: "Census New Residential Construction."}
+
+  # ---------------------------------------------- approval (extra scenario)
+  approval_time_saved_years:
+    {low: 0.25, central: 0.5, high: 1.0, unit: years, group: approval, ui: true,
+     label: Approval time saved,
+     rationale: "Discretionary review, hearings, and appeals replaced by an administrative shot clock."}
+  carry_rate:
+    {low: 0.06, central: 0.08, high: 0.10, unit: per year, group: approval, ui: false,
+     label: Carrying cost rate,
+     rationale: "Interest and holding cost on capital tied up during approval."}
+  carry_base_share:
+    {low: 0.3, central: 0.5, high: 0.7, unit: share of cost, group: approval, ui: false,
+     label: Share of cost carried during approval,
+     rationale: "Land, design, and fees are spent before approval; construction is not."}
+
+# Imputation for suppressed ACS cells. Never zero.
+imputation:
+  moe_widen_share: 0.25    # imputed values get a 90% MOE of +/- 25 percent

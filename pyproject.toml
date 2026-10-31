@@ -23,7 +23,7 @@ dev = ["pytest==8.3.5"]
 stateframe = "src.cli:main"
 
 [tool.setuptools]
-packages = ["src", "src.data", "src.model", "src.export", "src.web"]
+packages = ["src", "src.data", "src.model", "src.export", "src.web", "src.lab"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

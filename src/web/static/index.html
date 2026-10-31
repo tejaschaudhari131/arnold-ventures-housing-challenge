@@ -12,7 +12,7 @@
     <div class="brand">
       <p class="eyebrow">Arnold Ventures / The Turnout Housing Challenge</p>
       <h1>Stateframe</h1>
-      <p class="lede">A transparent simulator of how five state housing reforms change permits and completions over five years.</p>
+      <p class="lede">A transparent simulator of how five state housing reforms change permits and completions over five years. Every number is tagged observed, assumed, or calculated.</p>
     </div>
     <div class="team">
       <p>Tejas Chaudhari</p>
@@ -32,14 +32,43 @@
     <main id="main">
       <section class="status" id="status" aria-live="polite"></section>
 
-      <section class="headline" id="headline"></section>
+      <p class="legend-bar no-print" id="provenance-legend">
+        Every displayed number is tagged
+        <abbr class="tag observed" title="Measured in a public dataset from the official data list and stored for this place.">observed</abbr>
+        <abbr class="tag assumed" title="A published assumption or an imputation. It is not a measurement for this place.">assumed</abbr>
+        <abbr class="tag calculated" title="Arithmetic in src/model/equations.py, using observed inputs and published assumptions.">calculated</abbr>
+      </p>
 
-      <nav class="tabs" aria-label="Result views">
+      <section class="map-wrap no-print" aria-label="State and county map">
+        <div class="panel-head">
+          <h2 id="map-title">Counties</h2>
+          <div class="exports">
+            <button type="button" id="map-back">All eleven states</button>
+          </div>
+        </div>
+        <p class="help" id="map-help">Click a state, then a county. Circles sit on Census interior points. The outline is the convex hull of those points, not a legal boundary.</p>
+        <div id="map-stage"></div>
+        <div id="county-detail" class="callout" hidden></div>
+      </section>
+
+      <section class="headline no-print" id="headline"></section>
+
+      <section class="no-print" aria-label="Scenario cards">
+        <div class="panel-head">
+          <h2>Scenarios</h2>
+          <p class="help">Before is five-year completions under current rules. After adds the reform. Switches and weights change the package only.</p>
+        </div>
+        <div class="cards" id="cards"></div>
+      </section>
+
+      <nav class="tabs no-print" aria-label="Result views">
         <button type="button" class="tab active" data-tab="compare">Compare</button>
         <button type="button" class="tab" data-tab="math">Show the math</button>
         <button type="button" class="tab" data-tab="sensitivity">Sensitivity</button>
         <button type="button" class="tab" data-tab="counties">Counties</button>
         <button type="button" class="tab" data-tab="cross">Cross-check</button>
+        <button type="button" class="tab" data-tab="case">Pennsylvania case study</button>
+        <button type="button" class="tab" data-tab="brief">One-page brief</button>
         <button type="button" class="tab" data-tab="limits">What this cannot tell you</button>
       </nav>
 
@@ -52,7 +81,7 @@
             <button type="button" id="export-md">Markdown</button>
           </div>
         </div>
-        <p class="help">Select a row to inspect its equation trace. Incremental figures are net completions added over five years, on top of the baseline. The package does not add the five reforms together.</p>
+        <p class="help">Select a row to inspect its equation trace. Incremental figures are net completions added over five years, on top of the baseline. The package does not add the five reforms together. Exported CSV and JSON repeat the observed, assumed, or calculated tag on every number.</p>
         <div class="table-wrap">
           <table id="compare-table">
             <thead>
@@ -84,7 +113,7 @@
           <h2>What moves the result</h2>
           <button type="button" id="run-sensitivity">Run tornado and confidence band</button>
         </div>
-        <p class="help">Each bar sets one published assumption to its low value and its high value, holding the others at central. The band is a seeded Monte Carlo draw from those same ranges.</p>
+        <p class="help">Each bar sets one published assumption to its low value and its high value, holding the others at central. The band is a seeded Monte Carlo draw from those same ranges. A close-call badge appears when the p10–p90 band crosses zero.</p>
         <div id="band" class="callout"></div>
         <div id="tornado"></div>
       </section>
@@ -93,7 +122,7 @@
         <div class="panel-head">
           <h2>County and planning-region breakdown</h2>
         </div>
-        <p class="help">Integer units use largest-remainder rounding, so the column adds up to the rounded state total. Connecticut is shown as the nine Census planning regions used in the 2019–2023 ACS.</p>
+        <p class="help">Integer units use largest-remainder rounding, so the column adds up to the rounded state total. Connecticut is shown as the nine Census planning regions used in the 2019–2023 ACS. A star marks an imputed median value.</p>
         <div class="table-wrap tall">
           <table id="county-table">
             <thead>
@@ -123,6 +152,26 @@
         <div id="cross-out"></div>
       </section>
 
+      <section class="panel" id="panel-case" hidden>
+        <div class="panel-head">
+          <h2>Pennsylvania incomplete-data case study</h2>
+          <div class="exports">
+            <button type="button" id="case-prev">Back</button>
+            <button type="button" id="case-next">Next</button>
+          </div>
+        </div>
+        <p class="help" id="case-progress">Allegheny County is the worked example. The state total is the sum of Pennsylvania's counties.</p>
+        <div id="case-body"></div>
+      </section>
+
+      <section class="panel" id="panel-brief" hidden>
+        <div class="panel-head no-print">
+          <h2>One-page brief</h2>
+          <button type="button" id="print-brief">Print brief</button>
+        </div>
+        <article id="brief"></article>
+      </section>
+
       <section class="panel" id="panel-limits" hidden>
         <h2>What this model cannot tell you</h2>
         <div id="limits"></div>
@@ -134,13 +183,14 @@
         <h2>Assumptions</h2>
         <button type="button" id="reset">Reset</button>
       </div>
-      <p class="help">Sliders stay inside the published low-to-high band. The model recalculates from the equations; nothing is looked up from a precomputed grid.</p>
+      <p class="help">Sliders stay inside the published low-to-high band. Reset restores every assumption and turns every reform back on at full weight. The model recalculates from the equations.</p>
+      <div id="reform-mix"></div>
       <div id="sliders"></div>
     </aside>
   </div>
 
   <footer>
-    <p>Stateframe is open source under the Apache License 2.0. Structural equations live in <code>src/model/equations.py</code>. Default values live in <code>config/assumptions.yaml</code>. No machine-learning model is used.</p>
+    <p>Stateframe is open source under the Apache License 2.0. Structural equations live in <code>src/model/equations.py</code>. Default values live in <code>config/assumptions.yaml</code>. No machine-learning model is used. Map points are Census gazetteer interior points, not a copied basemap.</p>
     <p>Tejas Chaudhari (tchaudha@andrew.cmu.edu), Yoon Yik Ng (yoonyikn@andrew.cmu.edu), Christopher Severns (cseverns@andrew.cmu.edu), Carnegie Mellon University.</p>
   </footer>
   <script src="/app.js"></script>

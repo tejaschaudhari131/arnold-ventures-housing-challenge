@@ -15,6 +15,7 @@ import json
 from typing import Any
 
 from src.model.engine import SCENARIO_ORDER, simulate_state
+from src.model.provenance import LEGEND, TAGS
 
 
 def simulate_many(fixtures: dict[str, Any], assumptions: Any, states: list[str] | None = None) -> list[dict[str, Any]]:
@@ -24,29 +25,41 @@ def simulate_many(fixtures: dict[str, Any], assumptions: Any, states: list[str] 
     return [simulate_state(fixtures, assumptions, code) for code in order]
 
 
+_EXPORT_TAGS = {
+    "tier": "observed",
+    "completeness": "assumed",
+}
+
+
+def _is_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
 def comparison_rows(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
     rows = []
     for result in results:
         for scenario_id in SCENARIO_ORDER:
             scenario = result["scenarios"][scenario_id]
-            rows.append(
-                {
-                    "state": result["state"],
-                    "state_name": result["name"],
-                    "tier": result["tier"],
-                    "completeness": result["completeness"],
-                    "scenario": scenario_id,
-                    "scenario_label": scenario["label"],
-                    "permits_5yr": round(scenario["permits_5yr"], 1),
-                    "completions_5yr": round(scenario["completions_5yr"], 1),
-                    "incremental_permits": round(scenario["incremental_permits"], 1),
-                    "incremental_completions": round(scenario["incremental_completions"], 1),
-                    "annualized_completions": round(scenario["annualized_completions"], 1),
-                    "lift_pct": round(scenario["lift_pct"], 2),
-                    "cap_binding": scenario["cap_binding"],
-                    "capacity_completions": round(scenario["capacity_completions"], 1),
-                }
-            )
+            row: dict[str, Any] = {
+                "state": result["state"],
+                "state_name": result["name"],
+                "tier": result["tier"],
+                "completeness": result["completeness"],
+                "scenario": scenario_id,
+                "scenario_label": scenario["label"],
+                "permits_5yr": round(scenario["permits_5yr"], 1),
+                "completions_5yr": round(scenario["completions_5yr"], 1),
+                "incremental_permits": round(scenario["incremental_permits"], 1),
+                "incremental_completions": round(scenario["incremental_completions"], 1),
+                "annualized_completions": round(scenario["annualized_completions"], 1),
+                "lift_pct": round(scenario["lift_pct"], 2),
+                "cap_binding": scenario["cap_binding"],
+                "capacity_completions": round(scenario["capacity_completions"], 1),
+            }
+            for key, value in list(row.items()):
+                if _is_number(value):
+                    row[f"{key}_provenance"] = _EXPORT_TAGS.get(key, "calculated")
+            rows.append(row)
     return rows
 
 
@@ -61,7 +74,7 @@ def to_csv(results: list[dict[str, Any]]) -> str:
 
 
 def to_json(results: list[dict[str, Any]]) -> str:
-    return json.dumps({"results": results}, indent=2)
+    return json.dumps({"provenance_legend": LEGEND, "results": results}, indent=2)
 
 
 def to_markdown(results: list[dict[str, Any]]) -> str:
@@ -73,7 +86,7 @@ def to_markdown(results: list[dict[str, Any]]) -> str:
     for result in results:
         scenarios = result["scenarios"]
         lines.append(
-            "| {state} | {tier} | {base:,.0f} | {adu:,.0f} | {mm:,.0f} | {tod:,.0f} | {park:,.0f} | {fee:,.0f} | {pkg:,.0f} |".format(
+            "| {state} | {tier} [observed] | {base:,.0f} [calculated] | {adu:,.0f} [calculated] | {mm:,.0f} [calculated] | {tod:,.0f} [calculated] | {park:,.0f} [calculated] | {fee:,.0f} [calculated] | {pkg:,.0f} [calculated] |".format(
                 state=result["state"],
                 tier=result["tier"],
                 base=result["baseline_completions_5yr"],
@@ -87,6 +100,8 @@ def to_markdown(results: list[dict[str, Any]]) -> str:
         )
     lines.append("")
     lines.append("Figures are 5-year net completions added by the reform, except the baseline column, which is total completions under current rules. The package is not the sum of the five reforms.")
+    lines.append("Tags: observed = public measurement; assumed = published assumption or imputation; calculated = equation output. Tier is observed. Every completion figure in this table is calculated.")
+    lines.append("Allowed tags: " + ", ".join(TAGS) + ".")
     return "\n".join(lines) + "\n"
 
 

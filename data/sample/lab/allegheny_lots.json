@@ -1,0 +1,89 @@
+{
+ "source": "Western Pennsylvania Regional Data Center, Allegheny County Property Assessments",
+ "resource_id": "65855e14-549e-4992-b5be-d629afc676fa",
+ "license": "CC0 1.0 (public domain dedication)",
+ "query": "aggregate counts by lot-area bin; no parcel rows, owner names, or mailing addresses",
+ "lot_edges_sqft": [
+  0,
+  1500,
+  2500,
+  3500,
+  5000,
+  7500,
+  10000,
+  15000,
+  21780,
+  43560
+ ],
+ "host_map": {
+  "detached": "USEDESC SINGLE FAMILY",
+  "attached": "USEDESC TOWNHOUSE or ROWHOUSE"
+ },
+ "land_value_note": "FAIRMARKETLAND is Allegheny County's 2012 base-year assessed land value. It is shown for context only and is not used as a current land price.",
+ "groups": {
+  "pittsburgh:attached": {
+   "counts": [
+    5228,
+    3769,
+    1063,
+    405,
+    149,
+    30,
+    13,
+    5,
+    3,
+    0
+   ],
+   "land_psf_2012_weighted_median_of_bins": 11.58,
+   "parcels": 10665
+  },
+  "pittsburgh:detached": {
+   "counts": [
+    3754,
+    10288,
+    17632,
+    15439,
+    14831,
+    4715,
+    2573,
+    803,
+    442,
+    188
+   ],
+   "land_psf_2012_weighted_median_of_bins": 5.49,
+   "parcels": 70665
+  },
+  "rest:attached": {
+   "counts": [
+    2825,
+    5630,
+    3510,
+    2405,
+    1962,
+    825,
+    492,
+    136,
+    42,
+    9
+   ],
+   "land_psf_2012_weighted_median_of_bins": 11.07,
+   "parcels": 17836
+  },
+  "rest:detached": {
+   "counts": [
+    1726,
+    7812,
+    19538,
+    24022,
+    53173,
+    51511,
+    60133,
+    33843,
+    30275,
+    22644
+   ],
+   "land_psf_2012_weighted_median_of_bins": 3.05,
+   "parcels": 304677
+  }
+ }
+}

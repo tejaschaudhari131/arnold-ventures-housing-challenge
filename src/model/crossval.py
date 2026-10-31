@@ -27,6 +27,7 @@ from typing import Any
 
 from src.data.schema import TIER1_STATES
 from src.model.engine import SCENARIO_ORDER, simulate_state
+from src.model.provenance import stamp_tree
 from src.model.sensitivity import monte_carlo
 
 POLICY_IDS = tuple(scenario for scenario in SCENARIO_ORDER if scenario != "baseline")
@@ -73,20 +74,24 @@ def cross_validate_state(
             "imputed_parcels": _error(full_value, imputed["scenarios"][scenario]["incremental_completions"]),
             "state_screen": _error(full_value, screen["scenarios"][scenario]["incremental_completions"]),
         }
-    return {
-        "state": state,
-        "tier": full["tier"],
-        "lot_full": full["lot_feasible_share"],
-        "lot_imputed": imputed["lot_feasible_share"],
-        "lot_full_note": full["lot_feasible_note"],
-        "lot_imputed_note": imputed["lot_feasible_note"],
-        "scenarios": scenarios,
-        "combined_band_full": full_band,
-        "combined_band_imputed": imputed_band,
-        "band_width_full": full_width,
-        "band_width_imputed": imputed_width,
-        "band_width_ratio": (imputed_width / full_width) if full_width > 1 else None,
-    }
+    return stamp_tree(
+        {
+            "state": state,
+            "tier": full["tier"],
+            "lot_full": full["lot_feasible_share"],
+            "lot_imputed": imputed["lot_feasible_share"],
+            "lot_full_tag": full.get("lot_feasible_tag", "calculated"),
+            "lot_imputed_tag": imputed.get("lot_feasible_tag", "assumed"),
+            "lot_full_note": full["lot_feasible_note"],
+            "lot_imputed_note": imputed["lot_feasible_note"],
+            "scenarios": scenarios,
+            "combined_band_full": full_band,
+            "combined_band_imputed": imputed_band,
+            "band_width_full": full_width,
+            "band_width_imputed": imputed_width,
+            "band_width_ratio": (imputed_width / full_width) if full_width > 1 else None,
+        }
+    )
 
 
 def cross_validate_tier1(fixtures: dict[str, Any], assumptions: Any, draws: int = 60) -> dict[str, Any]:
