@@ -1,0 +1,78 @@
+# New Hampshire zoning evidence for the Small Homes Policy Lab (portability
+# test). Same schema as config/lab/evidence/PA.yaml.
+#
+# New Hampshire is the lower-data state: no statewide parcel or zoning layer
+# is ingested, and county government has no zoning role. What it does have is
+# statewide statute, so the ADU status of most lots is observed from law
+# rather than from local codes.
+
+state: NH
+state_fips: "33"
+name: New Hampshire
+as_of: "2026-10-31"
+statewide:
+  adu: by_rule
+  mm: unknown
+  parking_cap_per_unit: 1.0
+  parking_cap_effective: "2025-09-13"
+  note: >-
+    RSA 674:71–73 (2017) requires every municipality that allows single-family
+    homes to allow one accessory dwelling unit. HB 577 (effective 2025-07-01)
+    made one attached or detached ADU allowed by right, let towns require up to
+    one added parking space, and let towns prohibit ADUs on attached
+    single-family homes such as townhouses. SB 284 (Chapter 258, effective
+    2025-09-13) caps residential parking minimums at one space per unit.
+    HB 631 permits residential building in commercial zones; it does not
+    change single-family districts, so 2–6 homes there stay unknown.
+  sources:
+    - https://gc.nh.gov/rsa/html/LXIV/674/674-72.htm
+    - https://gc.nh.gov/bill_status/legacy/bs2016/results.aspx?lsr=0119&sortoption=&txtbillnumber=HB577&txtsessionyear=2025
+    - https://www.governor.nh.gov/news/governor-highlights-new-laws-tackle-housing-crisis
+
+rules:
+  - id: nh_adu_detached_hosts
+    label: RSA 674:72 as amended by HB 577
+    option: adu
+    geography: {state: true}
+    host_types: [detached]
+    status: allowed_with_parking
+    parking_spaces: 1
+    effective: "2017-06-01"
+    confidence: high
+    summary: >-
+      One ADU is legal on every detached single-family lot (attached form since
+      2017, detached form by right since HB 577). Towns may require one added
+      parking space; the Handbook benchmark requires none. The share of towns
+      that impose the space is an assumption (prior_adu_parking_required).
+    sources:
+      - https://gc.nh.gov/rsa/html/LXIV/674/674-72.htm
+
+  - id: nh_adu_attached_hosts
+    label: RSA 674:72 townhouse exception
+    option: adu
+    geography: {state: true}
+    host_types: [attached]
+    status: unknown
+    effective: "2025-07-01"
+    confidence: high
+    summary: >-
+      Towns may prohibit ADUs on attached single-family homes. Which towns do
+      is not recorded, so these lots stay unknown and use the prior.
+    sources:
+      - https://gc.nh.gov/rsa/html/LXIV/674/674-72.htm
+
+  - id: nh_parking_cap_sb284
+    label: SB 284 parking cap (Chapter 258)
+    option: parking
+    geography: {state: true}
+    host_types: [detached, attached]
+    status: capped
+    parking_cap_per_unit: 1.0
+    effective: "2025-09-13"
+    confidence: high
+    summary: >-
+      Municipal residential parking minimums may not exceed one space per
+      unit. Baseline includes the pipeline response to the cap, because the
+      2023–2025 permits predate it.
+    sources:
+      - https://www.governor.nh.gov/news/governor-highlights-new-laws-tackle-housing-crisis
