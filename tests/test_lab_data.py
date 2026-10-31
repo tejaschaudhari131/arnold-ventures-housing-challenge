@@ -106,6 +106,7 @@ def test_sample_extracts_cover_all_counties():
             assert hosts == pytest.approx(county.detached.value + county.attached.value, rel=1e-9)
             for cell in county.cells:
                 assert sum(seg.share for seg in cell.segments) == pytest.approx(1.0)
+            assert sum(county.context_units.values()) == pytest.approx(1.0)
 
 
 def test_allegheny_has_pittsburgh_segment_and_observed_lots():

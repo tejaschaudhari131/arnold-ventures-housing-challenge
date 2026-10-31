@@ -45,6 +45,10 @@ params:
     {low: 1.0, central: 1.5, high: 2.25, unit: years, group: timing, ui: true,
      label: Small multifamily permit-to-completion,
      rationale: "Census Survey of Construction: 2–4 unit buildings average roughly 15–20 months from permit to completion."}
+  build_lag_sf_years:
+    {low: 0.6, central: 0.75, high: 1.0, unit: years, group: timing, ui: false,
+     label: Single-family permit-to-completion,
+     rationale: "Census Survey of Construction: single-family homes average about 8–9 months from permit to completion."}
   pipeline_response_lag_years:
     {low: 0.5, central: 0.75, high: 1.25, unit: years, group: timing, ui: true,
      label: Pipeline response lag,
@@ -260,6 +264,10 @@ params:
     {low: 0.12, central: 0.20, high: 0.30, unit: share of total cost, group: pipeline, ui: false,
      label: Land share of total project cost,
      rationale: "BPS valuation excludes land; this grosses it up."}
+  bps_value_shrink_units:
+    {low: 50, central: 50, high: 50, unit: permitted homes per year, group: pipeline, ui: false,
+     label: Permit valuation shrink threshold,
+     rationale: "A county segment with fewer permitted homes than this per year is blended toward the state valuation per home, in proportion, so a handful of projects cannot set its cost."}
   permit_trend:
     {low: -0.03, central: 0.0, high: 0.03, unit: per year, group: pipeline, ui: true,
      label: Baseline permit trend,

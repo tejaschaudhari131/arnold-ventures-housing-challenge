@@ -90,6 +90,7 @@ class County:
     cells: list[HostCell]
     hud_fmr: dict[str, float] | None
     imputed: list[str]
+    context_units: dict[str, float] = field(default_factory=dict)
 
     @property
     def bps_avg(self) -> dict[str, float]:
@@ -232,11 +233,16 @@ def build_state(raw: dict[str, Any], allegheny: dict[str, Any] | None, source_pa
 
         # Context split from tract density bins. County ACS totals stay the
         # control; tract sums only set the shares.
-        by_context = {ctx: {"detached": 0.0, "attached": 0.0} for ctx in CONTEXTS}
+        by_context = {ctx: {"detached": 0.0, "attached": 0.0, "housing_units": 0.0} for ctx in CONTEXTS}
         for i, cell in enumerate(row.get("density_bins") or []):
             ctx = context_of_bin(edges[i], thresholds)
-            by_context[ctx]["detached"] += cell["detached"]
-            by_context[ctx]["attached"] += cell["attached"]
+            for key in ("detached", "attached", "housing_units"):
+                by_context[ctx][key] += cell[key]
+        unit_total = sum(by_context[ctx]["housing_units"] for ctx in CONTEXTS)
+        context_units = {
+            ctx: (by_context[ctx]["housing_units"] / unit_total if unit_total > 0 else (1.0 if ctx == "suburban" else 0.0))
+            for ctx in CONTEXTS
+        }
 
         cells: list[HostCell] = []
         county_places = places_by_county.get(row["fips"], [])
@@ -289,6 +295,7 @@ def build_state(raw: dict[str, Any], allegheny: dict[str, Any] | None, source_pa
                 cells=cells,
                 hud_fmr=row.get("hud_fmr"),
                 imputed=imputed,
+                context_units=context_units,
             )
         )
     statewide = evidence.get("statewide", {})
