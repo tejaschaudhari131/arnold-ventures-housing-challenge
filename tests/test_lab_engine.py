@@ -127,6 +127,21 @@ def test_one_best_option_per_host_is_not_a_sum():
     assert both.feasible == pytest.approx(1000 * lots.survival(1000) * normal_cdf(-0.1 / 0.25))
 
 
+def test_legalizing_a_better_option_does_not_strand_lots_already_building():
+    lots = LotDist(5000, 0.6)
+    adu = _opt("adu", -0.2, 1000, hazard=0.01)
+    mm2 = _opt("mm2", -0.2, 1000, hazard=0.01)
+    lags = {"adu": 0.0, "mm2": 1.5}
+    alone = resolve_hosts([adu], lags, lots, 1000, 0.25, 5)
+    # Same margin, later lag: the incumbent keeps going, nothing is lost.
+    tie = resolve_hosts([adu, _opt("mm2", -0.2 + 1e-9, 1000, hazard=0.01)], lags, lots, 1000, 0.25, 5)
+    assert tie.delivered == pytest.approx(alone.delivered, rel=1e-6)
+    better = resolve_hosts([adu, _opt("mm2", 0.0, 1000, hazard=0.01)], lags, lots, 1000, 0.25, 5)
+    assert better.delivered > alone.delivered
+    assert better.by_option["adu"] > 0 and better.by_option["mm2"] > 0
+    assert mm2.option == "mm2"
+
+
 def test_lots_too_small_for_the_best_option_take_the_next_one():
     lots = LotDist(3000, 0.6)
     adu = _opt("adu", -0.3, 2000)

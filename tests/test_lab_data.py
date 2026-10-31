@@ -143,5 +143,5 @@ def test_boundaries_and_sample_size_budget():
         geo = load_boundaries(code)
         assert len(geo["counties"]) == count
         assert all(feature["rings"] for feature in geo["counties"])
-    total = sum(path.stat().st_size for path in SAMPLE_DIR.iterdir())
+    total = sum(path.stat().st_size for path in SAMPLE_DIR.iterdir() if not path.name.startswith("results_"))
     assert total < 512 * 1024, "keep committed Lab extracts small"

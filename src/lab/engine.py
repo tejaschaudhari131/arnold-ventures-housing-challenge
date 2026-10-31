@@ -153,6 +153,12 @@ def resolve_hosts(
     option that adds more homes). Each lot's own margin is the group margin
     plus a common lot shock with spread sigma, so the same option is best
     for every lot in the slice and F = Phi(x_best / sigma).
+
+    Transition: if the best option only becomes legal later than another
+    fitting option (an incumbent, e.g. an ADU already allowed when a reform
+    adds 2–6 homes), lots keep building the incumbent until the new option's
+    lag ends, and the lots not yet built then switch. Legalizing a better
+    option therefore never strands lots that were already building.
     """
     out = HostOutcome()
     if not results or hosts <= 0:
@@ -166,12 +172,26 @@ def resolve_hosts(
         fitting = [r for r in results if r.area <= area]
         best = max(fitting, key=lambda r: (r.excess, r.net))
         share_feasible = normal_cdf(best.excess / sigma)
-        timing = timing_share(best.hazard, horizon, lags[best.option], best.build_lag)
+        best_lag = lags[best.option]
         lots_here = hosts * mass
         out.eligible += lots_here * max(r.net for r in fitting)
         out.feasible += lots_here * share_feasible * best.net
-        delivered = lots_here * share_feasible * timing * best.net
-        out.delivered += delivered
+        timing = timing_share(best.hazard, horizon, best_lag, best.build_lag)
+        earlier = [r for r in fitting if lags[r.option] < best_lag - 1e-12]
+        phase_one = 0.0
+        if earlier:
+            incumbent = max(earlier, key=lambda r: (r.excess, r.net))
+            share_incumbent = normal_cdf(incumbent.excess / sigma)
+            start = lags[incumbent.option]
+            stop = min(best_lag, horizon - incumbent.build_lag)
+            built = 1.0 - math.exp(-incumbent.hazard * max(0.0, stop - start))
+            phase_one = lots_here * share_incumbent * built * incumbent.net
+            remaining = max(0.0, share_feasible - share_incumbent * built)
+            out.by_option[incumbent.option] = out.by_option.get(incumbent.option, 0.0) + phase_one
+            delivered = lots_here * remaining * timing * best.net
+        else:
+            delivered = lots_here * share_feasible * timing * best.net
+        out.delivered += phase_one + delivered
         out.by_option[best.option] = out.by_option.get(best.option, 0.0) + delivered
         out.lots_by_option[best.option] = out.lots_by_option.get(best.option, 0.0) + lots_here
     return out
@@ -417,7 +437,9 @@ def evaluate_county(
     inputs: CountyInputs | None = None,
     priors: dict[str, float] | None = None,
     state_values: dict[str, float] | None = None,
+    variants: dict[str, tuple[Econ, frozenset[str]]] | None = None,
 ) -> dict[str, Any]:
+    """Evaluate one county. ``variants`` adds ad hoc (economics, legalized options) runs."""
     doc = load_scenarios()
     adoc = load_assumptions()
     horizon = float(doc["horizon_years"])
@@ -464,17 +486,18 @@ def evaluate_county(
 
     # Host-level economics ignore the approval flag; a scenario that adds no
     # legal option and leaves host economics unchanged has no host term.
-    host_econ = {}
+    specs: dict[str, tuple[Econ, frozenset[str]]] = {}
     for sid in scenarios:
-        if sid == "baseline":
-            continue
-        e1 = scenario_econ(sid, p)
+        if sid != "baseline":
+            specs[sid] = (scenario_econ(sid, p), frozenset(doc["scenarios"][sid].get("legalize", [])))
+    specs.update(variants or {})
+    host_econ = {}
+    for sid, (e1, legalize) in specs.items():
         e1_host = Econ(e1.fee, e1.parking, e1.adu_no_parking, False)
-        legalize = frozenset(doc["scenarios"][sid].get("legalize", []))
         host_econ[sid] = (e1_host, legalize, not legalize and e1_host == e0)
 
     host_base = HostOutcome()
-    host_delta = {sid: HostOutcome() for sid in scenarios}
+    host_delta: dict[str, HostOutcome] = {}
     coverage = {"adu": 0.0, "mm": 0.0, "hosts": 0.0}
     for index, cell in enumerate(county.cells):
         scale = inputs.detached_scale if cell.host_type == "detached" else inputs.attached_scale
@@ -494,6 +517,7 @@ def evaluate_county(
                 adj.add(pre0, -1.0)
                 host_base.add(adj, part.weight)
                 for sid, (e1, legalize, unchanged) in host_econ.items():
+                    host_delta.setdefault(sid, HostOutcome())
                     if unchanged:
                         continue
                     new = outcome(index, cell, seg_hosts, part.legal_now | legalize, e1, part)
@@ -507,7 +531,7 @@ def evaluate_county(
     base_pipe = pipeline_effect(county, state_values, e0, e0, p, horizon, cap, cap_lag)
     baseline_total = base_pipe["baseline"] + base_pipe["cap_adjustment"] + host_base.delivered
     results: dict[str, Any] = {}
-    for sid in scenarios:
+    for sid in list(scenarios) + [v for v in (variants or {}) if v not in scenarios]:
         if sid == "baseline":
             results[sid] = {
                 "delivery": baseline_total,
@@ -518,9 +542,9 @@ def evaluate_county(
                 "pipeline": base_pipe,
             }
             continue
-        e1 = scenario_econ(sid, p)
+        e1 = specs[sid][0]
         pipe = pipeline_effect(county, state_values, e1, e0, p, horizon, cap, cap_lag)
-        hd = host_delta[sid]
+        hd = host_delta.get(sid, HostOutcome())
         delta = hd.delivered + pipe["delta"]
         results[sid] = {
             "delivery": baseline_total + delta,
@@ -553,15 +577,19 @@ def evaluate_state(
     params: dict[str, float] | None = None,
     scenarios: list[str] | None = None,
     priors: dict[str, float] | None = None,
+    variants: dict[str, tuple[Econ, frozenset[str]]] | None = None,
 ) -> dict[str, Any]:
     p = dict(central_params())
     if params:
         p.update(params)
     scenarios = scenarios or scenario_ids()
     values = state_unit_values(state)
-    counties = [evaluate_county(c, state, p, scenarios, priors=priors, state_values=values) for c in state.counties]
+    counties = [
+        evaluate_county(c, state, p, scenarios, priors=priors, state_values=values, variants=variants)
+        for c in state.counties
+    ]
     totals: dict[str, dict[str, float]] = {}
-    for sid in scenarios:
+    for sid in list(scenarios) + [v for v in (variants or {}) if v not in scenarios]:
         row: dict[str, Any] = {f: 0.0 for f in SUM_FIELDS}
         by_option: dict[str, float] = {}
         for county in counties:
@@ -587,4 +615,35 @@ def evaluate_state(
         },
         "implied_cost_elasticity": implied_cost_elasticity(p),
         "counties": counties,
+    }
+
+
+def package_variants(p: dict[str, float]) -> dict[str, tuple[Econ, frozenset[str]]]:
+    """Steps that build the package: legalization only, then the fee cut, then parking."""
+    e0 = scenario_econ("baseline", p)
+    package = scenario_econ("package", p)
+    legal = frozenset(load_scenarios()["scenarios"]["package"]["legalize"])
+    return {
+        "package_legal_only": (Econ(e0.fee, e0.parking, True, False), legal),
+        "package_legal_fees": (Econ(package.fee, e0.parking, True, False), legal),
+    }
+
+
+def package_decomposition(result: dict[str, Any], key: str = "statewide") -> dict[str, float]:
+    """Waterfall from Baseline to the package, and the sum of separate scenarios."""
+    rows = result[key] if key == "statewide" else result
+    legal = rows["package_legal_only"]["delta"]
+    fees = rows["package_legal_fees"]["delta"]
+    package = rows["package"]["delta"]
+    separate = sum(rows[sid]["delta"] for sid in ("adu", "missing_middle", "parking", "fees"))
+    separate_legal = rows["adu"]["delta"] + rows["missing_middle"]["delta"]
+    return {
+        "legalization_resolved": legal,
+        "legalization_if_summed": separate_legal,
+        "competition_loss": legal - separate_legal,
+        "fee_cut_step": fees - legal,
+        "parking_step": package - fees,
+        "package": package,
+        "sum_of_separate": separate,
+        "interaction": package - separate,
     }
