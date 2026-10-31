@@ -91,7 +91,7 @@ The core Stateframe engine (`src/model/`) answers a different question: statewid
 | RI | 2 | 6,421 | 2,821 | 2,587 | 189 | 133 | 370 | 6,298 |
 | NH | 2 | 21,478 | 3,489 | 1,766 | 8 | 238 | 1,077 | 7,170 |
 
-The Lab's Pennsylvania ADU increment is 6,048 against the core's 46,261. Moving the Lab toward the core, one step at a time: Handbook $50,000 ADU fee → core $6,000 fee (12,505); then homeowner yield at a 4.5 percent cap, no operating share, rent × 0.85 (31,489); then no adoption or build lag (48,192). Method: `docs/SMALL_HOMES_LAB.md` §9.
+The Lab's Pennsylvania ADU increment (+6,048) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +46,261. That fee gap is why the two numbers differ. Walking the Lab toward the core, one step at a time: use the $6,000 fee (+12,505); then value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+31,489); then drop adoption and build lags (+48,192), within about 4 percent of the core. See the Lab at /lab and the core engine at /. Method: `docs/SMALL_HOMES_LAB.md` §9.
 
 Rank reforms by units inside one model. The primary outcome is homes, not the percent lift. The fee cut is the most stable core-engine reform (about 5 to 7 percent of baseline in ten states). Transit-oriented density is local: 10,789 in Virginia, 8 in New Hampshire. Already-legal shares, station counts, and the $50,000 fee stack are assumptions in the core; the Lab locks that fee for the Handbook comparison and applies it to ADUs.
 

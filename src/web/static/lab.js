@@ -26,6 +26,7 @@
   var whyOpen = false;
   var timer = null;
   var requestId = 0;
+  var aduCompare = null;
 
   var statusEl = document.getElementById("status");
   var stateList = document.getElementById("state-list");
@@ -121,22 +122,31 @@
     });
   }
 
+  function fillAduFeeNote() {
+    var el = document.getElementById("adu-fee-note");
+    if (!el || !aduCompare) return;
+    el.innerHTML = aduCompare.notes.lab_html;
+  }
+
   function loadAll() {
     var id = ++requestId;
     setStatus("Loading locked Lab results…");
     return Promise.all([
       get("/api/lab/results?state=" + stateCode),
       get("/api/lab/geo?state=" + stateCode),
-      catalog ? Promise.resolve(catalog) : get("/api/lab/assumptions")
+      catalog ? Promise.resolve(catalog) : get("/api/lab/assumptions"),
+      aduCompare ? Promise.resolve(aduCompare) : get("/api/adu-compare?state=PA")
     ]).then(function (parts) {
       if (id !== requestId) return;
       locked = parts[0];
       geoDoc = parts[1];
       catalog = parts[2];
+      aduCompare = parts[3];
       live = null;
       overrides = {};
       if (stateCode === "PA") selectedFips = selectedFips || "42003";
       else if (!countyRow(selectedFips)) selectedFips = locked.counties[0].fips;
+      fillAduFeeNote();
       renderAll();
       if (whyOpen) loadWhy();
       setStatus("");

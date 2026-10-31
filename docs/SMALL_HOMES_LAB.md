@@ -149,7 +149,9 @@ Resolution removes 5,993 double-counted homes. The fee cut adds more inside the 
 
 ## 9. Why the Lab's ADU total differs from the core engine's
 
-The core Stateframe engine reports about 46,300 five-year ADUs for Pennsylvania. The Lab's benchmark ADU increment is 6,048. The two answer different questions. The table below moves the Lab's assumptions toward the core engine's one at a time, cumulatively.
+The Lab's Pennsylvania ADU increment (+6,048) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +46,261. That fee gap is why the two numbers differ. Walking the Lab toward the core, one step at a time: use the $6,000 fee (+12,505); then value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+31,489); then drop adoption and build lags (+48,192), within about 4 percent of the core. See the Lab at /lab and the core engine at /.
+
+The two engines also answer different questions. The table below moves the Lab's assumptions toward the core engine's one at a time, cumulatively.
 
 | Step | PA ADU homes |
 | ---- | ------------ |

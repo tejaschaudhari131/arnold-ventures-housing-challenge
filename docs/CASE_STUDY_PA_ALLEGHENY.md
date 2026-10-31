@@ -70,6 +70,8 @@ Integer units use largest-remainder rounding. Tags on this table are calculated.
 | Fee reduction, net | 748 | 6,490 |
 | Package, net | 6,574 | 74,114 |
 
+The Lab's Pennsylvania ADU increment (+6,048) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +46,261. That fee gap is why the two numbers differ. Walking the Lab toward the core, one step at a time: use the $6,000 fee (+12,505); then value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+31,489); then drop adoption and build lags (+48,192), within about 4 percent of the core. See the Lab at /lab and the core engine at /.
+
 Plain language for the state package:
 
 Combined package adds about 74,114 (calculated) net completions in Pennsylvania over five years, 68.0 percent (calculated) above the baseline of 108,950 (calculated). After the reform, five-year completions are about 183,065 (calculated). The worked example is Philadelphia County. The package removes overlap among the reforms that are switched on. It is not the sum of the five standalone totals.

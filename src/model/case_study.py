@@ -289,8 +289,15 @@ def build_case_study(
         "steps": steps,
         "explanations": {key: result["scenarios"][key]["explanation"] for key in result["scenarios"]},
         "provenance_legend": LEGEND,
+        "adu_fee_note": _adu_fee_note(),
     }
     return stamp_tree(study)
+
+
+def _adu_fee_note() -> str:
+    from src.adu_fee_note import note_text
+
+    return note_text("docs")
 
 
 def render_markdown(study: dict[str, Any]) -> str:
@@ -370,6 +377,8 @@ def render_markdown(study: dict[str, Any]) -> str:
         f"| Parking reform, net | {_fmt(calculated['allegheny_parking'])} | {_fmt(calculated['state_parking'])} |",
         f"| Fee reduction, net | {_fmt(calculated['allegheny_fees'])} | {_fmt(calculated['state_fees'])} |",
         f"| Package, net | {_fmt(calculated['allegheny_package'])} | {_fmt(calculated['state_package'])} |",
+        "",
+        study["adu_fee_note"],
         "",
         "Plain language for the state package:",
         "",
