@@ -100,6 +100,9 @@ def to_markdown(results: list[dict[str, Any]]) -> str:
         )
     lines.append("")
     lines.append("Figures are 5-year net completions added by the reform, except the baseline column, which is total completions under current rules. The package is not the sum of the five reforms.")
+    from src.adu_fee_note import note_text
+
+    lines.append(note_text("docs"))
     lines.append("Tags: observed = public measurement; assumed = published assumption or imputation; calculated = equation output. Tier is observed. Every completion figure in this table is calculated.")
     lines.append("Allowed tags: " + ", ".join(TAGS) + ".")
     return "\n".join(lines) + "\n"

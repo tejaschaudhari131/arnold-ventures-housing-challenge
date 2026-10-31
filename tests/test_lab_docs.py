@@ -34,6 +34,9 @@ def test_policy_comparison_stays_within_four_pages():
     assert "111,016" in text
     assert "+6,048" in text
     assert "+12,916" in text
+    from src.adu_fee_note import note_text
+
+    assert note_text("docs") in text
 
 
 def test_sbom_matches_requirements_pins():

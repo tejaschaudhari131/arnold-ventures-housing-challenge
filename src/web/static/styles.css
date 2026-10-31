@@ -160,6 +160,8 @@ tbody tr { cursor: pointer; }
 }
 .callout.warn { border-left-color: var(--copper); }
 .callout ul { margin: 6px 0 0; padding-left: 18px; }
+.adu-fee-note { font-size: 14px; line-height: 1.45; }
+.adu-fee-note a { color: var(--green); }
 
 .step {
   background: var(--paper-2);

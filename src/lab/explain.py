@@ -537,7 +537,13 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
         lines.append("")
     if live and live.get("envelope_note"):
         lines += ["## Note", "", live["envelope_note"], ""]
+    from src.adu_fee_note import note_text
+
     lines += [
+        "## ADU fee difference",
+        "",
+        note_text("docs"),
+        "",
         "Every number is tagged observed, assumed, or calculated in the Why drawer. "
         "The ADU pro forma shown there is illustrative.",
         "",

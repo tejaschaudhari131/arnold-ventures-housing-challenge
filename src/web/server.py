@@ -168,6 +168,11 @@ class App:
 
         return export_brief(state, fmt, county, clamp_overrides(overrides) if overrides else None)
 
+    def adu_compare(self, state: str = "PA") -> dict[str, Any]:
+        from src.adu_fee_note import comparison
+
+        return comparison(self._check_state(state))
+
     def export(self, state: str, fmt: str) -> tuple[bytes, str, str]:
         if fmt not in {"csv", "json", "md"}:
             raise AssumptionError("format must be csv, json, or md")
@@ -264,6 +269,8 @@ def make_handler(app: App):
             if path in STATIC_FILES:
                 name, content_type = STATIC_FILES[path]
                 body = (STATIC_DIR / name).read_bytes()
+                if path in {"/", "/index.html", "/lab", "/lab.html"}:
+                    body = _with_adu_fee_note(body, path)
                 self._send(200, body, content_type)
                 return
             query = parse_qs(parsed.query)
@@ -306,6 +313,8 @@ def make_handler(app: App):
                     fmt = query.get("format", ["md"])[0]
                     body, mime, filename = app.lab_export(query.get("state", ["PA"])[0], fmt, county, None)
                     self._send(200, body, mime, filename)
+                elif path == "/api/adu-compare":
+                    self._json(200, app.adu_compare(query.get("state", ["PA"])[0]))
                 else:
                     self._json(404, {"error": "Not found"})
             except AssumptionError as exc:
@@ -347,6 +356,19 @@ def make_handler(app: App):
                 self._json(500, {"error": "Server error"})
 
     return Handler
+
+
+ADU_NOTE_MARKER = b"<!-- ADU_FEE_NOTE -->"
+
+
+def _with_adu_fee_note(body: bytes, path: str) -> bytes:
+    """Fill the ADU fee note from the engines so / and /lab render it without JS."""
+    if ADU_NOTE_MARKER not in body:
+        return body
+    from src.adu_fee_note import note_html
+
+    audience = "lab" if "lab" in path else "core"
+    return body.replace(ADU_NOTE_MARKER, note_html(audience).encode("utf-8"), 1)
 
 
 def serve(host: str = "127.0.0.1", port: int = 8080) -> None:

@@ -32,6 +32,7 @@
   var caseStep = 0;
   var timer = null;
   var requestId = 0;
+  var aduCompare = null;
 
   var statusEl = document.getElementById("status");
   var stateList = document.getElementById("state-list");
@@ -607,6 +608,7 @@
       "<p>" + badge("assumed") + " " + escapeHtml(LEGEND.assumed) + "</p>" +
       "<p>" + badge("calculated") + " " + escapeHtml(LEGEND.calculated) + "</p>" +
       "<p><strong>What this cannot tell you.</strong> " + escapeHtml((chosen.cannot && chosen.cannot[0]) || "") + "</p>" +
+      (aduCompare ? "<p class='adu-fee-note'>" + escapeHtml(aduCompare.notes.docs) + "</p>" : "") +
       "<p>Housing stock and prices are Census ACS figures. Permits are the Building Permits Survey. The map uses Census gazetteer interior points. County integers sum to the rounded state total. Tejas Chaudhari, Yoon Yik Ng, and Christopher Severns, Carnegie Mellon University. Apache-2.0.</p>" +
       "</div>";
   }
@@ -860,7 +862,17 @@
     }).join("");
     caseBody.innerHTML =
       '<article class="case-step"><h3>' + escapeHtml(step.title) + "</h3><p class='plain'>" +
-      escapeHtml(step.body) + "</p><div class='case-fields'>" + fieldHtml + "</div></article>";
+      escapeHtml(step.body) + "</p>" +
+      (caseStudy.adu_fee_note && (step.id === "county" || step.id === "rollup")
+        ? "<p class='adu-fee-note callout'>" + escapeHtml(caseStudy.adu_fee_note) + "</p>"
+        : "") +
+      "<div class='case-fields'>" + fieldHtml + "</div></article>";
+  }
+
+  function fillAduFeeNote() {
+    var el = document.getElementById("adu-fee-note");
+    if (!el || !aduCompare) return;
+    el.innerHTML = aduCompare.notes.core_html;
   }
 
   function loadCaseStudy() {
@@ -1150,9 +1162,11 @@
   }
 
   renderReformMix();
-  Promise.all([request("/api/states"), request("/api/map")])
+  Promise.all([request("/api/states"), request("/api/map"), request("/api/adu-compare?state=PA")])
     .then(function (payloads) {
       mapDoc = payloads[1];
+      aduCompare = payloads[2];
+      fillAduFeeNote();
       renderStates(payloads[0].states);
       return selectState("PA");
     })
