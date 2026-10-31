@@ -173,3 +173,7 @@ A zero policy change produces a zero increment. Higher fee cuts, higher supply e
 ## 14. Adding a state
 
 Supply a state object and a list of counties with the keys in `REQUIRED_STATE_KEYS` and `REQUIRED_COUNTY_KEYS`. Set the tier. Optionally attach a `tier1` object with `lot_bins_sqft` or `mean_lot_sqft` or `urban_land_share`. Add a transit-inventory row and a legal-share block in `config/assumptions.yaml`. Run `validate_state`. The engine does not branch on the state postal code except to read those inputs. Parcel adapters must call `assert_no_pii` and must not request owner or mailing fields.
+
+## 15. Small Homes Policy Lab
+
+The Lab is a county-level comparison of small-home reforms in Pennsylvania (all 67 counties) with New Hampshire as a portability test. It is documented in [SMALL_HOMES_LAB.md](SMALL_HOMES_LAB.md) and configured in `config/lab/`. It resolves competing options lot by lot, keeps unknown zoning unknown, and reports ACS sampling error separately from the assumption envelope. The Lab and the core engine answer different questions and use different hosts and uptake assumptions, so their ADU totals differ; section 9 of the Lab method explains the gap.
