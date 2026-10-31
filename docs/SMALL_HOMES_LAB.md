@@ -48,6 +48,7 @@ The terms in the table are defined as follows:
 - **Timing.** **p(T) = 1 − exp(−λ × max(0, T − legal lag − build lag))**, with T = 5.
   - The legal lag is 1 year for a reform adopted at the start of the window. For a rule enacted shortly before the window it is whatever remains of that year; Pittsburgh's ordinance (2026-10-29), for example, has 0.82 years left.
   - λ is 0.6% a year for homeowners on feasible lots. This is anchored to California's post-legalization ADU rate of about 0.3% of single-family homes a year with roughly half of lots feasible. Developers rebuilding a lot have half that rate.
+- **Transition between options.** A newly legal option can beat one that is already legal, for example 2–6 homes on a Pittsburgh lot where ADUs are already allowed. Lots keep building the incumbent option until the new option's legal lag ends. The lots not yet built then switch to the better option. Legalizing a better option therefore never strands lots that were already building.
 - **Why the package is not a sum.** Separate scenarios each assume a lot can do their one option. The package lets every option compete for the same lot, so a lot that would add an ADU under one reform and a second home under another adds only one of them.
 
 ## 5. Legal status: unknown is never zero
@@ -100,3 +101,67 @@ Levers are defined in `config/lab/scenarios.yaml` and tested against the Handboo
 | Approval (extra) | — | by-right approval with a shot clock; not bundled with parking |
 
 Transit-oriented density (benchmark 3) is not a small-homes reform and is not modeled in the Lab. The core engine models it.
+
+## 8. Uncertainty and close calls
+
+The Lab reports three uncertainty layers separately and never adds them together. Each answers a different question.
+
+| Layer | Question | Method | PA ADU increment |
+| ----- | -------- | ------ | ---------------- |
+| Assumption envelope | What if our economic and behavioral assumptions are off? | 200 seeded triangular draws (seed 20261107) over every adjustable parameter except the zoning priors and the locked Handbook levers. All scenarios share the same draws. Reported as p10–p90. | 1,048–8,768 |
+| Zoning-evidence bound | What if unknown zoning is more or less permissive than our prior? | The priors are set to their low and high ends, giving the reported bound. The logical bound sets every unknown lot to allowed and then to prohibited. | 4,552–7,183 (logical 1–7,749) |
+| ACS sampling error | What if the survey inputs are off by their margin of error? | Each county's host counts, 1-BR and 2-BR rents, and median value are moved by −MOE and +MOE, one at a time. Half the change is the sensitivity, and the sensitivities combine in quadrature across inputs and counties. | ±183 |
+
+A comparison between two scenarios is flagged as a **close call** if any of the following holds:
+
+- the order of the two scenarios flips in at least 10% of the assumption draws;
+- the order flips at an end of the zoning-evidence bound; or
+- the central gap is smaller than the ACS margin on the gap. The margin on the gap is computed from the difference in sensitivities, not from the two separate margins.
+
+**One at a time.** Each parameter is moved alone to its low and its high end, with the others at central.
+
+**Switching values.** For the leading benchmark pair, bisection finds the value of each parameter at which the pair ties, if that value lies inside the parameter's band. This is the "what would change our conclusion" view.
+
+In Pennsylvania, missing middle leads fees statewide by 6,126 homes, but the order flips in 19% of draws. It would flip at any of these values:
+
+- homeowner uptake hazard 0.31% a year (central 0.6%);
+- conversion cost $195,000 per home (central $160,000); or
+- cap rate 7.1% (central 6%).
+
+**Package decomposition.** The package is decomposed in steps, and each step is an exact model run:
+
+1. legalization only, with lots resolved;
+2. the fee cut added; and
+3. the removal of parking minimums added.
+
+The decomposition also reports the separate scenarios summed, to show what double counting would add.
+
+| PA step | Homes |
+| ------- | ----- |
+| Legalization if summed (ADU + missing middle) | 18,964 |
+| Legalization resolved, one option per lot | 12,971 |
+| + fee cut | +11,878 |
+| + parking minimums removed | +2,538 |
+| **Package** | **27,387** |
+| Sum of the four separate scenarios | 26,956 |
+
+Resolution removes 5,993 double-counted homes. The fee cut adds more inside the package than alone (6,790), because it also improves the newly legal options. The net interaction is +430.
+
+## 9. Why the Lab's ADU total differs from the core engine's
+
+The core Stateframe engine reports about 46,300 five-year ADUs for Pennsylvania. The Lab's benchmark ADU increment is 6,048. The two answer different questions. The table below moves the Lab's assumptions toward the core engine's one at a time, cumulatively.
+
+| Step | PA ADU homes |
+| ---- | ------------ |
+| Lab central (Handbook $50,000 fee per home, investor yield, adoption and build lags) | 6,048 |
+| Core engine's ADU fee of $6,000 instead of the Handbook's $50,000 | 12,505 |
+| Homeowner yield: cap rate 4.5%, no operating share, rent × 0.85 | 31,489 |
+| No adoption lag and no build lag | 48,192 |
+
+The two engines also define hosts and lots differently, so the last step lands within about 4% of the core figure rather than on it.
+
+Three choices explain the gap:
+
+- **The fee.** The Handbook fixes current fees at $50,000 per home and the Lab applies that to ADUs too, which is a judgment call. The fee cut scenario then halves it.
+- **The yield.** The Lab values an ADU as rental property.
+- **The window.** The Lab counts only homes completed after a reform takes effect and a home is built.
