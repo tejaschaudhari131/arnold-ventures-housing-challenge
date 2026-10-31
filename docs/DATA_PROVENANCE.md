@@ -57,6 +57,32 @@ National Transit Database SODA endpoints returned HTTP 404 during this build. Th
 - Utah's lot distribution is a mean plus a lognormal assumption.
 - The acquisition allowlist is www2.census.gov, www.fhfa.gov, services3.arcgis.com, services1.arcgis.com, and geodata.hawaii.gov. Any other host is rejected.
 
+# Small Homes Policy Lab inputs
+
+The Lab (`src/lab/`, `/lab` in the simulator) has its own acquisition script, `python -m src.lab.acquire` (or `make lab-data`). It writes `data/cache/lab/` and, with `--write-sample`, refreshes the committed extracts in `data/sample/lab/` (about 220 KB in total). No raw national file is committed. Every dataset below is public domain or CC0, so the terms place no restriction on anyone who reuses the code, the extracts, or the results.
+
+| Dataset | Source | Version / vintage | Access date | License / terms | Used for |
+| ------- | ------ | ----------------- | ----------- | --------------- | -------- |
+| ACS 5-year table-based summary file | U.S. Census Bureau, `www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/` tables B25001, B25024, B25031, B25077 | 2020–2024 5-year, estimates and 90% margins of error, county, tract, and place rows | 2026-10-31 | Public domain, U.S. government work | Single-family host counts (B25024 1-unit detached and attached), rents by bedroom (B25031), median home value (B25077), tract density (B25001) |
+| Building Permits Survey, county annual files | U.S. Census Bureau, `www2.census.gov/econ/bps/County/coYY12y.txt` | 2023, 2024, 2025 (imputed + reported columns) | 2026-10-31 | Public domain | Baseline run-rate and permit valuation per unit |
+| Census gazetteer, counties and tracts | U.S. Census Bureau, 2024 Gazetteer (`2024_Gaz_counties_national.zip`, `2024_gaz_tracts_SS.txt`) | 2024 | 2026-10-31 | Public domain | Land area for tract density, county names, interior points |
+| Cartographic boundary file, counties | U.S. Census Bureau, `cb_2024_us_county_5m.zip` | 2024, 1:5,000,000 | 2026-10-31 | Public domain | Lab map. Read with a standard-library shapefile reader (`src/lab/shapefile.py`) and simplified (Douglas–Peucker, 0.004°) |
+| HUD Fair Market Rents | U.S. Department of Housing and Urban Development, `FY26_FMRs.xlsx` | FY2026 | 2026-10-31 | Public domain, U.S. government work | Optional rent cross-check only; not a model input |
+| Allegheny County Property Assessments | Western Pennsylvania Regional Data Center (WPRDC), CKAN resource `65855e14-549e-4992-b5be-d629afc676fa` | Current assessment roll; land values are the county's 2012 base-year values | 2026-10-31 | CC0 1.0 public domain dedication | Optional Allegheny enrichment: lot-area bins for single-family (detached) and townhouse/rowhouse (attached) lots, Pittsburgh vs. rest of county |
+| Zoning evidence | `config/lab/evidence/PA.yaml`, `NH.yaml`: Philadelphia Code §14-604, Pittsburgh Council Bill 2025-1545, PA HB 2186 / SB 1346 status, NH RSA 674:72 (HB 577), NH SB 284 (Chapter 258) | As of 2026-10-31 | 2026-10-31 | Team-created summaries of public law, with URLs | Observed legal status per host; everything else is unknown |
+
+**ACS margins and missing cells.** Every estimate keeps its published 90 percent margin of error. Summary-file annotation values (−666666666, −999999999, −888888888, −333333333, −222222222) are read as missing, never zero. −555555555 on a margin means the estimate is controlled and has no sampling error, so its margin is 0. Suppressed cells are imputed from same-state relationships (for example, county 2-bedroom rent × the state 1BR/2BR ratio), tagged `assumed`, and given a ±25 percent margin. In the 2020–2024 vintage no Pennsylvania or New Hampshire county rent, value, or host-count cell is suppressed; the imputation path is covered by tests.
+
+**Host contexts.** Each tract's housing units per square mile of land (B25001 / gazetteer `ALAND_SQMI`) puts it in a density bin. Context thresholds (urban ≥ 2,000, suburban ≥ 200 units per square mile) are assumptions in `config/lab/assumptions.yaml`. County B25024 totals stay the control; tract sums only set the context shares.
+
+**Places.** Pittsburgh's 1-unit detached (70,572 ± 1,437) and attached (22,776 ± 1,154) homes come from the ACS place row 1600000US4261000. They are assigned to Allegheny's urban hosts first, then suburban. That allocation is an assumption, because the Lab does not ingest a tract-to-place file.
+
+**WPRDC.** The query is aggregate SQL against the CKAN datastore: `COUNT(*)` by area, host type, and lot-area bin, plus the median of `FAIRMARKETLAND / LOTAREA`. It never selects owner, mailing-address (`CHANGENOTICE*`), or parcel-ID fields, and a test enforces that. The land value per square foot is Allegheny County's 2012 base-year assessment. It is shown for context and is not used as a current land price.
+
+**HUD.** `www.huduser.gov` answered the acquisition script's honest user agent with an HTTP 202 challenge page. The script does not work around that. It skips HUD and exits normally, or reads a workbook downloaded by hand with `--hud-file FY26_FMRs.xlsx`. The committed extract used a hand-downloaded copy of the public FY2026 workbook. New Hampshire FMRs are published by town and are population-weighted to counties.
+
+**Allowlist.** Lab acquisition reaches only www2.census.gov, data.wprdc.org, and www.huduser.gov.
+
 # Restricted, Sensitive, or Personal Data
 
 No dataset of individuals, households, owners, or mailing addresses is used or stored. Parcel services were queried for counts, sums, and lot-size bins. The adapter refuses records that contain owner, co-owner, mailing address, or account-number fields (`FORBIDDEN_PARCEL_FIELDS`). The committed JSON cannot be walked back to a person. County medians are Census published cells, already aggregated. No restricted-use Census file, no state wage file, and no brokerage listing feed is used.

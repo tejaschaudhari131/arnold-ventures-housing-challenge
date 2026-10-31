@@ -1,4 +1,4 @@
-.PHONY: setup run test data
+.PHONY: setup run test data lab-data
 
 setup:
 	bash scripts/setup.sh
@@ -11,3 +11,6 @@ test:
 
 data:
 	bash scripts/get_data.sh
+
+lab-data:
+	bash scripts/get_lab_data.sh
