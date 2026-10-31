@@ -45,7 +45,15 @@ bash scripts/run.sh      # web app at http://127.0.0.1:8080
 bash scripts/get_data.sh # optional refresh; works offline (keeps data/sample)
 ```
 
-The same three targets exist in the `Makefile` (`make setup`, `make test`, `make run`). CI (`.github/workflows/ci.yml`) runs `scripts/setup.sh` and `scripts/test.sh`.
+The same three targets exist in the `Makefile` (`make setup`, `make test`, `make run`). CI (`.github/workflows/ci.yml`) runs `scripts/setup.sh` and `scripts/test.sh`. An optional `workflow_dispatch` job (`.github/workflows/lab-results.yml`) recomputes the Lab and checks the committed fingerprints.
+
+Lab results, from a clean checkout after setup:
+
+```bash
+PYTHONPATH=. .venv/bin/python -m src.lab.results          # compare to data/sample/lab/results_*.json
+PYTHONPATH=. .venv/bin/python -m src.lab.run --state PA --county Allegheny
+bash scripts/run.sh                                       # then open http://127.0.0.1:8080/lab
+```
 
 Write the comparison files instead of starting the server:
 
@@ -75,7 +83,9 @@ PYTHONPATH=. .venv/bin/python -m src.cli run --state PA --out output
 | `data/sample/` | Small committed benchmark so tests run with no network |
 | `src/web/` | Standard-library server and the single-page app |
 | `docs/MODEL_AND_ASSUMPTIONS.md` | Equations, calibration, and limits |
-| `docs/POLICY_SCENARIO_COMPARISON.md` | The eleven-state results table and how to read it |
+| `docs/POLICY_SCENARIO_COMPARISON.md` | Lab comparison (≤4 pages) and the eleven-state core table |
+| `docs/SMALL_HOMES_LAB.md` | Lab method: hosts, options, uncertainty, core-engine gap |
+| `docs/NH_PORTABILITY.md` | New Hampshire as the lower-data portability test |
 | `docs/DATA_PROVENANCE.md` | Sources, vintages, cleaning, and privacy |
 | `docs/DISCLOSURES.md` | AI use, prior work, datasets, dependencies, and external services |
 | `docs/CASE_STUDY_PA_ALLEGHENY.md` | Allegheny County to Pennsylvania, with observed and imputed inputs separated |
