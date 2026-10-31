@@ -1,0 +1,25 @@
+# Optional reproduction of the locked Lab results. Does not write sample
+# extracts. Confirm the committed fingerprints still match the source.
+name: Lab results
+
+on:
+  workflow_dispatch:
+    inputs:
+      states:
+        description: Comma-separated Lab states
+        required: false
+        default: "PA,NH"
+
+jobs:
+  results:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up
+        run: bash scripts/setup.sh
+      - name: Recompute and compare to the committed files
+        env:
+          PYTHONPATH: .
+        run: |
+          .venv/bin/python -m src.lab.results --states "${{ inputs.states }}"
+          .venv/bin/python -m pytest tests/test_lab_results.py tests/test_lab_rules.py -q

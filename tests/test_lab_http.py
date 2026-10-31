@@ -37,12 +37,14 @@ def test_lab_page_and_locked_results_leave_home_intact():
     httpd = _server()
     base = f"http://127.0.0.1:{httpd.server_address[1]}"
     try:
-        home_status, home, _ = _get(base, "/")
+        home_status, home, home_headers = _get(base, "/")
         home_text = home.decode("utf-8")
         assert home_status == 200
         assert "Stateframe" in home_text
         assert "Tejas Chaudhari" in home_text
         assert 'href="/lab"' in home_text
+        assert home_headers.get("X-Frame-Options") == "DENY"
+        assert home_headers.get("Referrer-Policy") == "no-referrer"
 
         status, page, _ = _get(base, "/lab")
         text = page.decode("utf-8")

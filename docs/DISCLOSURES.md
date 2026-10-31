@@ -53,6 +53,11 @@ Every series below is public and is on the challenge data list, except the team-
 | Hawaii parcel count and State Land Use acres | Hawaii statewide GIS; aggregates only | `data/sample/tier1_benchmarks.json` |
 | Major transit stop inventory | Team-compiled counts of public system facts, not a GTFS extract | `data/sample/transit_inventory.json` |
 | Legal-baseline shares | Team assumptions in `config/assumptions.yaml`, not a dataset | `config/assumptions.yaml` |
+| ACS 2020–2024 5-year (Lab) | Public domain, U.S. government work | `data/sample/lab/{PA,NH}.json` |
+| Census cartographic boundaries, counties 2024 (Lab) | Public domain; simplified in-repo | `data/sample/lab/{PA,NH}_counties.geo.json` |
+| WPRDC Allegheny assessments, lot-area bins only | CC0 1.0; 2012 base-year land values | `data/sample/lab/allegheny_lots.json` |
+| HUD FY2026 FMR workbook (optional Lab context) | Public domain; not a model input | committed extract, vintage labeled |
+| Lab zoning evidence | Team summaries of public law with source URLs | `config/lab/evidence/{PA,NH}.yaml` |
 
 No raw parcel geometry, owner table, or household microdata is committed. `scripts/get_data.sh` refreshes the Census and FHFA portion, including gazetteer interior points, and falls back to `data/sample/` when the network is unavailable.
 
@@ -75,7 +80,9 @@ A CycloneDX bill of materials for the direct pins is `docs/sbom.cdx.json`. GitHu
 
 # Security settings
 
-`SECURITY.md` and `docs/REPO_SETUP_GUIDE.md` describe the dashboard toggles for secret scanning, Dependabot alerts, and CodeQL. This repository commits `.github/workflows/codeql.yml` (Python) and `.github/dependabot.yml` (pip and GitHub Actions). The HTTP server binds to 127.0.0.1 by default, caps JSON bodies at 64 KB, uses a fixed route map, and clamps assumption overrides to the published band. Parcel queries are not allowed to request owner or mailing fields.
+`SECURITY.md` and `docs/REPO_SETUP_GUIDE.md` describe the dashboard toggles for secret scanning, Dependabot alerts, and CodeQL. This repository commits `.github/workflows/codeql.yml` (Python) and `.github/dependabot.yml` (pip and GitHub Actions). The HTTP server binds to 127.0.0.1 by default, caps JSON bodies at 64 KB, uses a fixed route map (`STATIC_FILES` plus `/api/...`), and clamps assumption overrides to the published band. Responses send `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: no-referrer`. Parcel and WPRDC queries are not allowed to request owner or mailing fields. On Vercel, `GET /api/lab/results` reads committed files only (`allow_compute=False`). Lab acquisition reaches only www2.census.gov, data.wprdc.org, and www.huduser.gov.
+
+Dependabot has opened version-bump pull requests #2–#5 (pytest, PyYAML, setuptools, ruff). They are left unmerged so the locked pins, the SBOM, and the license test stay on the versions this write-up names.
 
 # Other
 
