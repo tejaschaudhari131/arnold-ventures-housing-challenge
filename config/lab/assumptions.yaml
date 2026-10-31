@@ -290,6 +290,10 @@ params:
     {low: 0.25, central: 0.5, high: 1.0, unit: years, group: approval, ui: true,
      label: Approval time saved,
      rationale: "Discretionary review, hearings, and appeals replaced by an administrative shot clock."}
+  approval_discretionary_share:
+    {low: 0.3, central: 0.5, high: 0.7, unit: share of permitted homes, group: approval, ui: true,
+     label: Pipeline homes that go through discretionary review today,
+     rationale: "Most single-family subdivision lots are already approved by right; most multifamily and infill projects need a hearing, variance, or special exception. Only this share saves time under a shot clock."}
   carry_rate:
     {low: 0.06, central: 0.08, high: 0.10, unit: per year, group: approval, ui: false,
      label: Carrying cost rate,
