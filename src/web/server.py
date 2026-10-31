@@ -32,6 +32,10 @@ STATIC_FILES = {
     "/index.html": ("index.html", "text/html; charset=utf-8"),
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+    "/lab": ("lab.html", "text/html; charset=utf-8"),
+    "/lab.html": ("lab.html", "text/html; charset=utf-8"),
+    "/lab.css": ("lab.css", "text/css; charset=utf-8"),
+    "/lab.js": ("lab.js", "text/javascript; charset=utf-8"),
 }
 MAX_BODY = 64_000
 
@@ -123,6 +127,46 @@ class App:
             return cross_validate_tier1(self.fixtures, self.assumptions, draws=draws)
         state = self._check_state(str(payload.get("state", "CT")))
         return {"states": {state: cross_validate_state(self.fixtures, self.assumptions, state, draws=draws)}}
+
+    def lab_results(self, state: str) -> dict[str, Any]:
+        from src.lab.explain import locked_results
+
+        return locked_results(state)
+
+    def lab_geo(self, state: str) -> dict[str, Any]:
+        from src.lab.explain import geo
+
+        return geo(state)
+
+    def lab_assumptions(self) -> dict[str, Any]:
+        from src.lab.explain import assumption_catalog
+
+        return assumption_catalog()
+
+    def lab_why(self, payload: dict[str, Any]) -> dict[str, Any]:
+        from src.lab.explain import clamp_overrides, why_county
+
+        return why_county(
+            str(payload.get("state", "PA")),
+            str(payload.get("county", "Allegheny")),
+            str(payload.get("scenario", "adu")),
+            clamp_overrides(payload.get("overrides")),
+        )
+
+    def lab_recompute(self, payload: dict[str, Any]) -> dict[str, Any]:
+        from src.lab.explain import clamp_overrides, recompute
+
+        county = payload.get("county")
+        return recompute(
+            str(payload.get("state", "PA")),
+            clamp_overrides(payload.get("overrides")),
+            str(county) if county else None,
+        )
+
+    def lab_export(self, state: str, fmt: str, county: str | None, overrides: dict[str, Any] | None) -> tuple[bytes, str, str]:
+        from src.lab.explain import clamp_overrides, export_brief
+
+        return export_brief(state, fmt, county, clamp_overrides(overrides) if overrides else None)
 
     def export(self, state: str, fmt: str) -> tuple[bytes, str, str]:
         if fmt not in {"csv", "json", "md"}:
@@ -238,6 +282,28 @@ def make_handler(app: App):
                     self._json(200, app.map_points())
                 elif path == "/api/case-study":
                     self._json(200, app.case_study())
+                elif path == "/api/lab/results":
+                    self._json(200, app.lab_results(query.get("state", ["PA"])[0]))
+                elif path == "/api/lab/geo":
+                    self._json(200, app.lab_geo(query.get("state", ["PA"])[0]))
+                elif path == "/api/lab/assumptions":
+                    self._json(200, app.lab_assumptions())
+                elif path == "/api/lab/why":
+                    self._json(
+                        200,
+                        app.lab_why(
+                            {
+                                "state": query.get("state", ["PA"])[0],
+                                "county": query.get("county", ["Allegheny"])[0],
+                                "scenario": query.get("scenario", ["adu"])[0],
+                            }
+                        ),
+                    )
+                elif path == "/api/lab/export":
+                    county = query.get("county", [None])[0]
+                    fmt = query.get("format", ["md"])[0]
+                    body, mime, filename = app.lab_export(query.get("state", ["PA"])[0], fmt, county, None)
+                    self._send(200, body, mime, filename)
                 else:
                     self._json(404, {"error": "Not found"})
             except AssumptionError as exc:
@@ -257,6 +323,18 @@ def make_handler(app: App):
                     self._json(200, app.sensitivity(payload))
                 elif parsed.path == "/api/crossval":
                     self._json(200, app.crossval(payload))
+                elif parsed.path == "/api/lab/recompute":
+                    self._json(200, app.lab_recompute(payload))
+                elif parsed.path == "/api/lab/why":
+                    self._json(200, app.lab_why(payload))
+                elif parsed.path == "/api/lab/export":
+                    body, mime, filename = app.lab_export(
+                        str(payload.get("state", "PA")),
+                        str(payload.get("format", "md")),
+                        str(payload["county"]) if payload.get("county") else None,
+                        payload.get("overrides"),
+                    )
+                    self._send(200, body, mime, filename)
                 else:
                     self._json(404, {"error": "Not found"})
             except AssumptionError as exc:

@@ -1,0 +1,75 @@
+.lab-body .lab-layout {
+  grid-template-columns: 230px minmax(0, 1fr) 280px;
+}
+.walk {
+  margin-top: 22px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.walk p { margin: 0 0 10px; font-size: 14px; }
+.why-drawer {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+}
+.why-grid {
+  display: grid;
+  gap: 8px;
+}
+.why-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.why-row .src { font-size: 12px; color: var(--muted); }
+.formula {
+  font-family: var(--mono);
+  font-size: 13px;
+  background: #f6f1e6;
+  padding: 8px 10px;
+  border-radius: 8px;
+  overflow: auto;
+}
+.proforma {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+.badge-unknown {
+  background: #e8e4dc;
+  color: var(--muted);
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+}
+#map-stage svg path.county {
+  stroke: #1c2430;
+  stroke-width: 0.6;
+  cursor: pointer;
+}
+#map-stage svg path.county.selected {
+  stroke: #9a4e24;
+  stroke-width: 2;
+}
+#map-stage svg path.county:focus {
+  outline: 2px solid var(--copper);
+}
+.coverage-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+@media (max-width: 1100px) {
+  .lab-body .lab-layout { grid-template-columns: 1fr; }
+}
