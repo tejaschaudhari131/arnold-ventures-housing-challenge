@@ -11,12 +11,28 @@ Stateframe compares a calibrated baseline with five benchmark reforms, plus a co
 ## What you can do with it
 
 - Compare baseline permits and completions with ADUs, missing middle, transit-oriented density, parking reform, and a 50 percent fee cut.
-- Move any published assumption inside its low-to-high band and recalculate.
-- Open "Show the math" for the selected state and scenario, with the numbers substituted.
+- Open a state on the map and drill into a county. The shapes are convex hulls of Census interior points, drawn in the browser from `data/sample/county_points.json`.
+- Read a scenario card with the before, the after, and a plain-language sentence.
+- Switch reforms on or off, or give one a weight below 100 percent, and see the combined package.
+- Move any published assumption inside its low-to-high band and recalculate. Reset restores the published case and the full reform mix.
+- See a close-call badge when a margin sits near the feasibility hurdle, when the increment is under 1 percent of baseline, or when a seeded p10–p90 band crosses zero.
+- Open "Show the math" for the selected state and scenario, with the numbers substituted and tagged.
 - Read a tornado chart and a seeded Monte Carlo band.
 - Check that county rows sum to the state.
+- Walk Pennsylvania from Allegheny County up to the state total, with observed inputs separated from imputations (`docs/CASE_STUDY_PA_ALLEGHENY.md`, and the case-study tab in the app).
+- Print a one-page brief for the selected state and scenario.
 - Run the tier-1 states through the incomplete-data estimator and see the error.
-- Export CSV, JSON, and Markdown.
+- Export CSV, JSON, and Markdown. Every numeric field in the CSV and JSON carries an observed, assumed, or calculated tag.
+
+## How to read a number
+
+| Tag | Meaning |
+| --- | ------- |
+| observed | A public measurement stored for that place |
+| assumed | A published assumption or an imputation, not a measurement for that place |
+| calculated | The equations in `src/model/equations.py` |
+
+The same three tags appear as badges in the app, on each line of "Show the math," and as `*_provenance` columns in the CSV. Pennsylvania's lot screen is assumed. Connecticut's lot screen is calculated from observed bins.
 
 ## Command contract
 
@@ -61,8 +77,10 @@ PYTHONPATH=. .venv/bin/python -m src.cli run --state PA --out output
 | `docs/MODEL_AND_ASSUMPTIONS.md` | Equations, calibration, and limits |
 | `docs/POLICY_SCENARIO_COMPARISON.md` | The eleven-state results table and how to read it |
 | `docs/DATA_PROVENANCE.md` | Sources, vintages, cleaning, and privacy |
-| `docs/DISCLOSURES.md` | AI use, dependencies, and external services |
+| `docs/DISCLOSURES.md` | AI use, prior work, datasets, dependencies, and external services |
+| `docs/CASE_STUDY_PA_ALLEGHENY.md` | Allegheny County to Pennsylvania, with observed and imputed inputs separated |
 | `docs/sbom.cdx.json` | CycloneDX bill of materials for the direct pins |
+| `data/sample/county_points.json` | Census 2024 gazetteer interior points for the eleven states |
 
 ## Tests that lock the economics
 
@@ -77,6 +95,10 @@ PYTHONPATH=. .venv/bin/python -m src.cli run --state PA --out output
 ## Dependencies
 
 Runtime: Python 3.11+ and PyYAML 6.0.2 (MIT). Tests: pytest 8.3.5 (MIT). Lint: ruff 0.14.2 (MIT). No copyleft packages. The license test fails the build if one appears.
+
+## Prior work
+
+The interaction ideas — a map with drill-down, before-and-after scenario cards, plain language beside the figures, assumption controls with a reset, close-call flags, and a one-page brief — were inspired by PlayHouse, an earlier Pittsburgh parcel explorer by Tejas Chaudhari ([repository](https://github.com/tejaschaudhari131/playhouse), [live site](https://playhouse-pittsburgh.vercel.app)). PlayHouse was written before the challenge coding window, it has no open-source license, and it is not part of this submission. No PlayHouse source, data, or visual asset was copied. Stateframe was written for this challenge and stays at state and county level, with the baseline and the five benchmark reforms. Details are in `docs/DISCLOSURES.md`.
 
 ## Security
 

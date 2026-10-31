@@ -1,0 +1,3339 @@
+{
+  "source": "U.S. Census Bureau 2024 Gazetteer county interior points (INTPTLAT, INTPTLONG)",
+  "vintage": "2024",
+  "license": "Public domain, U.S. government work",
+  "points": [
+    {
+      "fips": "04001",
+      "state": "AZ",
+      "name": "Apache County",
+      "lat": 35.385084,
+      "lon": -109.490172
+    },
+    {
+      "fips": "04003",
+      "state": "AZ",
+      "name": "Cochise County",
+      "lat": 31.840129,
+      "lon": -109.775163
+    },
+    {
+      "fips": "04005",
+      "state": "AZ",
+      "name": "Coconino County",
+      "lat": 35.829692,
+      "lon": -111.773728
+    },
+    {
+      "fips": "04007",
+      "state": "AZ",
+      "name": "Gila County",
+      "lat": 33.789618,
+      "lon": -110.81187
+    },
+    {
+      "fips": "04009",
+      "state": "AZ",
+      "name": "Graham County",
+      "lat": 32.931828,
+      "lon": -109.87831
+    },
+    {
+      "fips": "04011",
+      "state": "AZ",
+      "name": "Greenlee County",
+      "lat": 33.238872,
+      "lon": -109.242323
+    },
+    {
+      "fips": "04012",
+      "state": "AZ",
+      "name": "La Paz County",
+      "lat": 33.72761,
+      "lon": -114.038806
+    },
+    {
+      "fips": "04013",
+      "state": "AZ",
+      "name": "Maricopa County",
+      "lat": 33.345176,
+      "lon": -112.49893
+    },
+    {
+      "fips": "04015",
+      "state": "AZ",
+      "name": "Mohave County",
+      "lat": 35.717705,
+      "lon": -113.749689
+    },
+    {
+      "fips": "04017",
+      "state": "AZ",
+      "name": "Navajo County",
+      "lat": 35.390785,
+      "lon": -110.321025
+    },
+    {
+      "fips": "04019",
+      "state": "AZ",
+      "name": "Pima County",
+      "lat": 32.128038,
+      "lon": -111.783657
+    },
+    {
+      "fips": "04021",
+      "state": "AZ",
+      "name": "Pinal County",
+      "lat": 32.918521,
+      "lon": -111.366339
+    },
+    {
+      "fips": "04023",
+      "state": "AZ",
+      "name": "Santa Cruz County",
+      "lat": 31.525733,
+      "lon": -110.845228
+    },
+    {
+      "fips": "04025",
+      "state": "AZ",
+      "name": "Yavapai County",
+      "lat": 34.631071,
+      "lon": -112.577225
+    },
+    {
+      "fips": "04027",
+      "state": "AZ",
+      "name": "Yuma County",
+      "lat": 32.773942,
+      "lon": -113.910905
+    },
+    {
+      "fips": "09110",
+      "state": "CT",
+      "name": "Capitol Planning Region",
+      "lat": 41.81697,
+      "lon": -72.575886
+    },
+    {
+      "fips": "09120",
+      "state": "CT",
+      "name": "Greater Bridgeport Planning Region",
+      "lat": 41.184558,
+      "lon": -73.209401
+    },
+    {
+      "fips": "09130",
+      "state": "CT",
+      "name": "Lower Connecticut River Valley Planning Region",
+      "lat": 41.420307,
+      "lon": -72.493525
+    },
+    {
+      "fips": "09140",
+      "state": "CT",
+      "name": "Naugatuck Valley Planning Region",
+      "lat": 41.518931,
+      "lon": -73.087906
+    },
+    {
+      "fips": "09150",
+      "state": "CT",
+      "name": "Northeastern Connecticut Planning Region",
+      "lat": 41.842375,
+      "lon": -71.972655
+    },
+    {
+      "fips": "09160",
+      "state": "CT",
+      "name": "Northwest Hills Planning Region",
+      "lat": 41.854809,
+      "lon": -73.221494
+    },
+    {
+      "fips": "09170",
+      "state": "CT",
+      "name": "South Central Connecticut Planning Region",
+      "lat": 41.290167,
+      "lon": -72.837024
+    },
+    {
+      "fips": "09180",
+      "state": "CT",
+      "name": "Southeastern Connecticut Planning Region",
+      "lat": 41.484769,
+      "lon": -72.101666
+    },
+    {
+      "fips": "09190",
+      "state": "CT",
+      "name": "Western Connecticut Planning Region",
+      "lat": 41.279055,
+      "lon": -73.44655
+    },
+    {
+      "fips": "15001",
+      "state": "HI",
+      "name": "Hawaii County",
+      "lat": 19.597764,
+      "lon": -155.502443
+    },
+    {
+      "fips": "15003",
+      "state": "HI",
+      "name": "Honolulu County",
+      "lat": 21.461365,
+      "lon": -158.201974
+    },
+    {
+      "fips": "15005",
+      "state": "HI",
+      "name": "Kalawao County",
+      "lat": 21.218764,
+      "lon": -156.97401
+    },
+    {
+      "fips": "15007",
+      "state": "HI",
+      "name": "Kauai County",
+      "lat": 22.012038,
+      "lon": -159.705965
+    },
+    {
+      "fips": "15009",
+      "state": "HI",
+      "name": "Maui County",
+      "lat": 20.855931,
+      "lon": -156.60155
+    },
+    {
+      "fips": "33001",
+      "state": "NH",
+      "name": "Belknap County",
+      "lat": 43.519109,
+      "lon": -71.425366
+    },
+    {
+      "fips": "33003",
+      "state": "NH",
+      "name": "Carroll County",
+      "lat": 43.867774,
+      "lon": -71.20156
+    },
+    {
+      "fips": "33005",
+      "state": "NH",
+      "name": "Cheshire County",
+      "lat": 42.92546,
+      "lon": -72.248183
+    },
+    {
+      "fips": "33007",
+      "state": "NH",
+      "name": "Coos County",
+      "lat": 44.652548,
+      "lon": -71.289431
+    },
+    {
+      "fips": "33009",
+      "state": "NH",
+      "name": "Grafton County",
+      "lat": 43.926439,
+      "lon": -71.842424
+    },
+    {
+      "fips": "33011",
+      "state": "NH",
+      "name": "Hillsborough County",
+      "lat": 42.911532,
+      "lon": -71.723055
+    },
+    {
+      "fips": "33013",
+      "state": "NH",
+      "name": "Merrimack County",
+      "lat": 43.299579,
+      "lon": -71.680041
+    },
+    {
+      "fips": "33015",
+      "state": "NH",
+      "name": "Rockingham County",
+      "lat": 42.988664,
+      "lon": -71.09908
+    },
+    {
+      "fips": "33017",
+      "state": "NH",
+      "name": "Strafford County",
+      "lat": 43.293272,
+      "lon": -71.035589
+    },
+    {
+      "fips": "33019",
+      "state": "NH",
+      "name": "Sullivan County",
+      "lat": 43.361188,
+      "lon": -72.222084
+    },
+    {
+      "fips": "41001",
+      "state": "OR",
+      "name": "Baker County",
+      "lat": 44.703427,
+      "lon": -117.691933
+    },
+    {
+      "fips": "41003",
+      "state": "OR",
+      "name": "Benton County",
+      "lat": 44.493882,
+      "lon": -123.424664
+    },
+    {
+      "fips": "41005",
+      "state": "OR",
+      "name": "Clackamas County",
+      "lat": 45.160493,
+      "lon": -122.195127
+    },
+    {
+      "fips": "41007",
+      "state": "OR",
+      "name": "Clatsop County",
+      "lat": 46.024509,
+      "lon": -123.705037
+    },
+    {
+      "fips": "41009",
+      "state": "OR",
+      "name": "Columbia County",
+      "lat": 45.941932,
+      "lon": -123.081079
+    },
+    {
+      "fips": "41011",
+      "state": "OR",
+      "name": "Coos County",
+      "lat": 43.18591,
+      "lon": -124.094133
+    },
+    {
+      "fips": "41013",
+      "state": "OR",
+      "name": "Crook County",
+      "lat": 44.163054,
+      "lon": -120.371585
+    },
+    {
+      "fips": "41015",
+      "state": "OR",
+      "name": "Curry County",
+      "lat": 42.466439,
+      "lon": -124.210929
+    },
+    {
+      "fips": "41017",
+      "state": "OR",
+      "name": "Deschutes County",
+      "lat": 43.915118,
+      "lon": -121.225575
+    },
+    {
+      "fips": "41019",
+      "state": "OR",
+      "name": "Douglas County",
+      "lat": 43.286328,
+      "lon": -123.154476
+    },
+    {
+      "fips": "41021",
+      "state": "OR",
+      "name": "Gilliam County",
+      "lat": 45.382955,
+      "lon": -120.276246
+    },
+    {
+      "fips": "41023",
+      "state": "OR",
+      "name": "Grant County",
+      "lat": 44.496326,
+      "lon": -119.014057
+    },
+    {
+      "fips": "41025",
+      "state": "OR",
+      "name": "Harney County",
+      "lat": 43.064449,
+      "lon": -118.987169
+    },
+    {
+      "fips": "41027",
+      "state": "OR",
+      "name": "Hood River County",
+      "lat": 45.511775,
+      "lon": -121.655976
+    },
+    {
+      "fips": "41029",
+      "state": "OR",
+      "name": "Jackson County",
+      "lat": 42.411621,
+      "lon": -122.675611
+    },
+    {
+      "fips": "41031",
+      "state": "OR",
+      "name": "Jefferson County",
+      "lat": 44.645151,
+      "lon": -121.178632
+    },
+    {
+      "fips": "41033",
+      "state": "OR",
+      "name": "Josephine County",
+      "lat": 42.386983,
+      "lon": -123.57162
+    },
+    {
+      "fips": "41035",
+      "state": "OR",
+      "name": "Klamath County",
+      "lat": 42.683761,
+      "lon": -121.646168
+    },
+    {
+      "fips": "41037",
+      "state": "OR",
+      "name": "Lake County",
+      "lat": 42.788401,
+      "lon": -120.38979
+    },
+    {
+      "fips": "41039",
+      "state": "OR",
+      "name": "Lane County",
+      "lat": 43.928334,
+      "lon": -122.897581
+    },
+    {
+      "fips": "41041",
+      "state": "OR",
+      "name": "Lincoln County",
+      "lat": 44.641061,
+      "lon": -123.911212
+    },
+    {
+      "fips": "41043",
+      "state": "OR",
+      "name": "Linn County",
+      "lat": 44.488898,
+      "lon": -122.537208
+    },
+    {
+      "fips": "41045",
+      "state": "OR",
+      "name": "Malheur County",
+      "lat": 43.188625,
+      "lon": -117.603191
+    },
+    {
+      "fips": "41047",
+      "state": "OR",
+      "name": "Marion County",
+      "lat": 44.900898,
+      "lon": -122.57626
+    },
+    {
+      "fips": "41049",
+      "state": "OR",
+      "name": "Morrow County",
+      "lat": 45.425496,
+      "lon": -119.602311
+    },
+    {
+      "fips": "41051",
+      "state": "OR",
+      "name": "Multnomah County",
+      "lat": 45.547711,
+      "lon": -122.417363
+    },
+    {
+      "fips": "41053",
+      "state": "OR",
+      "name": "Polk County",
+      "lat": 44.900372,
+      "lon": -123.39864
+    },
+    {
+      "fips": "41055",
+      "state": "OR",
+      "name": "Sherman County",
+      "lat": 45.399216,
+      "lon": -120.678512
+    },
+    {
+      "fips": "41057",
+      "state": "OR",
+      "name": "Tillamook County",
+      "lat": 45.45589,
+      "lon": -123.759299
+    },
+    {
+      "fips": "41059",
+      "state": "OR",
+      "name": "Umatilla County",
+      "lat": 45.5912,
+      "lon": -118.73388
+    },
+    {
+      "fips": "41061",
+      "state": "OR",
+      "name": "Union County",
+      "lat": 45.304081,
+      "lon": -117.999149
+    },
+    {
+      "fips": "41063",
+      "state": "OR",
+      "name": "Wallowa County",
+      "lat": 45.593753,
+      "lon": -117.18558
+    },
+    {
+      "fips": "41065",
+      "state": "OR",
+      "name": "Wasco County",
+      "lat": 45.164536,
+      "lon": -121.165069
+    },
+    {
+      "fips": "41067",
+      "state": "OR",
+      "name": "Washington County",
+      "lat": 45.553542,
+      "lon": -123.097615
+    },
+    {
+      "fips": "41069",
+      "state": "OR",
+      "name": "Wheeler County",
+      "lat": 44.736415,
+      "lon": -120.026861
+    },
+    {
+      "fips": "41071",
+      "state": "OR",
+      "name": "Yamhill County",
+      "lat": 45.247827,
+      "lon": -123.316399
+    },
+    {
+      "fips": "42001",
+      "state": "PA",
+      "name": "Adams County",
+      "lat": 39.869437,
+      "lon": -77.21775
+    },
+    {
+      "fips": "42003",
+      "state": "PA",
+      "name": "Allegheny County",
+      "lat": 40.469757,
+      "lon": -79.980451
+    },
+    {
+      "fips": "42005",
+      "state": "PA",
+      "name": "Armstrong County",
+      "lat": 40.81238,
+      "lon": -79.464129
+    },
+    {
+      "fips": "42007",
+      "state": "PA",
+      "name": "Beaver County",
+      "lat": 40.68414,
+      "lon": -80.350721
+    },
+    {
+      "fips": "42009",
+      "state": "PA",
+      "name": "Bedford County",
+      "lat": 39.998634,
+      "lon": -78.494747
+    },
+    {
+      "fips": "42011",
+      "state": "PA",
+      "name": "Berks County",
+      "lat": 40.413957,
+      "lon": -75.92686
+    },
+    {
+      "fips": "42013",
+      "state": "PA",
+      "name": "Blair County",
+      "lat": 40.498683,
+      "lon": -78.309597
+    },
+    {
+      "fips": "42015",
+      "state": "PA",
+      "name": "Bradford County",
+      "lat": 41.791504,
+      "lon": -76.502123
+    },
+    {
+      "fips": "42017",
+      "state": "PA",
+      "name": "Bucks County",
+      "lat": 40.336887,
+      "lon": -75.10706
+    },
+    {
+      "fips": "42019",
+      "state": "PA",
+      "name": "Butler County",
+      "lat": 40.913847,
+      "lon": -79.918978
+    },
+    {
+      "fips": "42021",
+      "state": "PA",
+      "name": "Cambria County",
+      "lat": 40.510209,
+      "lon": -78.710488
+    },
+    {
+      "fips": "42023",
+      "state": "PA",
+      "name": "Cameron County",
+      "lat": 41.438291,
+      "lon": -78.198323
+    },
+    {
+      "fips": "42025",
+      "state": "PA",
+      "name": "Carbon County",
+      "lat": 40.918367,
+      "lon": -75.705039
+    },
+    {
+      "fips": "42027",
+      "state": "PA",
+      "name": "Centre County",
+      "lat": 40.909322,
+      "lon": -77.847667
+    },
+    {
+      "fips": "42029",
+      "state": "PA",
+      "name": "Chester County",
+      "lat": 39.974029,
+      "lon": -75.749751
+    },
+    {
+      "fips": "42031",
+      "state": "PA",
+      "name": "Clarion County",
+      "lat": 41.198159,
+      "lon": -79.420369
+    },
+    {
+      "fips": "42033",
+      "state": "PA",
+      "name": "Clearfield County",
+      "lat": 41.006862,
+      "lon": -78.477724
+    },
+    {
+      "fips": "42035",
+      "state": "PA",
+      "name": "Clinton County",
+      "lat": 41.239508,
+      "lon": -77.629009
+    },
+    {
+      "fips": "42037",
+      "state": "PA",
+      "name": "Columbia County",
+      "lat": 41.045517,
+      "lon": -76.40426
+    },
+    {
+      "fips": "42039",
+      "state": "PA",
+      "name": "Crawford County",
+      "lat": 41.687876,
+      "lon": -80.107795
+    },
+    {
+      "fips": "42041",
+      "state": "PA",
+      "name": "Cumberland County",
+      "lat": 40.164805,
+      "lon": -77.263442
+    },
+    {
+      "fips": "42043",
+      "state": "PA",
+      "name": "Dauphin County",
+      "lat": 40.412565,
+      "lon": -76.792634
+    },
+    {
+      "fips": "42045",
+      "state": "PA",
+      "name": "Delaware County",
+      "lat": 39.916685,
+      "lon": -75.398818
+    },
+    {
+      "fips": "42047",
+      "state": "PA",
+      "name": "Elk County",
+      "lat": 41.427332,
+      "lon": -78.653937
+    },
+    {
+      "fips": "42049",
+      "state": "PA",
+      "name": "Erie County",
+      "lat": 42.117952,
+      "lon": -80.096386
+    },
+    {
+      "fips": "42051",
+      "state": "PA",
+      "name": "Fayette County",
+      "lat": 39.918911,
+      "lon": -79.640253
+    },
+    {
+      "fips": "42053",
+      "state": "PA",
+      "name": "Forest County",
+      "lat": 41.513304,
+      "lon": -79.249705
+    },
+    {
+      "fips": "42055",
+      "state": "PA",
+      "name": "Franklin County",
+      "lat": 39.926772,
+      "lon": -77.724521
+    },
+    {
+      "fips": "42057",
+      "state": "PA",
+      "name": "Fulton County",
+      "lat": 39.91075,
+      "lon": -78.122617
+    },
+    {
+      "fips": "42059",
+      "state": "PA",
+      "name": "Greene County",
+      "lat": 39.847707,
+      "lon": -80.225655
+    },
+    {
+      "fips": "42061",
+      "state": "PA",
+      "name": "Huntingdon County",
+      "lat": 40.422311,
+      "lon": -77.968595
+    },
+    {
+      "fips": "42063",
+      "state": "PA",
+      "name": "Indiana County",
+      "lat": 40.651432,
+      "lon": -79.087545
+    },
+    {
+      "fips": "42065",
+      "state": "PA",
+      "name": "Jefferson County",
+      "lat": 41.138028,
+      "lon": -79.012419
+    },
+    {
+      "fips": "42067",
+      "state": "PA",
+      "name": "Juniata County",
+      "lat": 40.530673,
+      "lon": -77.400438
+    },
+    {
+      "fips": "42069",
+      "state": "PA",
+      "name": "Lackawanna County",
+      "lat": 41.436636,
+      "lon": -75.608768
+    },
+    {
+      "fips": "42071",
+      "state": "PA",
+      "name": "Lancaster County",
+      "lat": 40.041992,
+      "lon": -76.250198
+    },
+    {
+      "fips": "42073",
+      "state": "PA",
+      "name": "Lawrence County",
+      "lat": 40.992735,
+      "lon": -80.334446
+    },
+    {
+      "fips": "42075",
+      "state": "PA",
+      "name": "Lebanon County",
+      "lat": 40.371448,
+      "lon": -76.464819
+    },
+    {
+      "fips": "42077",
+      "state": "PA",
+      "name": "Lehigh County",
+      "lat": 40.614241,
+      "lon": -75.590627
+    },
+    {
+      "fips": "42079",
+      "state": "PA",
+      "name": "Luzerne County",
+      "lat": 41.173078,
+      "lon": -75.976053
+    },
+    {
+      "fips": "42081",
+      "state": "PA",
+      "name": "Lycoming County",
+      "lat": 41.343882,
+      "lon": -77.055262
+    },
+    {
+      "fips": "42083",
+      "state": "PA",
+      "name": "McKean County",
+      "lat": 41.81459,
+      "lon": -78.572463
+    },
+    {
+      "fips": "42085",
+      "state": "PA",
+      "name": "Mercer County",
+      "lat": 41.300014,
+      "lon": -80.252786
+    },
+    {
+      "fips": "42087",
+      "state": "PA",
+      "name": "Mifflin County",
+      "lat": 40.601615,
+      "lon": -77.651832
+    },
+    {
+      "fips": "42089",
+      "state": "PA",
+      "name": "Monroe County",
+      "lat": 41.05624,
+      "lon": -75.329065
+    },
+    {
+      "fips": "42091",
+      "state": "PA",
+      "name": "Montgomery County",
+      "lat": 40.209999,
+      "lon": -75.370201
+    },
+    {
+      "fips": "42093",
+      "state": "PA",
+      "name": "Montour County",
+      "lat": 41.029284,
+      "lon": -76.665225
+    },
+    {
+      "fips": "42095",
+      "state": "PA",
+      "name": "Northampton County",
+      "lat": 40.752791,
+      "lon": -75.307447
+    },
+    {
+      "fips": "42097",
+      "state": "PA",
+      "name": "Northumberland County",
+      "lat": 40.851524,
+      "lon": -76.709877
+    },
+    {
+      "fips": "42099",
+      "state": "PA",
+      "name": "Perry County",
+      "lat": 40.39778,
+      "lon": -77.266328
+    },
+    {
+      "fips": "42101",
+      "state": "PA",
+      "name": "Philadelphia County",
+      "lat": 40.009376,
+      "lon": -75.133346
+    },
+    {
+      "fips": "42103",
+      "state": "PA",
+      "name": "Pike County",
+      "lat": 41.325949,
+      "lon": -75.031514
+    },
+    {
+      "fips": "42105",
+      "state": "PA",
+      "name": "Potter County",
+      "lat": 41.748587,
+      "lon": -77.894436
+    },
+    {
+      "fips": "42107",
+      "state": "PA",
+      "name": "Schuylkill County",
+      "lat": 40.703682,
+      "lon": -76.217788
+    },
+    {
+      "fips": "42109",
+      "state": "PA",
+      "name": "Snyder County",
+      "lat": 40.755412,
+      "lon": -77.07302
+    },
+    {
+      "fips": "42111",
+      "state": "PA",
+      "name": "Somerset County",
+      "lat": 39.981297,
+      "lon": -79.028486
+    },
+    {
+      "fips": "42113",
+      "state": "PA",
+      "name": "Sullivan County",
+      "lat": 41.439285,
+      "lon": -76.511717
+    },
+    {
+      "fips": "42115",
+      "state": "PA",
+      "name": "Susquehanna County",
+      "lat": 41.819665,
+      "lon": -75.800969
+    },
+    {
+      "fips": "42117",
+      "state": "PA",
+      "name": "Tioga County",
+      "lat": 41.766858,
+      "lon": -77.257288
+    },
+    {
+      "fips": "42119",
+      "state": "PA",
+      "name": "Union County",
+      "lat": 40.962179,
+      "lon": -77.055475
+    },
+    {
+      "fips": "42121",
+      "state": "PA",
+      "name": "Venango County",
+      "lat": 41.400714,
+      "lon": -79.765813
+    },
+    {
+      "fips": "42123",
+      "state": "PA",
+      "name": "Warren County",
+      "lat": 41.834298,
+      "lon": -79.298182
+    },
+    {
+      "fips": "42125",
+      "state": "PA",
+      "name": "Washington County",
+      "lat": 40.200005,
+      "lon": -80.252132
+    },
+    {
+      "fips": "42127",
+      "state": "PA",
+      "name": "Wayne County",
+      "lat": 41.646602,
+      "lon": -75.292493
+    },
+    {
+      "fips": "42129",
+      "state": "PA",
+      "name": "Westmoreland County",
+      "lat": 40.311068,
+      "lon": -79.466688
+    },
+    {
+      "fips": "42131",
+      "state": "PA",
+      "name": "Wyoming County",
+      "lat": 41.525167,
+      "lon": -76.008682
+    },
+    {
+      "fips": "42133",
+      "state": "PA",
+      "name": "York County",
+      "lat": 39.921751,
+      "lon": -76.728889
+    },
+    {
+      "fips": "44001",
+      "state": "RI",
+      "name": "Bristol County",
+      "lat": 41.70684,
+      "lon": -71.286687
+    },
+    {
+      "fips": "44003",
+      "state": "RI",
+      "name": "Kent County",
+      "lat": 41.675118,
+      "lon": -71.580282
+    },
+    {
+      "fips": "44005",
+      "state": "RI",
+      "name": "Newport County",
+      "lat": 41.501045,
+      "lon": -71.283063
+    },
+    {
+      "fips": "44007",
+      "state": "RI",
+      "name": "Providence County",
+      "lat": 41.869768,
+      "lon": -71.578625
+    },
+    {
+      "fips": "44009",
+      "state": "RI",
+      "name": "Washington County",
+      "lat": 41.396792,
+      "lon": -71.620282
+    },
+    {
+      "fips": "47001",
+      "state": "TN",
+      "name": "Anderson County",
+      "lat": 36.116731,
+      "lon": -84.195418
+    },
+    {
+      "fips": "47003",
+      "state": "TN",
+      "name": "Bedford County",
+      "lat": 35.51366,
+      "lon": -86.458294
+    },
+    {
+      "fips": "47005",
+      "state": "TN",
+      "name": "Benton County",
+      "lat": 36.070948,
+      "lon": -88.071232
+    },
+    {
+      "fips": "47007",
+      "state": "TN",
+      "name": "Bledsoe County",
+      "lat": 35.593561,
+      "lon": -85.20591
+    },
+    {
+      "fips": "47009",
+      "state": "TN",
+      "name": "Blount County",
+      "lat": 35.688185,
+      "lon": -83.922973
+    },
+    {
+      "fips": "47011",
+      "state": "TN",
+      "name": "Bradley County",
+      "lat": 35.153914,
+      "lon": -84.859414
+    },
+    {
+      "fips": "47013",
+      "state": "TN",
+      "name": "Campbell County",
+      "lat": 36.401592,
+      "lon": -84.159249
+    },
+    {
+      "fips": "47015",
+      "state": "TN",
+      "name": "Cannon County",
+      "lat": 35.808394,
+      "lon": -86.062404
+    },
+    {
+      "fips": "47017",
+      "state": "TN",
+      "name": "Carroll County",
+      "lat": 35.965748,
+      "lon": -88.452379
+    },
+    {
+      "fips": "47019",
+      "state": "TN",
+      "name": "Carter County",
+      "lat": 36.284744,
+      "lon": -82.126593
+    },
+    {
+      "fips": "47021",
+      "state": "TN",
+      "name": "Cheatham County",
+      "lat": 36.255169,
+      "lon": -87.100808
+    },
+    {
+      "fips": "47023",
+      "state": "TN",
+      "name": "Chester County",
+      "lat": 35.420253,
+      "lon": -88.611353
+    },
+    {
+      "fips": "47025",
+      "state": "TN",
+      "name": "Claiborne County",
+      "lat": 36.501572,
+      "lon": -83.660698
+    },
+    {
+      "fips": "47027",
+      "state": "TN",
+      "name": "Clay County",
+      "lat": 36.545749,
+      "lon": -85.545717
+    },
+    {
+      "fips": "47029",
+      "state": "TN",
+      "name": "Cocke County",
+      "lat": 35.916198,
+      "lon": -83.119224
+    },
+    {
+      "fips": "47031",
+      "state": "TN",
+      "name": "Coffee County",
+      "lat": 35.488765,
+      "lon": -86.078202
+    },
+    {
+      "fips": "47033",
+      "state": "TN",
+      "name": "Crockett County",
+      "lat": 35.818795,
+      "lon": -89.132494
+    },
+    {
+      "fips": "47035",
+      "state": "TN",
+      "name": "Cumberland County",
+      "lat": 35.952398,
+      "lon": -84.994761
+    },
+    {
+      "fips": "47037",
+      "state": "TN",
+      "name": "Davidson County",
+      "lat": 36.169129,
+      "lon": -86.78479
+    },
+    {
+      "fips": "47039",
+      "state": "TN",
+      "name": "Decatur County",
+      "lat": 35.603136,
+      "lon": -88.110292
+    },
+    {
+      "fips": "47041",
+      "state": "TN",
+      "name": "DeKalb County",
+      "lat": 35.982219,
+      "lon": -85.833596
+    },
+    {
+      "fips": "47043",
+      "state": "TN",
+      "name": "Dickson County",
+      "lat": 36.145533,
+      "lon": -87.364155
+    },
+    {
+      "fips": "47045",
+      "state": "TN",
+      "name": "Dyer County",
+      "lat": 36.054196,
+      "lon": -89.398306
+    },
+    {
+      "fips": "47047",
+      "state": "TN",
+      "name": "Fayette County",
+      "lat": 35.196993,
+      "lon": -89.413803
+    },
+    {
+      "fips": "47049",
+      "state": "TN",
+      "name": "Fentress County",
+      "lat": 36.369892,
+      "lon": -84.937764
+    },
+    {
+      "fips": "47051",
+      "state": "TN",
+      "name": "Franklin County",
+      "lat": 35.155926,
+      "lon": -86.099203
+    },
+    {
+      "fips": "47053",
+      "state": "TN",
+      "name": "Gibson County",
+      "lat": 35.991632,
+      "lon": -88.933812
+    },
+    {
+      "fips": "47055",
+      "state": "TN",
+      "name": "Giles County",
+      "lat": 35.202723,
+      "lon": -87.035319
+    },
+    {
+      "fips": "47057",
+      "state": "TN",
+      "name": "Grainger County",
+      "lat": 36.277509,
+      "lon": -83.509546
+    },
+    {
+      "fips": "47059",
+      "state": "TN",
+      "name": "Greene County",
+      "lat": 36.179487,
+      "lon": -82.847523
+    },
+    {
+      "fips": "47061",
+      "state": "TN",
+      "name": "Grundy County",
+      "lat": 35.393352,
+      "lon": -85.710374
+    },
+    {
+      "fips": "47063",
+      "state": "TN",
+      "name": "Hamblen County",
+      "lat": 36.218397,
+      "lon": -83.266071
+    },
+    {
+      "fips": "47065",
+      "state": "TN",
+      "name": "Hamilton County",
+      "lat": 35.163472,
+      "lon": -85.201843
+    },
+    {
+      "fips": "47067",
+      "state": "TN",
+      "name": "Hancock County",
+      "lat": 36.521353,
+      "lon": -83.227493
+    },
+    {
+      "fips": "47069",
+      "state": "TN",
+      "name": "Hardeman County",
+      "lat": 35.218785,
+      "lon": -88.988697
+    },
+    {
+      "fips": "47071",
+      "state": "TN",
+      "name": "Hardin County",
+      "lat": 35.201893,
+      "lon": -88.185696
+    },
+    {
+      "fips": "47073",
+      "state": "TN",
+      "name": "Hawkins County",
+      "lat": 36.452089,
+      "lon": -82.931485
+    },
+    {
+      "fips": "47075",
+      "state": "TN",
+      "name": "Haywood County",
+      "lat": 35.586678,
+      "lon": -89.282691
+    },
+    {
+      "fips": "47077",
+      "state": "TN",
+      "name": "Henderson County",
+      "lat": 35.653994,
+      "lon": -88.387674
+    },
+    {
+      "fips": "47079",
+      "state": "TN",
+      "name": "Henry County",
+      "lat": 36.325295,
+      "lon": -88.300288
+    },
+    {
+      "fips": "47081",
+      "state": "TN",
+      "name": "Hickman County",
+      "lat": 35.802327,
+      "lon": -87.467116
+    },
+    {
+      "fips": "47083",
+      "state": "TN",
+      "name": "Houston County",
+      "lat": 36.285782,
+      "lon": -87.705598
+    },
+    {
+      "fips": "47085",
+      "state": "TN",
+      "name": "Humphreys County",
+      "lat": 36.040822,
+      "lon": -87.790453
+    },
+    {
+      "fips": "47087",
+      "state": "TN",
+      "name": "Jackson County",
+      "lat": 36.35425,
+      "lon": -85.674128
+    },
+    {
+      "fips": "47089",
+      "state": "TN",
+      "name": "Jefferson County",
+      "lat": 36.048452,
+      "lon": -83.441216
+    },
+    {
+      "fips": "47091",
+      "state": "TN",
+      "name": "Johnson County",
+      "lat": 36.453203,
+      "lon": -81.861247
+    },
+    {
+      "fips": "47093",
+      "state": "TN",
+      "name": "Knox County",
+      "lat": 35.992726,
+      "lon": -83.937721
+    },
+    {
+      "fips": "47095",
+      "state": "TN",
+      "name": "Lake County",
+      "lat": 36.333905,
+      "lon": -89.485536
+    },
+    {
+      "fips": "47097",
+      "state": "TN",
+      "name": "Lauderdale County",
+      "lat": 35.762951,
+      "lon": -89.627732
+    },
+    {
+      "fips": "47099",
+      "state": "TN",
+      "name": "Lawrence County",
+      "lat": 35.220476,
+      "lon": -87.396546
+    },
+    {
+      "fips": "47101",
+      "state": "TN",
+      "name": "Lewis County",
+      "lat": 35.523244,
+      "lon": -87.496983
+    },
+    {
+      "fips": "47103",
+      "state": "TN",
+      "name": "Lincoln County",
+      "lat": 35.142784,
+      "lon": -86.593403
+    },
+    {
+      "fips": "47105",
+      "state": "TN",
+      "name": "Loudon County",
+      "lat": 35.735085,
+      "lon": -84.314085
+    },
+    {
+      "fips": "47107",
+      "state": "TN",
+      "name": "McMinn County",
+      "lat": 35.424472,
+      "lon": -84.619949
+    },
+    {
+      "fips": "47109",
+      "state": "TN",
+      "name": "McNairy County",
+      "lat": 35.175375,
+      "lon": -88.56374
+    },
+    {
+      "fips": "47111",
+      "state": "TN",
+      "name": "Macon County",
+      "lat": 36.537757,
+      "lon": -86.00096
+    },
+    {
+      "fips": "47113",
+      "state": "TN",
+      "name": "Madison County",
+      "lat": 35.606056,
+      "lon": -88.833424
+    },
+    {
+      "fips": "47115",
+      "state": "TN",
+      "name": "Marion County",
+      "lat": 35.127565,
+      "lon": -85.607429
+    },
+    {
+      "fips": "47117",
+      "state": "TN",
+      "name": "Marshall County",
+      "lat": 35.468329,
+      "lon": -86.765868
+    },
+    {
+      "fips": "47119",
+      "state": "TN",
+      "name": "Maury County",
+      "lat": 35.615696,
+      "lon": -87.077763
+    },
+    {
+      "fips": "47121",
+      "state": "TN",
+      "name": "Meigs County",
+      "lat": 35.512203,
+      "lon": -84.816102
+    },
+    {
+      "fips": "47123",
+      "state": "TN",
+      "name": "Monroe County",
+      "lat": 35.447818,
+      "lon": -84.249705
+    },
+    {
+      "fips": "47125",
+      "state": "TN",
+      "name": "Montgomery County",
+      "lat": 36.500354,
+      "lon": -87.380887
+    },
+    {
+      "fips": "47127",
+      "state": "TN",
+      "name": "Moore County",
+      "lat": 35.288888,
+      "lon": -86.358684
+    },
+    {
+      "fips": "47129",
+      "state": "TN",
+      "name": "Morgan County",
+      "lat": 36.138697,
+      "lon": -84.639262
+    },
+    {
+      "fips": "47131",
+      "state": "TN",
+      "name": "Obion County",
+      "lat": 36.361892,
+      "lon": -89.148078
+    },
+    {
+      "fips": "47133",
+      "state": "TN",
+      "name": "Overton County",
+      "lat": 36.34485,
+      "lon": -85.283076
+    },
+    {
+      "fips": "47135",
+      "state": "TN",
+      "name": "Perry County",
+      "lat": 35.663752,
+      "lon": -87.869326
+    },
+    {
+      "fips": "47137",
+      "state": "TN",
+      "name": "Pickett County",
+      "lat": 36.559364,
+      "lon": -85.075741
+    },
+    {
+      "fips": "47139",
+      "state": "TN",
+      "name": "Polk County",
+      "lat": 35.109437,
+      "lon": -84.541112
+    },
+    {
+      "fips": "47141",
+      "state": "TN",
+      "name": "Putnam County",
+      "lat": 36.14094,
+      "lon": -85.49618
+    },
+    {
+      "fips": "47143",
+      "state": "TN",
+      "name": "Rhea County",
+      "lat": 35.60059,
+      "lon": -84.949548
+    },
+    {
+      "fips": "47145",
+      "state": "TN",
+      "name": "Roane County",
+      "lat": 35.84725,
+      "lon": -84.523929
+    },
+    {
+      "fips": "47147",
+      "state": "TN",
+      "name": "Robertson County",
+      "lat": 36.524385,
+      "lon": -86.872594
+    },
+    {
+      "fips": "47149",
+      "state": "TN",
+      "name": "Rutherford County",
+      "lat": 35.843369,
+      "lon": -86.417213
+    },
+    {
+      "fips": "47151",
+      "state": "TN",
+      "name": "Scott County",
+      "lat": 36.430592,
+      "lon": -84.504091
+    },
+    {
+      "fips": "47153",
+      "state": "TN",
+      "name": "Sequatchie County",
+      "lat": 35.372336,
+      "lon": -85.410082
+    },
+    {
+      "fips": "47155",
+      "state": "TN",
+      "name": "Sevier County",
+      "lat": 35.787822,
+      "lon": -83.5249
+    },
+    {
+      "fips": "47157",
+      "state": "TN",
+      "name": "Shelby County",
+      "lat": 35.184553,
+      "lon": -89.894612
+    },
+    {
+      "fips": "47159",
+      "state": "TN",
+      "name": "Smith County",
+      "lat": 36.256645,
+      "lon": -85.941915
+    },
+    {
+      "fips": "47161",
+      "state": "TN",
+      "name": "Stewart County",
+      "lat": 36.458464,
+      "lon": -87.811889
+    },
+    {
+      "fips": "47163",
+      "state": "TN",
+      "name": "Sullivan County",
+      "lat": 36.509681,
+      "lon": -82.301336
+    },
+    {
+      "fips": "47165",
+      "state": "TN",
+      "name": "Sumner County",
+      "lat": 36.472423,
+      "lon": -86.458405
+    },
+    {
+      "fips": "47167",
+      "state": "TN",
+      "name": "Tipton County",
+      "lat": 35.498763,
+      "lon": -89.747145
+    },
+    {
+      "fips": "47169",
+      "state": "TN",
+      "name": "Trousdale County",
+      "lat": 36.39303,
+      "lon": -86.156691
+    },
+    {
+      "fips": "47171",
+      "state": "TN",
+      "name": "Unicoi County",
+      "lat": 36.100129,
+      "lon": -82.418218
+    },
+    {
+      "fips": "47173",
+      "state": "TN",
+      "name": "Union County",
+      "lat": 36.28414,
+      "lon": -83.836088
+    },
+    {
+      "fips": "47175",
+      "state": "TN",
+      "name": "Van Buren County",
+      "lat": 35.699234,
+      "lon": -85.458409
+    },
+    {
+      "fips": "47177",
+      "state": "TN",
+      "name": "Warren County",
+      "lat": 35.67825,
+      "lon": -85.777343
+    },
+    {
+      "fips": "47179",
+      "state": "TN",
+      "name": "Washington County",
+      "lat": 36.295665,
+      "lon": -82.495037
+    },
+    {
+      "fips": "47181",
+      "state": "TN",
+      "name": "Wayne County",
+      "lat": 35.242847,
+      "lon": -87.819843
+    },
+    {
+      "fips": "47183",
+      "state": "TN",
+      "name": "Weakley County",
+      "lat": 36.303596,
+      "lon": -88.721194
+    },
+    {
+      "fips": "47185",
+      "state": "TN",
+      "name": "White County",
+      "lat": 35.927049,
+      "lon": -85.455785
+    },
+    {
+      "fips": "47187",
+      "state": "TN",
+      "name": "Williamson County",
+      "lat": 35.894845,
+      "lon": -86.897888
+    },
+    {
+      "fips": "47189",
+      "state": "TN",
+      "name": "Wilson County",
+      "lat": 36.149431,
+      "lon": -86.291181
+    },
+    {
+      "fips": "49001",
+      "state": "UT",
+      "name": "Beaver County",
+      "lat": 38.357535,
+      "lon": -113.238948
+    },
+    {
+      "fips": "49003",
+      "state": "UT",
+      "name": "Box Elder County",
+      "lat": 41.622623,
+      "lon": -113.060252
+    },
+    {
+      "fips": "49005",
+      "state": "UT",
+      "name": "Cache County",
+      "lat": 41.734118,
+      "lon": -111.745394
+    },
+    {
+      "fips": "49007",
+      "state": "UT",
+      "name": "Carbon County",
+      "lat": 39.673284,
+      "lon": -110.588484
+    },
+    {
+      "fips": "49009",
+      "state": "UT",
+      "name": "Daggett County",
+      "lat": 40.890099,
+      "lon": -109.505785
+    },
+    {
+      "fips": "49011",
+      "state": "UT",
+      "name": "Davis County",
+      "lat": 41.037559,
+      "lon": -112.201943
+    },
+    {
+      "fips": "49013",
+      "state": "UT",
+      "name": "Duchesne County",
+      "lat": 40.289393,
+      "lon": -110.429584
+    },
+    {
+      "fips": "49015",
+      "state": "UT",
+      "name": "Emery County",
+      "lat": 39.009025,
+      "lon": -110.7211
+    },
+    {
+      "fips": "49017",
+      "state": "UT",
+      "name": "Garfield County",
+      "lat": 37.831663,
+      "lon": -111.450907
+    },
+    {
+      "fips": "49019",
+      "state": "UT",
+      "name": "Grand County",
+      "lat": 38.974326,
+      "lon": -109.57345
+    },
+    {
+      "fips": "49021",
+      "state": "UT",
+      "name": "Iron County",
+      "lat": 37.909304,
+      "lon": -113.30674
+    },
+    {
+      "fips": "49023",
+      "state": "UT",
+      "name": "Juab County",
+      "lat": 39.71412,
+      "lon": -112.790471
+    },
+    {
+      "fips": "49025",
+      "state": "UT",
+      "name": "Kane County",
+      "lat": 37.275089,
+      "lon": -111.815329
+    },
+    {
+      "fips": "49027",
+      "state": "UT",
+      "name": "Millard County",
+      "lat": 38.956744,
+      "lon": -113.133092
+    },
+    {
+      "fips": "49029",
+      "state": "UT",
+      "name": "Morgan County",
+      "lat": 41.091027,
+      "lon": -111.577885
+    },
+    {
+      "fips": "49031",
+      "state": "UT",
+      "name": "Piute County",
+      "lat": 38.335881,
+      "lon": -112.129375
+    },
+    {
+      "fips": "49033",
+      "state": "UT",
+      "name": "Rich County",
+      "lat": 41.627598,
+      "lon": -111.240227
+    },
+    {
+      "fips": "49035",
+      "state": "UT",
+      "name": "Salt Lake County",
+      "lat": 40.667883,
+      "lon": -111.92424
+    },
+    {
+      "fips": "49037",
+      "state": "UT",
+      "name": "San Juan County",
+      "lat": 37.602633,
+      "lon": -109.791574
+    },
+    {
+      "fips": "49039",
+      "state": "UT",
+      "name": "Sanpete County",
+      "lat": 39.373426,
+      "lon": -111.576933
+    },
+    {
+      "fips": "49041",
+      "state": "UT",
+      "name": "Sevier County",
+      "lat": 38.746824,
+      "lon": -111.81193
+    },
+    {
+      "fips": "49043",
+      "state": "UT",
+      "name": "Summit County",
+      "lat": 40.87206,
+      "lon": -110.968486
+    },
+    {
+      "fips": "49045",
+      "state": "UT",
+      "name": "Tooele County",
+      "lat": 40.467753,
+      "lon": -113.123979
+    },
+    {
+      "fips": "49047",
+      "state": "UT",
+      "name": "Uintah County",
+      "lat": 40.125887,
+      "lon": -109.517748
+    },
+    {
+      "fips": "49049",
+      "state": "UT",
+      "name": "Utah County",
+      "lat": 40.120418,
+      "lon": -111.668563
+    },
+    {
+      "fips": "49051",
+      "state": "UT",
+      "name": "Wasatch County",
+      "lat": 40.334884,
+      "lon": -111.161568
+    },
+    {
+      "fips": "49053",
+      "state": "UT",
+      "name": "Washington County",
+      "lat": 37.262531,
+      "lon": -113.4878
+    },
+    {
+      "fips": "49055",
+      "state": "UT",
+      "name": "Wayne County",
+      "lat": 38.259856,
+      "lon": -110.990872
+    },
+    {
+      "fips": "49057",
+      "state": "UT",
+      "name": "Weber County",
+      "lat": 41.270325,
+      "lon": -111.876883
+    },
+    {
+      "fips": "51001",
+      "state": "VA",
+      "name": "Accomack County",
+      "lat": 37.765944,
+      "lon": -75.757807
+    },
+    {
+      "fips": "51003",
+      "state": "VA",
+      "name": "Albemarle County",
+      "lat": 38.024184,
+      "lon": -78.553506
+    },
+    {
+      "fips": "51005",
+      "state": "VA",
+      "name": "Alleghany County",
+      "lat": 37.787905,
+      "lon": -80.008669
+    },
+    {
+      "fips": "51007",
+      "state": "VA",
+      "name": "Amelia County",
+      "lat": 37.331927,
+      "lon": -77.977462
+    },
+    {
+      "fips": "51009",
+      "state": "VA",
+      "name": "Amherst County",
+      "lat": 37.629301,
+      "lon": -79.154756
+    },
+    {
+      "fips": "51011",
+      "state": "VA",
+      "name": "Appomattox County",
+      "lat": 37.370725,
+      "lon": -78.81094
+    },
+    {
+      "fips": "51013",
+      "state": "VA",
+      "name": "Arlington County",
+      "lat": 38.878337,
+      "lon": -77.100703
+    },
+    {
+      "fips": "51015",
+      "state": "VA",
+      "name": "Augusta County",
+      "lat": 38.17259,
+      "lon": -79.140975
+    },
+    {
+      "fips": "51017",
+      "state": "VA",
+      "name": "Bath County",
+      "lat": 38.068368,
+      "lon": -79.731203
+    },
+    {
+      "fips": "51019",
+      "state": "VA",
+      "name": "Bedford County",
+      "lat": 37.312257,
+      "lon": -79.527223
+    },
+    {
+      "fips": "51021",
+      "state": "VA",
+      "name": "Bland County",
+      "lat": 37.130612,
+      "lon": -81.125853
+    },
+    {
+      "fips": "51023",
+      "state": "VA",
+      "name": "Botetourt County",
+      "lat": 37.565482,
+      "lon": -79.797546
+    },
+    {
+      "fips": "51025",
+      "state": "VA",
+      "name": "Brunswick County",
+      "lat": 36.764204,
+      "lon": -77.861483
+    },
+    {
+      "fips": "51027",
+      "state": "VA",
+      "name": "Buchanan County",
+      "lat": 37.26812,
+      "lon": -82.038151
+    },
+    {
+      "fips": "51029",
+      "state": "VA",
+      "name": "Buckingham County",
+      "lat": 37.573928,
+      "lon": -78.529169
+    },
+    {
+      "fips": "51031",
+      "state": "VA",
+      "name": "Campbell County",
+      "lat": 37.210152,
+      "lon": -79.095428
+    },
+    {
+      "fips": "51033",
+      "state": "VA",
+      "name": "Caroline County",
+      "lat": 38.028033,
+      "lon": -77.353736
+    },
+    {
+      "fips": "51035",
+      "state": "VA",
+      "name": "Carroll County",
+      "lat": 36.731963,
+      "lon": -80.727831
+    },
+    {
+      "fips": "51036",
+      "state": "VA",
+      "name": "Charles City County",
+      "lat": 37.361054,
+      "lon": -77.05417
+    },
+    {
+      "fips": "51037",
+      "state": "VA",
+      "name": "Charlotte County",
+      "lat": 37.009042,
+      "lon": -78.658568
+    },
+    {
+      "fips": "51041",
+      "state": "VA",
+      "name": "Chesterfield County",
+      "lat": 37.378434,
+      "lon": -77.585847
+    },
+    {
+      "fips": "51043",
+      "state": "VA",
+      "name": "Clarke County",
+      "lat": 39.115307,
+      "lon": -77.990748
+    },
+    {
+      "fips": "51045",
+      "state": "VA",
+      "name": "Craig County",
+      "lat": 37.473603,
+      "lon": -80.231051
+    },
+    {
+      "fips": "51047",
+      "state": "VA",
+      "name": "Culpeper County",
+      "lat": 38.48593,
+      "lon": -77.956476
+    },
+    {
+      "fips": "51049",
+      "state": "VA",
+      "name": "Cumberland County",
+      "lat": 37.520189,
+      "lon": -78.252836
+    },
+    {
+      "fips": "51051",
+      "state": "VA",
+      "name": "Dickenson County",
+      "lat": 37.136701,
+      "lon": -82.34922
+    },
+    {
+      "fips": "51053",
+      "state": "VA",
+      "name": "Dinwiddie County",
+      "lat": 37.073498,
+      "lon": -77.635492
+    },
+    {
+      "fips": "51057",
+      "state": "VA",
+      "name": "Essex County",
+      "lat": 37.936389,
+      "lon": -76.933747
+    },
+    {
+      "fips": "51059",
+      "state": "VA",
+      "name": "Fairfax County",
+      "lat": 38.82952,
+      "lon": -77.273252
+    },
+    {
+      "fips": "51061",
+      "state": "VA",
+      "name": "Fauquier County",
+      "lat": 38.744096,
+      "lon": -77.8215
+    },
+    {
+      "fips": "51063",
+      "state": "VA",
+      "name": "Floyd County",
+      "lat": 36.931433,
+      "lon": -80.350266
+    },
+    {
+      "fips": "51065",
+      "state": "VA",
+      "name": "Fluvanna County",
+      "lat": 37.830584,
+      "lon": -78.283494
+    },
+    {
+      "fips": "51067",
+      "state": "VA",
+      "name": "Franklin County",
+      "lat": 36.991186,
+      "lon": -79.882715
+    },
+    {
+      "fips": "51069",
+      "state": "VA",
+      "name": "Frederick County",
+      "lat": 39.20366,
+      "lon": -78.263829
+    },
+    {
+      "fips": "51071",
+      "state": "VA",
+      "name": "Giles County",
+      "lat": 37.318072,
+      "lon": -80.698321
+    },
+    {
+      "fips": "51073",
+      "state": "VA",
+      "name": "Gloucester County",
+      "lat": 37.403541,
+      "lon": -76.523505
+    },
+    {
+      "fips": "51075",
+      "state": "VA",
+      "name": "Goochland County",
+      "lat": 37.718814,
+      "lon": -77.917626
+    },
+    {
+      "fips": "51077",
+      "state": "VA",
+      "name": "Grayson County",
+      "lat": 36.652229,
+      "lon": -81.215324
+    },
+    {
+      "fips": "51079",
+      "state": "VA",
+      "name": "Greene County",
+      "lat": 38.297981,
+      "lon": -78.470163
+    },
+    {
+      "fips": "51081",
+      "state": "VA",
+      "name": "Greensville County",
+      "lat": 36.680336,
+      "lon": -77.560277
+    },
+    {
+      "fips": "51083",
+      "state": "VA",
+      "name": "Halifax County",
+      "lat": 36.766461,
+      "lon": -78.939614
+    },
+    {
+      "fips": "51085",
+      "state": "VA",
+      "name": "Hanover County",
+      "lat": 37.760215,
+      "lon": -77.491317
+    },
+    {
+      "fips": "51087",
+      "state": "VA",
+      "name": "Henrico County",
+      "lat": 37.43752,
+      "lon": -77.300333
+    },
+    {
+      "fips": "51089",
+      "state": "VA",
+      "name": "Henry County",
+      "lat": 36.620612,
+      "lon": -79.980662
+    },
+    {
+      "fips": "51091",
+      "state": "VA",
+      "name": "Highland County",
+      "lat": 38.366243,
+      "lon": -79.564472
+    },
+    {
+      "fips": "51093",
+      "state": "VA",
+      "name": "Isle of Wight County",
+      "lat": 36.901418,
+      "lon": -76.707569
+    },
+    {
+      "fips": "51095",
+      "state": "VA",
+      "name": "James City County",
+      "lat": 37.324837,
+      "lon": -76.777888
+    },
+    {
+      "fips": "51097",
+      "state": "VA",
+      "name": "King and Queen County",
+      "lat": 37.717772,
+      "lon": -76.905581
+    },
+    {
+      "fips": "51099",
+      "state": "VA",
+      "name": "King George County",
+      "lat": 38.27718,
+      "lon": -77.162636
+    },
+    {
+      "fips": "51101",
+      "state": "VA",
+      "name": "King William County",
+      "lat": 37.70826,
+      "lon": -77.091054
+    },
+    {
+      "fips": "51103",
+      "state": "VA",
+      "name": "Lancaster County",
+      "lat": 37.704843,
+      "lon": -76.412663
+    },
+    {
+      "fips": "51105",
+      "state": "VA",
+      "name": "Lee County",
+      "lat": 36.701721,
+      "lon": -83.130112
+    },
+    {
+      "fips": "51107",
+      "state": "VA",
+      "name": "Loudoun County",
+      "lat": 39.0812,
+      "lon": -77.638898
+    },
+    {
+      "fips": "51109",
+      "state": "VA",
+      "name": "Louisa County",
+      "lat": 37.972704,
+      "lon": -77.959795
+    },
+    {
+      "fips": "51111",
+      "state": "VA",
+      "name": "Lunenburg County",
+      "lat": 36.945555,
+      "lon": -78.240528
+    },
+    {
+      "fips": "51113",
+      "state": "VA",
+      "name": "Madison County",
+      "lat": 38.412059,
+      "lon": -78.276961
+    },
+    {
+      "fips": "51115",
+      "state": "VA",
+      "name": "Mathews County",
+      "lat": 37.425348,
+      "lon": -76.268808
+    },
+    {
+      "fips": "51117",
+      "state": "VA",
+      "name": "Mecklenburg County",
+      "lat": 36.687256,
+      "lon": -78.368959
+    },
+    {
+      "fips": "51119",
+      "state": "VA",
+      "name": "Middlesex County",
+      "lat": 37.606975,
+      "lon": -76.528082
+    },
+    {
+      "fips": "51121",
+      "state": "VA",
+      "name": "Montgomery County",
+      "lat": 37.175538,
+      "lon": -80.387794
+    },
+    {
+      "fips": "51125",
+      "state": "VA",
+      "name": "Nelson County",
+      "lat": 37.789079,
+      "lon": -78.88344
+    },
+    {
+      "fips": "51127",
+      "state": "VA",
+      "name": "New Kent County",
+      "lat": 37.51016,
+      "lon": -76.999331
+    },
+    {
+      "fips": "51131",
+      "state": "VA",
+      "name": "Northampton County",
+      "lat": 37.302775,
+      "lon": -75.924018
+    },
+    {
+      "fips": "51133",
+      "state": "VA",
+      "name": "Northumberland County",
+      "lat": 37.856974,
+      "lon": -76.379687
+    },
+    {
+      "fips": "51135",
+      "state": "VA",
+      "name": "Nottoway County",
+      "lat": 37.141167,
+      "lon": -78.053866
+    },
+    {
+      "fips": "51137",
+      "state": "VA",
+      "name": "Orange County",
+      "lat": 38.249326,
+      "lon": -78.011092
+    },
+    {
+      "fips": "51139",
+      "state": "VA",
+      "name": "Page County",
+      "lat": 38.623209,
+      "lon": -78.491872
+    },
+    {
+      "fips": "51141",
+      "state": "VA",
+      "name": "Patrick County",
+      "lat": 36.667138,
+      "lon": -80.286413
+    },
+    {
+      "fips": "51143",
+      "state": "VA",
+      "name": "Pittsylvania County",
+      "lat": 36.821721,
+      "lon": -79.398502
+    },
+    {
+      "fips": "51145",
+      "state": "VA",
+      "name": "Powhatan County",
+      "lat": 37.549404,
+      "lon": -77.912855
+    },
+    {
+      "fips": "51147",
+      "state": "VA",
+      "name": "Prince Edward County",
+      "lat": 37.224881,
+      "lon": -78.432957
+    },
+    {
+      "fips": "51149",
+      "state": "VA",
+      "name": "Prince George County",
+      "lat": 37.187325,
+      "lon": -77.220993
+    },
+    {
+      "fips": "51153",
+      "state": "VA",
+      "name": "Prince William County",
+      "lat": 38.701119,
+      "lon": -77.479579
+    },
+    {
+      "fips": "51155",
+      "state": "VA",
+      "name": "Pulaski County",
+      "lat": 37.063385,
+      "lon": -80.713444
+    },
+    {
+      "fips": "51157",
+      "state": "VA",
+      "name": "Rappahannock County",
+      "lat": 38.684522,
+      "lon": -78.168824
+    },
+    {
+      "fips": "51159",
+      "state": "VA",
+      "name": "Richmond County",
+      "lat": 37.942894,
+      "lon": -76.730561
+    },
+    {
+      "fips": "51161",
+      "state": "VA",
+      "name": "Roanoke County",
+      "lat": 37.330792,
+      "lon": -80.191237
+    },
+    {
+      "fips": "51163",
+      "state": "VA",
+      "name": "Rockbridge County",
+      "lat": 37.814517,
+      "lon": -79.447754
+    },
+    {
+      "fips": "51165",
+      "state": "VA",
+      "name": "Rockingham County",
+      "lat": 38.507612,
+      "lon": -78.885329
+    },
+    {
+      "fips": "51167",
+      "state": "VA",
+      "name": "Russell County",
+      "lat": 36.93342,
+      "lon": -82.095934
+    },
+    {
+      "fips": "51169",
+      "state": "VA",
+      "name": "Scott County",
+      "lat": 36.712776,
+      "lon": -82.613624
+    },
+    {
+      "fips": "51171",
+      "state": "VA",
+      "name": "Shenandoah County",
+      "lat": 38.856204,
+      "lon": -78.573987
+    },
+    {
+      "fips": "51173",
+      "state": "VA",
+      "name": "Smyth County",
+      "lat": 36.842318,
+      "lon": -81.539786
+    },
+    {
+      "fips": "51175",
+      "state": "VA",
+      "name": "Southampton County",
+      "lat": 36.720068,
+      "lon": -77.103813
+    },
+    {
+      "fips": "51177",
+      "state": "VA",
+      "name": "Spotsylvania County",
+      "lat": 38.182431,
+      "lon": -77.657226
+    },
+    {
+      "fips": "51179",
+      "state": "VA",
+      "name": "Stafford County",
+      "lat": 38.423084,
+      "lon": -77.458048
+    },
+    {
+      "fips": "51181",
+      "state": "VA",
+      "name": "Surry County",
+      "lat": 37.119761,
+      "lon": -76.880172
+    },
+    {
+      "fips": "51183",
+      "state": "VA",
+      "name": "Sussex County",
+      "lat": 36.926645,
+      "lon": -77.259732
+    },
+    {
+      "fips": "51185",
+      "state": "VA",
+      "name": "Tazewell County",
+      "lat": 37.125395,
+      "lon": -81.562924
+    },
+    {
+      "fips": "51187",
+      "state": "VA",
+      "name": "Warren County",
+      "lat": 38.908221,
+      "lon": -78.207594
+    },
+    {
+      "fips": "51191",
+      "state": "VA",
+      "name": "Washington County",
+      "lat": 36.747814,
+      "lon": -81.950322
+    },
+    {
+      "fips": "51193",
+      "state": "VA",
+      "name": "Westmoreland County",
+      "lat": 38.109311,
+      "lon": -76.803933
+    },
+    {
+      "fips": "51195",
+      "state": "VA",
+      "name": "Wise County",
+      "lat": 36.974561,
+      "lon": -82.62156
+    },
+    {
+      "fips": "51197",
+      "state": "VA",
+      "name": "Wythe County",
+      "lat": 36.899868,
+      "lon": -81.08301
+    },
+    {
+      "fips": "51199",
+      "state": "VA",
+      "name": "York County",
+      "lat": 37.220914,
+      "lon": -76.395533
+    },
+    {
+      "fips": "51510",
+      "state": "VA",
+      "name": "Alexandria city",
+      "lat": 38.819251,
+      "lon": -77.08367
+    },
+    {
+      "fips": "51520",
+      "state": "VA",
+      "name": "Bristol city",
+      "lat": 36.616954,
+      "lon": -82.157564
+    },
+    {
+      "fips": "51530",
+      "state": "VA",
+      "name": "Buena Vista city",
+      "lat": 37.729345,
+      "lon": -79.358134
+    },
+    {
+      "fips": "51540",
+      "state": "VA",
+      "name": "Charlottesville city",
+      "lat": 38.037658,
+      "lon": -78.485381
+    },
+    {
+      "fips": "51550",
+      "state": "VA",
+      "name": "Chesapeake city",
+      "lat": 36.679376,
+      "lon": -76.301788
+    },
+    {
+      "fips": "51570",
+      "state": "VA",
+      "name": "Colonial Heights city",
+      "lat": 37.261685,
+      "lon": -77.396804
+    },
+    {
+      "fips": "51580",
+      "state": "VA",
+      "name": "Covington city",
+      "lat": 37.78106,
+      "lon": -79.985434
+    },
+    {
+      "fips": "51590",
+      "state": "VA",
+      "name": "Danville city",
+      "lat": 36.583334,
+      "lon": -79.408071
+    },
+    {
+      "fips": "51595",
+      "state": "VA",
+      "name": "Emporia city",
+      "lat": 36.696182,
+      "lon": -77.535975
+    },
+    {
+      "fips": "51600",
+      "state": "VA",
+      "name": "Fairfax city",
+      "lat": 38.853183,
+      "lon": -77.299025
+    },
+    {
+      "fips": "51610",
+      "state": "VA",
+      "name": "Falls Church city",
+      "lat": 38.884722,
+      "lon": -77.175603
+    },
+    {
+      "fips": "51620",
+      "state": "VA",
+      "name": "Franklin city",
+      "lat": 36.684014,
+      "lon": -76.941396
+    },
+    {
+      "fips": "51630",
+      "state": "VA",
+      "name": "Fredericksburg city",
+      "lat": 38.299272,
+      "lon": -77.486658
+    },
+    {
+      "fips": "51640",
+      "state": "VA",
+      "name": "Galax city",
+      "lat": 36.66564,
+      "lon": -80.914308
+    },
+    {
+      "fips": "51650",
+      "state": "VA",
+      "name": "Hampton city",
+      "lat": 37.047961,
+      "lon": -76.297293
+    },
+    {
+      "fips": "51660",
+      "state": "VA",
+      "name": "Harrisonburg city",
+      "lat": 38.436255,
+      "lon": -78.873303
+    },
+    {
+      "fips": "51670",
+      "state": "VA",
+      "name": "Hopewell city",
+      "lat": 37.29101,
+      "lon": -77.298944
+    },
+    {
+      "fips": "51678",
+      "state": "VA",
+      "name": "Lexington city",
+      "lat": 37.782332,
+      "lon": -79.44432
+    },
+    {
+      "fips": "51680",
+      "state": "VA",
+      "name": "Lynchburg city",
+      "lat": 37.399016,
+      "lon": -79.195458
+    },
+    {
+      "fips": "51683",
+      "state": "VA",
+      "name": "Manassas city",
+      "lat": 38.746808,
+      "lon": -77.482633
+    },
+    {
+      "fips": "51685",
+      "state": "VA",
+      "name": "Manassas Park city",
+      "lat": 38.769398,
+      "lon": -77.442323
+    },
+    {
+      "fips": "51690",
+      "state": "VA",
+      "name": "Martinsville city",
+      "lat": 36.683527,
+      "lon": -79.863647
+    },
+    {
+      "fips": "51700",
+      "state": "VA",
+      "name": "Newport News city",
+      "lat": 37.076136,
+      "lon": -76.52198
+    },
+    {
+      "fips": "51710",
+      "state": "VA",
+      "name": "Norfolk city",
+      "lat": 36.923015,
+      "lon": -76.244641
+    },
+    {
+      "fips": "51720",
+      "state": "VA",
+      "name": "Norton city",
+      "lat": 36.931549,
+      "lon": -82.625996
+    },
+    {
+      "fips": "51730",
+      "state": "VA",
+      "name": "Petersburg city",
+      "lat": 37.20473,
+      "lon": -77.392368
+    },
+    {
+      "fips": "51735",
+      "state": "VA",
+      "name": "Poquoson city",
+      "lat": 37.12836,
+      "lon": -76.303534
+    },
+    {
+      "fips": "51740",
+      "state": "VA",
+      "name": "Portsmouth city",
+      "lat": 36.859339,
+      "lon": -76.356973
+    },
+    {
+      "fips": "51750",
+      "state": "VA",
+      "name": "Radford city",
+      "lat": 37.120119,
+      "lon": -80.559147
+    },
+    {
+      "fips": "51760",
+      "state": "VA",
+      "name": "Richmond city",
+      "lat": 37.531399,
+      "lon": -77.476009
+    },
+    {
+      "fips": "51770",
+      "state": "VA",
+      "name": "Roanoke city",
+      "lat": 37.278458,
+      "lon": -79.958174
+    },
+    {
+      "fips": "51775",
+      "state": "VA",
+      "name": "Salem city",
+      "lat": 37.285333,
+      "lon": -80.055241
+    },
+    {
+      "fips": "51790",
+      "state": "VA",
+      "name": "Staunton city",
+      "lat": 38.157978,
+      "lon": -79.061876
+    },
+    {
+      "fips": "51800",
+      "state": "VA",
+      "name": "Suffolk city",
+      "lat": 36.697157,
+      "lon": -76.634781
+    },
+    {
+      "fips": "51810",
+      "state": "VA",
+      "name": "Virginia Beach city",
+      "lat": 36.779525,
+      "lon": -76.029142
+    },
+    {
+      "fips": "51820",
+      "state": "VA",
+      "name": "Waynesboro city",
+      "lat": 38.067157,
+      "lon": -78.90142
+    },
+    {
+      "fips": "51830",
+      "state": "VA",
+      "name": "Williamsburg city",
+      "lat": 37.269481,
+      "lon": -76.708193
+    },
+    {
+      "fips": "51840",
+      "state": "VA",
+      "name": "Winchester city",
+      "lat": 39.173869,
+      "lon": -78.176356
+    },
+    {
+      "fips": "55001",
+      "state": "WI",
+      "name": "Adams County",
+      "lat": 43.973757,
+      "lon": -89.767228
+    },
+    {
+      "fips": "55003",
+      "state": "WI",
+      "name": "Ashland County",
+      "lat": 46.544424,
+      "lon": -90.679691
+    },
+    {
+      "fips": "55005",
+      "state": "WI",
+      "name": "Barron County",
+      "lat": 45.437192,
+      "lon": -91.852892
+    },
+    {
+      "fips": "55007",
+      "state": "WI",
+      "name": "Bayfield County",
+      "lat": 46.634199,
+      "lon": -91.177282
+    },
+    {
+      "fips": "55009",
+      "state": "WI",
+      "name": "Brown County",
+      "lat": 44.474024,
+      "lon": -87.99613
+    },
+    {
+      "fips": "55011",
+      "state": "WI",
+      "name": "Buffalo County",
+      "lat": 44.385633,
+      "lon": -91.761294
+    },
+    {
+      "fips": "55013",
+      "state": "WI",
+      "name": "Burnett County",
+      "lat": 45.866897,
+      "lon": -92.37573
+    },
+    {
+      "fips": "55015",
+      "state": "WI",
+      "name": "Calumet County",
+      "lat": 44.07841,
+      "lon": -88.212132
+    },
+    {
+      "fips": "55017",
+      "state": "WI",
+      "name": "Chippewa County",
+      "lat": 45.069092,
+      "lon": -91.283505
+    },
+    {
+      "fips": "55019",
+      "state": "WI",
+      "name": "Clark County",
+      "lat": 44.739166,
+      "lon": -90.609909
+    },
+    {
+      "fips": "55021",
+      "state": "WI",
+      "name": "Columbia County",
+      "lat": 43.471882,
+      "lon": -89.330472
+    },
+    {
+      "fips": "55023",
+      "state": "WI",
+      "name": "Crawford County",
+      "lat": 43.242768,
+      "lon": -90.935185
+    },
+    {
+      "fips": "55025",
+      "state": "WI",
+      "name": "Dane County",
+      "lat": 43.067468,
+      "lon": -89.417852
+    },
+    {
+      "fips": "55027",
+      "state": "WI",
+      "name": "Dodge County",
+      "lat": 43.429628,
+      "lon": -88.701939
+    },
+    {
+      "fips": "55029",
+      "state": "WI",
+      "name": "Door County",
+      "lat": 45.093417,
+      "lon": -87.048683
+    },
+    {
+      "fips": "55031",
+      "state": "WI",
+      "name": "Douglas County",
+      "lat": 46.463218,
+      "lon": -91.892477
+    },
+    {
+      "fips": "55033",
+      "state": "WI",
+      "name": "Dunn County",
+      "lat": 44.947751,
+      "lon": -91.897645
+    },
+    {
+      "fips": "55035",
+      "state": "WI",
+      "name": "Eau Claire County",
+      "lat": 44.726355,
+      "lon": -91.286414
+    },
+    {
+      "fips": "55037",
+      "state": "WI",
+      "name": "Florence County",
+      "lat": 45.871828,
+      "lon": -88.406988
+    },
+    {
+      "fips": "55039",
+      "state": "WI",
+      "name": "Fond du Lac County",
+      "lat": 43.754722,
+      "lon": -88.493284
+    },
+    {
+      "fips": "55041",
+      "state": "WI",
+      "name": "Forest County",
+      "lat": 45.666881,
+      "lon": -88.773326
+    },
+    {
+      "fips": "55043",
+      "state": "WI",
+      "name": "Grant County",
+      "lat": 42.870028,
+      "lon": -90.694229
+    },
+    {
+      "fips": "55045",
+      "state": "WI",
+      "name": "Green County",
+      "lat": 42.675522,
+      "lon": -89.605074
+    },
+    {
+      "fips": "55047",
+      "state": "WI",
+      "name": "Green Lake County",
+      "lat": 43.780247,
+      "lon": -88.97038
+    },
+    {
+      "fips": "55049",
+      "state": "WI",
+      "name": "Iowa County",
+      "lat": 43.001021,
+      "lon": -90.133691
+    },
+    {
+      "fips": "55051",
+      "state": "WI",
+      "name": "Iron County",
+      "lat": 46.32655,
+      "lon": -90.261298
+    },
+    {
+      "fips": "55053",
+      "state": "WI",
+      "name": "Jackson County",
+      "lat": 44.32459,
+      "lon": -90.79951
+    },
+    {
+      "fips": "55055",
+      "state": "WI",
+      "name": "Jefferson County",
+      "lat": 43.013804,
+      "lon": -88.773985
+    },
+    {
+      "fips": "55057",
+      "state": "WI",
+      "name": "Juneau County",
+      "lat": 43.932836,
+      "lon": -90.113984
+    },
+    {
+      "fips": "55059",
+      "state": "WI",
+      "name": "Kenosha County",
+      "lat": 42.587526,
+      "lon": -87.879996
+    },
+    {
+      "fips": "55061",
+      "state": "WI",
+      "name": "Kewaunee County",
+      "lat": 44.605677,
+      "lon": -87.448008
+    },
+    {
+      "fips": "55063",
+      "state": "WI",
+      "name": "La Crosse County",
+      "lat": 43.908222,
+      "lon": -91.111758
+    },
+    {
+      "fips": "55065",
+      "state": "WI",
+      "name": "Lafayette County",
+      "lat": 42.655578,
+      "lon": -90.130292
+    },
+    {
+      "fips": "55067",
+      "state": "WI",
+      "name": "Langlade County",
+      "lat": 45.254863,
+      "lon": -89.06707
+    },
+    {
+      "fips": "55069",
+      "state": "WI",
+      "name": "Lincoln County",
+      "lat": 45.333148,
+      "lon": -89.73224
+    },
+    {
+      "fips": "55071",
+      "state": "WI",
+      "name": "Manitowoc County",
+      "lat": 44.156137,
+      "lon": -87.577352
+    },
+    {
+      "fips": "55073",
+      "state": "WI",
+      "name": "Marathon County",
+      "lat": 44.898036,
+      "lon": -89.757823
+    },
+    {
+      "fips": "55075",
+      "state": "WI",
+      "name": "Marinette County",
+      "lat": 45.346899,
+      "lon": -87.991198
+    },
+    {
+      "fips": "55077",
+      "state": "WI",
+      "name": "Marquette County",
+      "lat": 43.826053,
+      "lon": -89.409095
+    },
+    {
+      "fips": "55078",
+      "state": "WI",
+      "name": "Menominee County",
+      "lat": 44.991304,
+      "lon": -88.669251
+    },
+    {
+      "fips": "55079",
+      "state": "WI",
+      "name": "Milwaukee County",
+      "lat": 42.912643,
+      "lon": -87.862312
+    },
+    {
+      "fips": "55081",
+      "state": "WI",
+      "name": "Monroe County",
+      "lat": 43.945175,
+      "lon": -90.619969
+    },
+    {
+      "fips": "55083",
+      "state": "WI",
+      "name": "Oconto County",
+      "lat": 44.996575,
+      "lon": -88.206516
+    },
+    {
+      "fips": "55085",
+      "state": "WI",
+      "name": "Oneida County",
+      "lat": 45.716176,
+      "lon": -89.534533
+    },
+    {
+      "fips": "55087",
+      "state": "WI",
+      "name": "Outagamie County",
+      "lat": 44.418226,
+      "lon": -88.464988
+    },
+    {
+      "fips": "55089",
+      "state": "WI",
+      "name": "Ozaukee County",
+      "lat": 43.501807,
+      "lon": -87.847551
+    },
+    {
+      "fips": "55091",
+      "state": "WI",
+      "name": "Pepin County",
+      "lat": 44.627436,
+      "lon": -91.83489
+    },
+    {
+      "fips": "55093",
+      "state": "WI",
+      "name": "Pierce County",
+      "lat": 44.725336,
+      "lon": -92.426279
+    },
+    {
+      "fips": "55095",
+      "state": "WI",
+      "name": "Polk County",
+      "lat": 45.462041,
+      "lon": -92.447066
+    },
+    {
+      "fips": "55097",
+      "state": "WI",
+      "name": "Portage County",
+      "lat": 44.476246,
+      "lon": -89.49807
+    },
+    {
+      "fips": "55099",
+      "state": "WI",
+      "name": "Price County",
+      "lat": 45.679072,
+      "lon": -90.35965
+    },
+    {
+      "fips": "55101",
+      "state": "WI",
+      "name": "Racine County",
+      "lat": 42.780392,
+      "lon": -87.771599
+    },
+    {
+      "fips": "55103",
+      "state": "WI",
+      "name": "Richland County",
+      "lat": 43.376199,
+      "lon": -90.435693
+    },
+    {
+      "fips": "55105",
+      "state": "WI",
+      "name": "Rock County",
+      "lat": 42.66988,
+      "lon": -89.075284
+    },
+    {
+      "fips": "55107",
+      "state": "WI",
+      "name": "Rusk County",
+      "lat": 45.472734,
+      "lon": -91.136745
+    },
+    {
+      "fips": "55109",
+      "state": "WI",
+      "name": "St. Croix County",
+      "lat": 45.028959,
+      "lon": -92.447284
+    },
+    {
+      "fips": "55111",
+      "state": "WI",
+      "name": "Sauk County",
+      "lat": 43.428001,
+      "lon": -89.943318
+    },
+    {
+      "fips": "55113",
+      "state": "WI",
+      "name": "Sawyer County",
+      "lat": 45.864999,
+      "lon": -91.147063
+    },
+    {
+      "fips": "55115",
+      "state": "WI",
+      "name": "Shawano County",
+      "lat": 44.789641,
+      "lon": -88.755813
+    },
+    {
+      "fips": "55117",
+      "state": "WI",
+      "name": "Sheboygan County",
+      "lat": 43.738713,
+      "lon": -87.731531
+    },
+    {
+      "fips": "55119",
+      "state": "WI",
+      "name": "Taylor County",
+      "lat": 45.211656,
+      "lon": -90.504853
+    },
+    {
+      "fips": "55121",
+      "state": "WI",
+      "name": "Trempealeau County",
+      "lat": 44.30305,
+      "lon": -91.358867
+    },
+    {
+      "fips": "55123",
+      "state": "WI",
+      "name": "Vernon County",
+      "lat": 43.599366,
+      "lon": -90.821983
+    },
+    {
+      "fips": "55125",
+      "state": "WI",
+      "name": "Vilas County",
+      "lat": 46.049848,
+      "lon": -89.501254
+    },
+    {
+      "fips": "55127",
+      "state": "WI",
+      "name": "Walworth County",
+      "lat": 42.66811,
+      "lon": -88.541731
+    },
+    {
+      "fips": "55129",
+      "state": "WI",
+      "name": "Washburn County",
+      "lat": 45.892489,
+      "lon": -91.796422
+    },
+    {
+      "fips": "55131",
+      "state": "WI",
+      "name": "Washington County",
+      "lat": 43.391156,
+      "lon": -88.232917
+    },
+    {
+      "fips": "55133",
+      "state": "WI",
+      "name": "Waukesha County",
+      "lat": 43.018368,
+      "lon": -88.30424
+    },
+    {
+      "fips": "55135",
+      "state": "WI",
+      "name": "Waupaca County",
+      "lat": 44.478004,
+      "lon": -88.967005
+    },
+    {
+      "fips": "55137",
+      "state": "WI",
+      "name": "Waushara County",
+      "lat": 44.112823,
+      "lon": -89.239786
+    },
+    {
+      "fips": "55139",
+      "state": "WI",
+      "name": "Winnebago County",
+      "lat": 44.085707,
+      "lon": -88.668149
+    },
+    {
+      "fips": "55141",
+      "state": "WI",
+      "name": "Wood County",
+      "lat": 44.461413,
+      "lon": -90.038825
+    }
+  ]
+}
