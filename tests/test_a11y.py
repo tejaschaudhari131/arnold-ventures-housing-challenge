@@ -73,6 +73,7 @@ def test_reduced_motion_and_print_and_slider_size():
     assert "onViewTabKey" in LAB_JS
     assert 'class="tog" aria-pressed' in LAB_JS
     assert 'role="listitem" aria-pressed' not in LAB_JS
+    assert re.search(r"\.scenario-card h3 button\s*\{[^}]*min-height:\s*24px", CSS)
 
 
 def test_lab_js_tags_envelope_as_calculated():

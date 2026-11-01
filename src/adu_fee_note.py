@@ -246,7 +246,10 @@ def _compose(doc: dict[str, Any], audience: str, html: bool = False) -> str:
         href, label = LAB_URL, "Lab ADU number"
     why = "That fee gap is why the two numbers differ."
     if html and audience in {"core", "lab"}:
-        other = f'See the <a href="{href}">{label}</a>.'
+        other = (
+            f'See the <a href="{href}" style="display:inline-block;min-height:24px">'
+            f"{label}</a>."
+        )
         details = f"<details><summary>How the two ADU numbers connect</summary><p>{walk}</p></details>"
         gap = f"<p class='baseline-gap'>{doc['baseline_note']}</p>"
         return f"{policy} {lead} {why} {other} {details}{gap}"
