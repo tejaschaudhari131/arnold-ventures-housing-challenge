@@ -1,19 +1,4 @@
-:root {
-  --paper: #f4f0e6;
-  --paper-2: #fffdf8;
-  --ink: #1c2430;
-  --muted: #5c6570;
-  --line: #d9d0c2;
-  --green: #0f6b4e;
-  --green-soft: #e5f3ec;
-  --copper: #9a4e24;
-  --navy: #1e3a5f;
-  --tier2: #8a5a12;
-  --shadow: 0 1px 0 rgba(28, 36, 48, 0.04);
-  --serif: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
-  --sans: "Segoe UI", system-ui, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-}
+@import url("/tokens.css");
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -28,8 +13,18 @@ body {
 .skip {
   position: absolute;
   left: -999px;
+  min-height: 24px;
 }
-.skip:focus { left: 12px; top: 12px; background: white; padding: 8px; z-index: 5; }
+.skip:focus, .skip:focus-visible {
+  left: 12px;
+  top: 12px;
+  background: white;
+  padding: 8px 12px;
+  z-index: 5;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+}
 
 .top {
   display: flex;
@@ -55,6 +50,20 @@ h1 {
   line-height: 0.95;
 }
 .lede { max-width: 46rem; margin: 8px 0 0; color: var(--muted); }
+.btn-try {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: var(--sun);
+  color: var(--navy);
+  font-weight: 700;
+  text-decoration: none;
+  border: 2px solid var(--sun);
+}
+.btn-try:hover { filter: brightness(0.96); color: var(--navy); background: var(--sun); }
 .team { text-align: right; font-size: 14px; }
 .team p { margin: 0; }
 .team .org { color: var(--muted); margin-top: 6px; }
@@ -311,7 +320,9 @@ footer p { margin: 0 0 6px; }
   color: var(--ink);
 }
 .skip-map {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
   margin: 0 0 8px;
   font-size: 13px;
 }
@@ -319,7 +330,7 @@ footer p { margin: 0 0 6px; }
 .county-pick select { display: block; width: 100%; margin-top: 4px; font: inherit; padding: 8px; }
 #map-stage { min-height: 360px; }
 .table-wrap:focus, .table-wrap:focus-visible {
-  outline: 2px solid var(--copper);
+  outline: 3px solid var(--navy);
   outline-offset: 2px;
 }
 .visually-hidden {
@@ -407,7 +418,7 @@ input[type="range"]::-moz-range-thumb {
   border: 0;
 }
 :focus-visible {
-  outline: 2px solid var(--copper);
+  outline: 3px solid var(--navy);
   outline-offset: 2px;
 }
 @media (prefers-reduced-motion: reduce) {

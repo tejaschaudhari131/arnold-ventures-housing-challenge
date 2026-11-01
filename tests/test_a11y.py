@@ -13,6 +13,8 @@ LAB = (ROOT / "src" / "web" / "static" / "lab.html").read_text(encoding="utf-8")
 APP_JS = (ROOT / "src" / "web" / "static" / "app.js").read_text(encoding="utf-8")
 LAB_JS = (ROOT / "src" / "web" / "static" / "lab.js").read_text(encoding="utf-8")
 CSS = (ROOT / "src" / "web" / "static" / "styles.css").read_text(encoding="utf-8")
+LAB_CSS = (ROOT / "src" / "web" / "static" / "lab.css").read_text(encoding="utf-8")
+TOKENS = (ROOT / "src" / "web" / "static" / "tokens.css").read_text(encoding="utf-8")
 
 
 def test_start_here_and_headline_sit_above_the_map():
@@ -58,10 +60,18 @@ def test_core_tabs_and_card_buttons():
 
 def test_reduced_motion_and_print_and_slider_size():
     assert "prefers-reduced-motion" in CSS
+    assert "prefers-reduced-motion" in LAB_CSS
     assert "size: letter" in CSS
     assert "24px" in CSS
     assert ":focus-visible" in CSS
     assert re.search(r"min-height:\s*360px", CSS)
+    assert "--sun: #f2b632" in TOKENS
+    assert "role=\"dialog\"" in LAB
+    assert "aria-live=\"polite\"" in LAB
+    assert 'id="state-list"' not in LAB
+    assert "onViewTabKey" in LAB_JS
+    assert 'class="tog" aria-pressed' in LAB_JS
+    assert 'role="listitem" aria-pressed' not in LAB_JS
 
 
 def test_lab_js_tags_envelope_as_calculated():

@@ -53,6 +53,16 @@ def test_lab_page_and_locked_results_leave_home_intact():
         assert "Why this result?" in text
         assert "illustrative" in text.lower()
         assert "Tejas Chaudhari" in text
+        assert "Try Pennsylvania 2027–31" in text
+
+        token_status, token_body, _ = _get(base, "/tokens.css")
+        assert token_status == 200
+        assert b"--teal" in token_body
+
+        assume_status, assume_body, _ = _get(base, "/api/lab/assumptions")
+        assume = json.loads(assume_body.decode("utf-8"))
+        assert assume_status == 200
+        assert "reconciliation_note" in assume
 
         results_status, results_body, _ = _get(base, "/api/lab/results?state=PA")
         results = json.loads(results_body.decode("utf-8"))
