@@ -745,6 +745,8 @@ def _combined_row(
         "parking": parking_completions,
         "fees": fee_completions,
         "binding": merchant_binding or adu_binding,
+        "merchant_binding": merchant_binding,
+        "merchant_cap": float(packaged["merchant_cap"]) if merchant_binding else 0.0,
         "capacity": capacity,
     }
 
@@ -995,7 +997,12 @@ def _scenario_shell(
     annualized_completions = level_c / 5.0 if scenario_id == "baseline" else incremental_completions / 5.0
     annualized_permits = level_p / 5.0 if scenario_id == "baseline" else incremental_permits / 5.0
     drivers = list(extra_drivers)
-    if binding:
+    if binding and scenario_id == "combined":
+        drivers.append(
+            "Uncapped potential is the package before the absorption cap and the ADU stock ceiling. "
+            "The absorption cap is the merchant ceiling in the counties where that cap binds."
+        )
+    elif binding:
         drivers.append("A cap is binding: feasible capacity is larger than what the five-year market or the adoption ceiling will absorb.")
     if not drivers:
         drivers.append("The county price-to-cost gap and the size of the eligible stock.")
@@ -1134,6 +1141,9 @@ def simulate_state(
     combined_p = sum(bit["permits"] for bit in combined_bits)
     combined_binding = any(bit["binding"] for bit in combined_bits)
     combined_capacity = sum(bit["capacity"] for bit in combined_bits)
+    # Sum of the merchant ceilings on the counties where that cap actually binds.
+    # This is not the package total and not the uncapped potential.
+    absorption_cap = sum(float(bit.get("merchant_cap") or 0.0) for bit in combined_bits if bit.get("merchant_binding"))
 
     metrics = {
         "adu": capped_metric(standalone_rows, "adu"),
@@ -1202,6 +1212,9 @@ def simulate_state(
             capacity,
             top_counties(per_county[scenario_id]),
         )
+    scenarios["combined"]["uncapped_potential"] = scenarios["combined"]["capacity_completions"]
+    scenarios["combined"]["absorption_cap"] = absorption_cap
+    scenarios["combined"]["absorption_cap_binding"] = absorption_cap > 0
 
     county_table = []
     integer_weights = {

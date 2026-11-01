@@ -463,8 +463,11 @@
       if (row.close_call || (lastBand && lastBand.scenario === id && lastBand.crosses_zero)) {
         flag = ' <span class="badge-uncertain" title="The published assumption range includes both a gain and a loss.">Outcome uncertain</span>';
       }
+      var capLabel = "";
+      if (id === "combined" && row.absorption_cap_binding) capLabel = " · absorption cap";
+      else if (row.cap_binding) capLabel = " · capped";
       tr.innerHTML =
-        "<td>" + escapeHtml(row.label) + (row.cap_binding ? " · capped" : "") + flag + "</td>" +
+        "<td>" + escapeHtml(row.label) + capLabel + flag + "</td>" +
         "<td>" + tagged(row.permits_5yr, "calculated", integer) + "</td>" +
         "<td>" + tagged(row.completions_5yr, "calculated", integer) + "</td>" +
         "<td>" + (id === "baseline" ? "—" : tagged(row.incremental_completions, "calculated", integer)) + "</td>" +
@@ -493,8 +496,21 @@
         ", parking " + tagged(c.combined_parking, "calculated", integer) +
         ", fees " + tagged(c.combined_fees, "calculated", integer) +
         ". Those five parts add to the package total. Fee and parking savings inside the zoning pro formas can make the package larger than the sum of the five reforms run alone.</p>";
+      var standaloneCap = result.scenarios.missing_middle.capacity_completions;
+      if (c.combined_mm > standaloneCap) {
+        extra += "<p>Package missing middle (" + tagged(c.combined_mm, "calculated", integer) +
+          ") can exceed standalone missing middle (" + tagged(standaloneCap, "calculated", integer) +
+          ") because the fee cut and market parking are in the package pro forma.</p>";
+      }
     }
-    if (chosen.cap_binding) {
+    if (scenarioId === "combined" && chosen.cap_binding) {
+      extra += "<p>Uncapped potential is " + tagged(chosen.uncapped_potential, "calculated", integer) +
+        " completions, before the absorption cap and the ADU stock ceiling.";
+      if (chosen.absorption_cap_binding) {
+        extra += " The binding absorption cap is " + tagged(chosen.absorption_cap, "calculated", integer) + ".";
+      }
+      extra += "</p>";
+    } else if (chosen.cap_binding) {
       extra += "<p>Feasible capacity is " + tagged(chosen.capacity_completions, "calculated", integer) +
         " completions. The five-year figure is the portion the absorption or adoption ceiling lets through.</p>";
     }
@@ -503,6 +519,26 @@
     }
     drivers.className = "callout" + (chosen.cap_binding || chosen.close_call ? " warn" : "");
     drivers.innerHTML = "<strong>" + escapeHtml(chosen.label) + "</strong><ul>" + parts + "</ul>" + extra;
+    renderPackageNote();
+  }
+
+  function renderPackageNote() {
+    var note = document.getElementById("package-note");
+    if (!note || !result || !result.components) return;
+    var pack = result.scenarios.combined;
+    var mm = result.components.combined_mm;
+    var standaloneCap = result.scenarios.missing_middle.capacity_completions;
+    var html = "Uncapped potential for the package is " + tagged(pack.uncapped_potential, "calculated", integer) + ".";
+    if (pack.absorption_cap_binding) {
+      html += " Where the absorption cap binds, that cap is " + tagged(pack.absorption_cap, "calculated", integer) + ".";
+    }
+    if (mm > standaloneCap) {
+      html += " Package missing middle (" + tagged(mm, "calculated", integer) +
+        ") can exceed standalone missing middle (" + tagged(standaloneCap, "calculated", integer) +
+        ") because the fee cut and market parking are in the package pro forma.";
+    }
+    note.hidden = false;
+    note.innerHTML = html;
   }
 
   function renderMath() {

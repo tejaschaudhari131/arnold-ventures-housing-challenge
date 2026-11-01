@@ -37,3 +37,15 @@ def test_pennsylvania_package_capacity_covers_parking_and_fees(bundle):
     # pro forma includes the fee cut and market parking. It is still capped
     # per county; the state flag stays consistent with the capacity field.
     assert parts["combined_mm"] > result["scenarios"]["missing_middle"]["capacity_completions"]
+    assert combined["uncapped_potential"] == combined["capacity_completions"]
+    assert combined["absorption_cap_binding"] is True
+    assert combined["absorption_cap"] > 0
+    assert combined["absorption_cap"] < combined["uncapped_potential"]
+    from src.export.report import to_csv, to_markdown
+
+    markdown = to_markdown([result])
+    assert "uncapped potential" in markdown
+    assert "absorption_cap" in markdown
+    csv_text = to_csv([result])
+    assert "uncapped_potential" in csv_text
+    assert "absorption_cap" in csv_text
