@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 """Precomputed Lab results.
 
-The full analysis (200 envelope draws, zoning bounds, ACS band, one-at-a-time
-runs, switching values) takes under a minute for Pennsylvania. The web app
-and the write-up read a compact copy from ``data/sample/lab/results_{STATE}.json``.
+The full analysis (2,000 envelope draws, zoning bounds, ACS band, one-at-a-time
+runs, switching values) is precomputed. The web app and the write-up read a
+compact copy from ``data/sample/lab/results_{STATE}.json``. Vercel never runs
+the envelope (``allow_compute=False``).
 
 Each file carries a fingerprint of every input it depends on: the Lab
 configuration, the state's evidence file and extracts, and the Lab source
@@ -60,6 +61,9 @@ def _results_block(layer: dict[str, Any], central_rows: dict[str, Any]) -> dict[
             "p10": _r(row["envelope"]["p10"]),
             "p50": _r(row["envelope"]["p50"]),
             "p90": _r(row["envelope"]["p90"]),
+            "p10_se": _r(row["envelope"].get("p10_se", 0.0)),
+            "p50_se": _r(row["envelope"].get("p50_se", 0.0)),
+            "p90_se": _r(row["envelope"].get("p90_se", 0.0)),
             "zoning_low": _r(row["zoning"]["low"]),
             "zoning_high": _r(row["zoning"]["high"]),
             "logical_low": _r(row["zoning"]["logical_low"]),
@@ -109,6 +113,10 @@ def compact(analysis: dict[str, Any], code: str) -> dict[str, Any]:
         "close_call_flip_share": analysis["close_call_flip_share"],
         "coverage": {k: round(v, 4) for k, v in analysis["coverage"].items()},
         "implied_cost_elasticity": round(analysis["implied_cost_elasticity"], 3),
+        "background_adu_flow": {
+            "homes": _r(analysis["central"].get("background_adu_flow", {}).get("homes", 0.0)),
+            "lots": _r(analysis["central"].get("background_adu_flow", {}).get("lots", 0.0)),
+        },
         "scenarios": [
             {"id": sid, "label": scenarios[sid]["label"], "short": scenarios[sid]["short"], "kind": scenarios[sid]["kind"]}
             for sid in scenarios
@@ -132,7 +140,26 @@ def compact(analysis: dict[str, Any], code: str) -> dict[str, Any]:
         wwc = analysis["what_would_change"]
         out["statewide"]["what_would_change"] = {
             "pair": wwc["pair"],
-            "switches": [{**row, "central": round(row["central"], 6), "switch_at": round(row["switch_at"], 6)} for row in wwc["switches"]],
+            "switches": [
+                {
+                    **{k: v for k, v in row.items() if k != "zero_pipeline"},
+                    "central": round(row["central"], 6),
+                    "switch_at": round(row["switch_at"], 6),
+                    **(
+                        {"zero_pipeline": {sid: _r(val) for sid, val in row["zero_pipeline"].items()}}
+                        if "zero_pipeline" in row
+                        else {}
+                    ),
+                }
+                for row in wwc["switches"]
+            ],
+        }
+    if "elasticity_zero" in analysis:
+        ez = analysis["elasticity_zero"]
+        out["statewide"]["elasticity_zero"] = {
+            "pipeline_sigma": ez["pipeline_sigma"],
+            "implied_cost_elasticity": round(ez["implied_cost_elasticity"], 4),
+            "statewide": {sid: _r(val) for sid, val in ez["statewide"].items()},
         }
     for index, row in enumerate(analysis["counties"]):
         crow = central["counties"][index]

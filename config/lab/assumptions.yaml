@@ -1,6 +1,7 @@
 # Small Homes Policy Lab — assumption bands.
 #
-# Locked for milestone 1 (2026-11-07). This file is the only place the Lab sets
+# Locked for milestone 1 (2026-11-07); M7 methods hardening updates the
+# published bands below. This file is the only place the Lab sets
 # a default parameter value. Every parameter carries Low / Central / High, a
 # unit, a group, and a rationale. `ui: true` parameters are the ones the
 # Monte Carlo envelope draws (triangular low/central/high) and the browser lets
@@ -14,7 +15,7 @@ version: 1
 locked: "2026-11-07"
 window_start: "2027-01-01"     # reforms are assumed adopted on this date
 horizon_years: 5
-monte_carlo_draws: 200
+monte_carlo_draws: 2000
 monte_carlo_seed: 20261107
 close_call_flip_share: 0.10    # a ranking flips in >= this share of draws
 
@@ -56,13 +57,17 @@ params:
 
   # ---------------------------------------------------------------- uptake
   hazard_homeowner:
-    {low: 0.003, central: 0.006, high: 0.012, unit: per year, group: uptake, ui: true,
+    {low: 0.0006, central: 0.0015, high: 0.0031, unit: per year, group: uptake, ui: true,
+     label: Homeowner uptake hazard (all lots),
+     rationale: "All-lots annual ADU start rate, sourced from CA HCD APR permits / DOF E-5 single-detached stock. Low 0.0006 is 2017 (first year after reform); central 0.0015 is the 2017–21 mean; high 0.0031 is the 2022 steady state. Permits, not completions — completion_share_1 already discounts. ASSUMPTION on treating this as an all-lots rate. ADU delivery multiplies by a fee/parking gate normalized to CA conditions instead of by F. Primary tables: HCD APR / data.ca.gov; denominator CA DOF E-5. Used for ADUs only."}
+  hazard_homeowner_feasible:
+    {low: 0.0012, central: 0.003, high: 0.0062, unit: per year, group: uptake, ui: true,
      label: Homeowner uptake hazard (feasible lots),
-     rationale: "Share of financially feasible owner-occupied lots that start an ADU or conversion each year. California built about 0.3 percent of its single-family stock per year as ADUs after statewide legalization, with roughly half of lots feasible, so about 0.6 percent of feasible lots."}
+     rationale: "ASSUMPTION (F_CA = 0.5), until F_CA is computed. All-lots ADU band (0.0006/0.0015/0.0031) divided by an assumed California feasible share of 0.5. Used only by mm2 (keep the house, add one), which still multiplies by F. Keeps mm2 from taking both the all-lots cut and F. MM moves roughly one-for-one with this rate (0.0015 gives 3,149 Pennsylvania homes; 0.006 gives 12,869). Minneapolis Fed 2026 (https://www.minneapolisfed.org/article/2026/minneapolis-2040-plan-indicators-point-to-stable-rents-stalled-development) is a low-side anchor: after Minneapolis 2040 upzoning, duplex/triplex/fourplex permits stayed small while multifamily construction stalled."}
   hazard_developer:
-    {low: 0.0015, central: 0.003, high: 0.006, unit: per year, group: uptake, ui: true,
+    {low: 0.0006, central: 0.0015, high: 0.0031, unit: per year, group: uptake, ui: true,
      label: Developer rebuild hazard (feasible lots),
-     rationale: "Teardown-and-rebuild requires buying an occupied house. Half the homeowner rate: lots must come to market and be assembled."}
+     rationale: "Half the feasible-lot homeowner rate (0.0012/0.003/0.0062), applied once. Teardown-and-rebuild still has to buy an occupied house. ASSUMPTION, scaled from the CA ADU rate."}
 
   # ----------------------------------------------------------- feasibility
   host_margin_sigma:
@@ -166,9 +171,9 @@ params:
      label: Current minimum, rural,
      rationale: "Typical rural code: 2 per home."}
   parking_market_urban:
-    {low: 0.25, central: 0.5, high: 0.8, unit: spaces per home, group: parking, ui: true,
+    {low: 0.5, central: 0.9, high: 1.1, unit: spaces per home, group: parking, ui: true,
      label: Developer-provided parking without mandates, urban,
-     rationale: "Handbook benchmark 4 asks teams to specify this. Studies of minimum-parking repeal (Buffalo, Seattle) find new urban projects provide roughly 0.3–0.8 spaces per home."}
+     rationale: "ASSUMPTION, widened range, informed by Hess & Rehler 2021 (JAPA 87(3):396–408; https://doi.org/10.1080/01944363.2020.1864225). After Buffalo abolished minimums, single-use residential projects in aggregate still built more than the old 1 space/unit minimum. Central 0.9 is just under that 1/unit habit."}
   parking_market_suburban:
     {low: 1.0, central: 1.25, high: 1.6, unit: spaces per home, group: parking, ui: true,
      label: Developer-provided parking without mandates, suburban,
@@ -182,17 +187,17 @@ params:
      label: Single-family parking dropped without mandates,
      rationale: "Share of the single-family mandate builders stop providing. Central 0: single-family buyers expect a driveway."}
   parking_constrained_share_urban:
-    {low: 0.15, central: 0.30, high: 0.45, unit: share, group: parking, ui: true,
+    {low: 0.0, central: 0.15, high: 0.45, unit: share, group: parking, ui: true,
      label: Urban multifamily sites where parking caps units,
-     rationale: "Share of urban 2+ home pipeline on lots where the parking mandate, not the envelope, sets unit count."}
+     rationale: "ASSUMPTION, widened range. No sourced count of parking-capped urban sites; the low end is opened to 0."}
   parking_constrained_share_suburban:
-    {low: 0.05, central: 0.10, high: 0.20, unit: share, group: parking, ui: false,
+    {low: 0.0, central: 0.05, high: 0.20, unit: share, group: parking, ui: false,
      label: Suburban multifamily sites where parking caps units,
-     rationale: "Larger suburban lots are rarely parking-capped."}
+     rationale: "ASSUMPTION, widened range. No sourced count; low end opened to 0. Larger suburban lots are rarely parking-capped."}
   parking_constrained_share_rural:
-    {low: 0.0, central: 0.03, high: 0.08, unit: share, group: parking, ui: false,
+    {low: 0.0, central: 0.02, high: 0.08, unit: share, group: parking, ui: false,
      label: Rural multifamily sites where parking caps units,
-     rationale: "Rural lots are almost never parking-capped."}
+     rationale: "ASSUMPTION, widened range. No sourced count; low end stays 0. Rural lots are almost never parking-capped."}
 
   # ---------------------------------------------------------- lots / fit
   lot_median_detached_urban:
@@ -240,7 +245,11 @@ params:
   prior_adu_prohibited:
     {low: 0.70, central: 0.85, high: 0.95, unit: probability, group: zoning, ui: true, zoning_bound: true,
      label: Benchmark ADU prohibited where zoning is unknown,
-     rationale: "Share of single-family lots with no observed ordinance where a detached 600+ sq ft ADU without parking is not allowed today. Most Pennsylvania municipal codes allow, at most, family-only or attached in-law suites with parking."}
+     rationale: "Share of single-family lots with no observed ordinance where a detached 600+ sq ft ADU without parking is not allowed today. Most Pennsylvania municipal codes allow, at most, family-only or attached in-law suites with parking. New Hampshire attached hosts use prior_adu_prohibited_nh_attached instead (RSA 674:72 default is allowed)."}
+  prior_adu_prohibited_nh_attached:
+    {low: 0.10, central: 0.30, high: 0.60, unit: probability, group: zoning, ui: true, zoning_bound: true,
+     label: NH attached-host ADU prohibited (townhouse exception),
+     rationale: "ASSUMPTION, widened range. RSA 674:72 I–II: one ADU is allowed as of right on attached or detached single-family hosts unless a town acts to prohibit ADUs on attached homes; if the ordinance is silent, the ADU is permitted. No count of towns that opt out exists (2024 MLUR survey has no townhouse field). https://gc.nh.gov/rsa/html/LXIV/674/674-72.htm"}
   prior_mm_prohibited:
     {low: 0.80, central: 0.90, high: 0.97, unit: probability, group: zoning, ui: true, zoning_bound: true,
      label: 2–6 homes prohibited where zoning is unknown,
@@ -253,13 +262,14 @@ params:
 
   # ------------------------------------------------------ existing pipeline
   pipeline_f0:
-    {low: 0.3, central: 0.5, high: 0.7, unit: share, group: pipeline, ui: true,
+    {low: 0.5, central: 0.5, high: 0.5, unit: share, group: pipeline, ui: false,
      label: Share of candidate projects that pencil today,
-     rationale: "Position of today's marginal project in the margin distribution. 0.5 puts the pipeline at the median."}
+     rationale: "Fixed at 0.5. F0 is not identified separately from pipeline_sigma, so varying both double-counts uncertainty. ASSUMPTION."}
   pipeline_sigma:
-    {low: 0.25, central: 0.40, high: 0.60, unit: margin, group: pipeline, ui: true,
+    {low: 0.31, central: 0.52, high: 3.7, unit: margin, group: pipeline, ui: true,
+     envelope_on: elasticity, elasticity_low: 0.25, elasticity_central: 1.75, elasticity_high: 3.0,
      label: Project-to-project margin spread,
-     rationale: "Sets the supply response to cost savings. Implied cost elasticity is reported with every result; literature range is about 1 to 3."}
+     rationale: "ASSUMPTION, widened range, anchored to Saiz 2010 (QJE 125(3); https://doi.org/10.1162/qjec.2010.125.3.1253). With F0=0.5 and h=0.15, ε = 0.918/σ_p. The envelope draws ε ~ triangular(0.25, 1.75, 3.0) and sets σ_p = 0.918/ε so the published ε band is the quantity that is sampled. Low 0.31 → ε=3; central 0.52 → ε=1.75 (Saiz metro mean); high 3.7 → ε=0.25. A probit cannot reach ε=0; that case is a separate sensitivity row."}
   land_share:
     {low: 0.12, central: 0.20, high: 0.30, unit: share of total cost, group: pipeline, ui: false,
      label: Land share of total project cost,

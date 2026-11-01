@@ -31,24 +31,47 @@ def test_policy_comparison_stays_within_four_pages():
     assert "New Hampshire" in text
     assert "unknown" in text.lower()
     assert "close call" in text.lower()
-    assert "111,016" in text
-    assert "+6,048" in text
-    assert "+12,916" in text
     from src.adu_fee_note import note_text
-    from src.lab.policy_tables import allegheny_table, nh_table, pa_statewide_table
+    from src.lab.policy_tables import (
+        allegheny_table,
+        nh_background_adu_sentence,
+        nh_table,
+        pa_ranking_sentence,
+        pa_statewide_table,
+        sampling_error_sentence,
+    )
+    from src.lab.results import load_results
+    from src.plain import homes, top_pair_tie_clause
 
+    pa = load_results("PA", allow_compute=False)
+    assert homes(pa["statewide"]["results"]["baseline"]["central"]) in text
+    assert homes(pa["statewide"]["results"]["adu"]["central"], signed=True) in text
+    assert homes(pa["statewide"]["results"]["missing_middle"]["central"], signed=True) in text
     assert note_text("docs") in text
     assert pa_statewide_table() in text
     assert allegheny_table() in text
     assert nh_table() in text
-    assert "ADU vs parking flips in 20 percent" in text
-    assert "core baseline (108,950)" in text
+    assert sampling_error_sentence("PA") in text
+    assert pa_ranking_sentence() in text
+    assert "≈" in text
     method = (ROOT / "docs" / "SMALL_HOMES_LAB.md").read_text(encoding="utf-8")
-    assert "fees come out ahead in 19% of the 200 assumption draws (38 of 200)" in method
+    clause = top_pair_tie_clause(pa["statewide"]["top_benchmark_pair"], pa["statewide"]["results"])
+    assert clause in text
+    assert clause in method
+    nh_port = (ROOT / "docs" / "NH_PORTABILITY.md").read_text(encoding="utf-8")
+    assert nh_background_adu_sentence() in nh_port
+    assert "Saiz 2010" in text
+    assert "core baseline (108,950)" in text
+    draws = pa["draws"]
+    n_flip = int(round(pa["statewide"]["top_benchmark_pair"]["flip_share"] * draws))
+    assert f"{n_flip} of {draws:,}" in method or f"{n_flip} of {draws}" in method
+    assert f"{draws:,} assumption draws" in method or f"{draws} assumption draws" in method
     assert "This 10% is the flag threshold" in method
+    assert "4.1%" in method and "Auckland" in method
     model = (ROOT / "docs" / "MODEL_AND_ASSUMPTIONS.md").read_text(encoding="utf-8")
     assert "250 draws" in model and "defaults to 60" in model
     assert "the Lab uses 2,000" in model
+    assert "Lab envelope is 2,000" in model
     disclosures = (ROOT / "docs" / "DISCLOSURES.md").read_text(encoding="utf-8")
     assert "Building Permits Survey 2023-2025 county files (Lab)" in disclosures
 

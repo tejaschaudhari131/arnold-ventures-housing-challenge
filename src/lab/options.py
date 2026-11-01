@@ -23,6 +23,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from src.model.equations import normal_cdf
+
 OWNER_OPTIONS = ("adu", "mm2")
 REBUILD_UNITS = {"mm4": 4, "mm6": 6}
 NET_HOMES = {"adu": 1, "mm2": 1, "mm4": 3, "mm6": 5}
@@ -58,6 +60,27 @@ class OptionResult:
     hazard: float
     build_lag: float
     spaces: float
+    ref_excess: float | None = None  # ADU excess at fee 0 and no parking
+
+
+def adu_economics_gate(excess: float, ref_excess: float | None, sigma: float) -> float:
+    """Share of the CA all-lots rate that still applies under this lot's ADU economics.
+
+    gate = min(1, Φ(x / σ) / Φ(x_ref / σ)). x_ref is the same ADU with fee = 0
+    and no parking, the CA calibration point. Official California Legislative
+    Information text of Gov. Code 66311.5(c)(1) (formerly 65852.2(f)(3))
+    exempts ADUs of 750 sq ft or less of interior livable space from impact
+    fees:
+    https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=66311.5.
+    The Lab prototype is 600 sq ft.
+    """
+    if ref_excess is None or sigma <= 0:
+        return 1.0
+    numer = normal_cdf(excess / sigma)
+    denom = normal_cdf(ref_excess / sigma)
+    if denom <= 1e-15:
+        return 0.0 if numer <= 1e-15 else 1.0
+    return min(1.0, numer / denom)
 
 
 def unit_value(rent: float, p: dict[str, float]) -> float:
@@ -110,12 +133,20 @@ def evaluate_option(
         cost = p["adu_sqft"] * p["adu_cost_psf"] * soft + econ.fee + spaces * p["stall_cost_surface"]
         area = footprint + p["adu_sqft"] / p["adu_stories"] + p["adu_open_space_sqft"] + spaces * stall_area
         hurdle, hazard, lag = p["hurdle_owner"], p["hazard_homeowner"], p["build_lag_adu_years"]
+        # CA calibration: Gov. Code 66311.5(c)(1) (formerly 65852.2(f)(3))
+        # exempts ADUs of 750 sq ft or less of interior livable space from
+        # impact fees, and the Handbook ADU needs no space. Confirmed at
+        # https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=66311.5.
+        # The Lab prototype is 600 sq ft.
+        ref_cost = p["adu_sqft"] * p["adu_cost_psf"] * soft
+        ref_excess = (value / ref_cost - 1.0) - hurdle if ref_cost > 0 else None
     elif option == "mm2":
         spaces = provided_parking(ctx, econ, p, cap)
         value = unit_value(rent_2br, p)
         cost = p["conversion_cost_per_unit"] * soft + econ.fee + spaces * p["stall_cost_surface"]
         area = footprint + p["mm_unit_sqft"] / 2.0 + spaces * stall_area
-        hurdle, hazard, lag = p["hurdle_owner"], p["hazard_homeowner"], p["build_lag_conversion_years"]
+        hurdle, hazard, lag = p["hurdle_owner"], p["hazard_homeowner_feasible"], p["build_lag_conversion_years"]
+        ref_excess = None
     else:
         units = REBUILD_UNITS[option]
         per_home = provided_parking(ctx, econ, p, cap)
@@ -130,6 +161,7 @@ def evaluate_option(
         )
         area = units * p["mm_unit_sqft"] / MM_STORIES + spaces * surface_share * stall_area
         hurdle, hazard, lag = p["hurdle_developer"], p["hazard_developer"], p["build_lag_newbuild_years"]
+        ref_excess = None
     margin = value / cost - 1.0
     return OptionResult(
         option=option,
@@ -143,4 +175,5 @@ def evaluate_option(
         hazard=hazard,
         build_lag=lag,
         spaces=spaces,
+        ref_excess=ref_excess,
     )

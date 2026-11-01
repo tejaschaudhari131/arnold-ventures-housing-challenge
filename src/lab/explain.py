@@ -3,7 +3,7 @@
 """Why-drawer payloads, live recomputes, and Lab briefs.
 
 The browser reads locked results (``load_results(..., allow_compute=False)``)
-so Vercel never runs the 200-draw envelope. Changing one assumption
+so Vercel never runs the 2,000-draw envelope. Changing one assumption
 recomputes the central case, the zoning bound, and the ACS band. The
 envelope stays on the locked file; the response says so.
 """
@@ -69,11 +69,18 @@ FORMULAS = [
         "note": "T is five years. λ is the homeowner or developer hazard.",
     },
     {
+        "id": "adu_gate",
+        "label": "ADU economics gate",
+        "formula": "gate = min(1, Φ(x_ADU / σ) / Φ(x_ADU,ref / σ))",
+        "tags": ["calculated", "assumed"],
+        "note": "x_ref is the same ADU with fee = 0 and no parking. CA Gov. Code 65852.2(f)(3) (now 66311.5(c)(1)) exempts ADUs of 750 sq ft or less from impact fees. The Lab prototype is 600 sq ft.",
+    },
+    {
         "id": "delivery",
         "label": "Host delivery",
-        "formula": "N = Σ H × F × p(T) × d",
+        "formula": "N = Σ H × F × p(T) × d  (ADU: N = Σ H × gate × p(T) × d)",
         "tags": ["calculated"],
-        "note": "Each lot takes at most one option. d is net homes that option adds.",
+        "note": "Each lot takes at most one option. d is net homes that option adds. ADUs use the CA all-lots rate times a fee/parking gate normalized to CA conditions (fee 0 and no parking). mm2 uses a feasible-lot hazard and F.",
     },
     {
         "id": "increment",
@@ -272,7 +279,8 @@ def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dic
     used = []
     for name in (
         "cap_rate", "opex_share", "new_unit_rent_premium", "adu_cost_psf", "adu_sqft",
-        "conversion_cost_per_unit", "fee_per_unit", "hazard_homeowner", "host_margin_sigma",
+        "conversion_cost_per_unit", "fee_per_unit", "hazard_homeowner", "hazard_homeowner_feasible",
+        "host_margin_sigma",
         "adoption_lag_years", "prior_adu_prohibited", "prior_mm_prohibited",
     ):
         spec = param_spec(name)
@@ -458,7 +466,7 @@ def recompute(code: str, overrides: dict[str, float] | None = None, county_key: 
         "state": code,
         "overrides": overrides,
         "envelope_note": (
-            "The p10–p90 envelope is from the locked 200-draw run "
+            f"The p10–p90 envelope is from the locked {locked['draws']:,}-draw run "
             f"(seed {locked['seed']}) and does not move when you change one slider. "
             "Central values, zoning bounds, and the ACS band are live."
         ),
@@ -489,7 +497,16 @@ def _band(low: float, high: float) -> str:
 
 def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any] | None = None) -> str:
     """One-page policy brief from locked or live results."""
-    from src.plain import CORE_URL, LAB_URL, SCENARIO_SHORT, format_assumption, homes, ranking_phrase
+    from src.plain import (
+        CORE_URL,
+        LAB_URL,
+        SCENARIO_SHORT,
+        format_assumption,
+        homes,
+        is_draw_tie,
+        ranking_phrase,
+        top_pair_tie_clause,
+    )
 
     code = check_state(code)
     locked = locked_results(code)
@@ -521,12 +538,32 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
     leader = SCENARIO_SHORT.get(top["leader"], top["leader"])
     trailer = SCENARIO_SHORT.get(top["trailer"], top["trailer"])
     threshold = locked.get("close_call_flip_share_label", "close-call threshold")
+    median_src = results
+    if is_draw_tie(top) and not (
+        "p50" in results.get(top["leader"], {}) and "p50" in results.get(top["trailer"], {})
+    ):
+        median_src = locked["statewide"]["results"]
+    if is_draw_tie(top):
+        pair_line = top_pair_tie_clause(top, median_src)
+    else:
+        pair_line = f"Top pair: {leader} leads {trailer} by {homes(top['gap'])} homes."
     lines += [
         "",
-        f"Handbook ranking: {ranking_phrase(sw['benchmark_ranking'])}.",
-        f"Top pair: {leader} leads {trailer} by {homes(top['gap'])} homes.",
+        f"Handbook ranking: {ranking_phrase(sw['benchmark_ranking'], top)}.",
+        pair_line,
         f"The {threshold} is 10 percent of assumption draws.",
     ]
+    se_bits = []
+    for sid in ["baseline"] + list(compared_scenarios()):
+        env = locked["statewide"]["results"][sid]
+        if "p50_se" in env:
+            label = SCENARIO_SHORT.get(sid) or next(s["short"] for s in locked["scenarios"] if s["id"] == sid)
+            se_bits.append(f"{label} ±{homes(env['p50_se'])}")
+    if se_bits:
+        lines.append(
+            f"Envelope sampling error (bootstrap SE of P50, {locked['draws']:,} draws, seed {locked['seed']}): "
+            + "; ".join(se_bits) + "."
+        )
     if top["close_call"]:
         lines.append("**Ranking is close.** " + "; ".join(top["reasons"]) + ".")
     decomp = sw["package_decomposition"]

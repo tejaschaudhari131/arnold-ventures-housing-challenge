@@ -6,18 +6,18 @@
   var ORDER = ["adu", "missing_middle", "parking", "fees", "package", "approval"];
   var BENCHMARKS = ["adu", "missing_middle", "parking", "fees"];
   var WALK = [
-    { title: "Pennsylvania is loaded", text: "All 67 counties and four Handbook scenarios are already computed. Baseline is 111,016 five-year completions. Unknown zoning is a prior, never zero." },
+    { title: "Pennsylvania is loaded", text: "All 67 counties and four Handbook scenarios are already computed. Baseline is 111,061 five-year completions. Unknown zoning is a prior, never zero." },
     { title: "Pick a reform", text: "Start with ADUs: one detached or semi-detached ADU of at least 600 sq ft, no added parking." },
     { title: "Open Allegheny County", text: "Allegheny is the walkthrough. Pittsburgh's October 2026 ADU ordinance is observed; the rest of the county is unknown." },
     { title: "Why this result?", text: "Every input is tagged observed, assumed, or calculated. The ADU pro forma is illustrative." },
     { title: "Change one assumption", text: "Move the homeowner uptake hazard. Central, zoning, and ACS MOE recompute. The p10–p90 envelope does not." },
-    { title: "Export a brief", text: "Download Markdown, HTML, or a county CSV. The brief states the ranking, the close call, and what would change it." }
+    { title: "Export a brief", text: "Download Markdown, HTML, or a county CSV. The brief states the ranking, including a tie when draw medians disagree with the central order, and what would change it." }
   ];
   var TIPS = {
     "pro forma": "A simple cost-and-value worksheet for one building type.",
     "uptake hazard": "The yearly chance a feasible lot actually starts a project.",
     "prior": "A published guess used when a local rule has not been read.",
-    Envelope: "The likely range from 200 test runs of the published assumptions.",
+    Envelope: "The likely range from 2,000 test runs of the published assumptions.",
     Zoning: "How the answer moves if unknown local rules are more or less strict.",
     "ACS MOE": "Census survey error on the counts and prices that feed the model."
   };
@@ -205,10 +205,42 @@
     });
   }
 
-  function rankingBadge(pair) {
+  function medianShort(id) {
+    return ({ adu: "ADU", missing_middle: "MM", fees: "Fees", parking: "Parking" })[id] || scenarioLabel(id);
+  }
+
+  function isDrawTie(pair) {
+    return !!(pair && pair.close_call && pair.flip_share >= 0.5);
+  }
+
+  function topPairTieClause(sw) {
+    var pair = sw.top_benchmark_pair;
+    var trail = sw.results[pair.trailer];
+    var lead = sw.results[pair.leader];
+    return scenarioLabel(pair.leader) + " ≈ " + scenarioLabel(pair.trailer) +
+      "; " + scenarioLabel(pair.trailer) + " ahead in " + Math.round(pair.flip_share * 100) +
+      "% of draws (draw medians " + medianShort(pair.trailer) + " " + integer(trail.p50) +
+      " vs " + medianShort(pair.leader) + " " + integer(lead.p50) + ")";
+  }
+
+  function rankingLine(sw) {
+    var rank = sw.benchmark_ranking || [];
+    if (isDrawTie(sw.top_benchmark_pair) && rank.length >= 2) {
+      return scenarioLabel(rank[0]) + " ≈ " + scenarioLabel(rank[1]) +
+        (rank.length > 2 ? " > " + rank.slice(2).map(scenarioLabel).join(" > ") : "");
+    }
+    return rank.map(scenarioLabel).join(" > ");
+  }
+
+  function rankingBadge(pair, sw) {
     var threshold = (locked && locked.close_call_flip_share_label) || "close-call threshold";
     if (!pair || !pair.close_call) {
       return '<span class="badge-holds">Ranking holds</span>';
+    }
+    if (isDrawTie(pair) && sw) {
+      return '<span class="badge-close" title="The envelope median ranking disagrees with the central ranking. The ' +
+        escapeHtml(threshold) + ' is 10 percent of draws.">Ranking is a tie: ' +
+        escapeHtml(topPairTieClause(sw)) + "</span>";
     }
     var keep = pair.flip_share != null ? Math.max(1, Math.round((1 - pair.flip_share) * 5)) : 4;
     return '<span class="badge-close" title="The top two Handbook reforms are close enough that a different published assumption can swap them. The ' +
@@ -226,9 +258,16 @@
     var leader = (sw.benchmark_ranking || BENCHMARKS)[0];
     var leadRow = sw.results[leader];
     var pack = sw.results.package;
-    var answer = "In " + locked.name + " over 2027–2031, " + scenarioLabel(leader) +
-      " adds the most (" + signed(leadRow.central) + "). All four reforms together add " +
-      signed(pack.central) + " on top of " + integer(sw.results.baseline.central) + " expected.";
+    var answer;
+    if (isDrawTie(pair)) {
+      answer = "In " + locked.name + " over 2027–2031, " + topPairTieClause(sw) +
+        ". All four reforms together add " + signed(pack.central) + " on top of " +
+        integer(sw.results.baseline.central) + " expected.";
+    } else {
+      answer = "In " + locked.name + " over 2027–2031, " + scenarioLabel(leader) +
+        " adds the most (" + signed(leadRow.central) + "). All four reforms together add " +
+        signed(pack.central) + " on top of " + integer(sw.results.baseline.central) + " expected.";
+    }
     headline.innerHTML =
       '<p class="headline-answer">' + escapeHtml(answer) + tag("calculated") + "</p>" +
       stat("Selected increment", signed(row.central), "calculated") +
@@ -242,8 +281,8 @@
       '<div class="stat"><div class="k">Coverage and ranking</div>' +
       "<div class='s'>ADU evidence " + pct(cover.adu) + tag("calculated") +
       " · 2–6 homes " + pct(cover.mm) + tag("calculated") + "</div>" +
-      "<div class='s'>" + rankingBadge(pair) + "</div>" +
-      "<div class='s'>" + escapeHtml((sw.benchmark_ranking || []).map(scenarioLabel).join(" > ")) + "</div></div>";
+      "<div class='s'>" + rankingBadge(pair, sw) + "</div>" +
+      "<div class='s'>" + escapeHtml(rankingLine(sw)) + "</div></div>";
   }
 
   function stat(label, value, kind) {
@@ -504,7 +543,7 @@
     var names = Object.keys(overrides);
     if (!names.length) {
       live = null;
-      envelopeNote.textContent = "Move one slider. Central values, zoning bounds, and the ACS band recompute. The p10–p90 envelope stays on the locked 200-draw run.";
+      envelopeNote.textContent = "Move one slider. Central values, zoning bounds, and the ACS band recompute. The p10–p90 envelope stays on the locked " + ((locked && locked.draws) ? Number(locked.draws).toLocaleString("en-US") : "2,000") + "-draw run.";
       renderAll();
       if (whyOpen) loadWhy();
       setStatus("");
@@ -653,7 +692,7 @@
   document.getElementById("reset").addEventListener("click", function () {
     overrides = {};
     live = null;
-    envelopeNote.textContent = "Move one slider. Central values, zoning bounds, and the ACS band recompute. The p10–p90 envelope stays on the locked 200-draw run.";
+    envelopeNote.textContent = "Move one slider. Central values, zoning bounds, and the ACS band recompute. The p10–p90 envelope stays on the locked " + ((locked && locked.draws) ? Number(locked.draws).toLocaleString("en-US") : "2,000") + "-draw run.";
     renderAll();
     if (whyOpen) loadWhy();
     setStatus("");

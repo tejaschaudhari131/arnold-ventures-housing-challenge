@@ -11,12 +11,14 @@ from src.lab.config import SAMPLE_DIR, central_params, param_spec
 from src.lab.data import build_state, load_state
 from src.lab.engine import evaluate_county, evaluate_state, package_decomposition, package_variants
 from src.lab.uncertainty import (
+    ELASTICITY_TO_SIGMA,
     compare_pair,
     county_evaluator,
     envelope_params,
     run_envelope,
     run_moe,
     sample_params,
+    summarize,
     switching_value,
     what_would_change,
     zoning_bounds,
@@ -93,7 +95,9 @@ def test_observed_status_does_not_move_with_its_prior():
 def test_new_hampshire_bounds_are_narrow_where_law_is_statewide(nh_zoning):
     adu = zoning_bounds(nh_zoning)["adu"]
     mm = zoning_bounds(nh_zoning)["missing_middle"]
-    assert (adu["high"] - adu["low"]) / max(adu["high"], 1) < (mm["high"] - mm["low"]) / max(mm["high"], 1) + 0.5
+    # Statewide ADU law leaves a narrower absolute bound than unknown 2–6
+    # zoning. Relative widths are a poor check once the ADU increment is small.
+    assert (adu["high"] - adu["low"]) < (mm["high"] - mm["low"])
     assert mm["logical_low"] == pytest.approx(0.0, abs=1e-6)
 
 
@@ -153,11 +157,31 @@ def test_acs_band_scales_with_margins_and_not_with_assumption_bands():
     assert all(value == 0.0 for value in zero.values())
 
 
+def test_pa_top_pair_tie_clause_reads_draw_medians():
+    from src.lab.results import load_results
+    from src.plain import homes, is_draw_tie, ranking_phrase, top_pair_tie_clause
+
+    pa = load_results("PA", allow_compute=False)
+    sw = pa["statewide"]
+    pair = sw["top_benchmark_pair"]
+    assert is_draw_tie(pair)
+    clause = top_pair_tie_clause(pair, sw["results"])
+    assert homes(sw["results"]["adu"]["p50"]) in clause
+    assert homes(sw["results"]["missing_middle"]["p50"]) in clause
+    assert "≈" in clause
+    assert ranking_phrase(sw["benchmark_ranking"], pair).startswith("Missing middle ≈ ADUs")
+
+
 def test_envelope_params_exclude_zoning_priors_and_locked_constants():
     names = set(envelope_params())
     assert "prior_adu_prohibited" not in names and "prior_mm_prohibited" not in names
+    assert "prior_adu_prohibited_nh_attached" not in names
     assert "fee_per_unit" not in names and "fee_cut_share" not in names
+    assert "pipeline_f0" not in names
     assert "hazard_homeowner" in names
+    assert "hazard_homeowner_feasible" in names
+    assert "pipeline_sigma" in names
+    assert param_spec("pipeline_sigma").get("envelope_on") == "elasticity"
 
 
 def test_envelope_is_seeded_and_inside_bands():
@@ -168,8 +192,14 @@ def test_envelope_is_seeded_and_inside_bands():
     for draw in a:
         for name in envelope_params():
             spec = param_spec(name)
-            assert spec["low"] <= draw[name] <= spec["high"]
+            if spec.get("envelope_on") == "elasticity":
+                lo = ELASTICITY_TO_SIGMA / float(spec["elasticity_high"])
+                hi = ELASTICITY_TO_SIGMA / float(spec["elasticity_low"])
+                assert lo - 1e-9 <= draw[name] <= hi + 1e-9
+            else:
+                assert spec["low"] <= draw[name] <= spec["high"]
         assert draw["prior_adu_prohibited"] == P["prior_adu_prohibited"]
+        assert "hazard_homeowner_feasible" in draw
 
 
 # ------------------------------------------------ what would change it
@@ -194,6 +224,16 @@ def test_switching_value_is_none_when_band_cannot_flip():
     state = load_state("NH")
     evaluate = county_evaluator(state, state.counties[0])
     assert switching_value(evaluate, P, "parking_market_urban", "package", "parking", "high") is None
+
+
+def test_summarize_reports_bootstrap_sampling_error():
+    values = [float(i) for i in range(40)]
+    bare = summarize(values)
+    assert set(bare) == {"p10", "p50", "p90"}
+    with_se = summarize(values, seed=20261107)
+    assert with_se["p10_se"] >= 0 and with_se["p50_se"] >= 0 and with_se["p90_se"] >= 0
+    again = summarize(values, seed=20261107)
+    assert again == with_se
 
 
 def test_evaluate_county_variants_do_not_change_named_scenarios():
