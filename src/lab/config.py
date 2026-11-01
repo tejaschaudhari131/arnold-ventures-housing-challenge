@@ -47,9 +47,37 @@ def load_scenarios() -> dict[str, Any]:
     return doc
 
 
+def _screening_completion_ratios() -> dict[str, dict[str, Any]]:
+    """D12. The Lab lot path uses the screening ratios, same bands, one source."""
+    from src.model.assumptions import load_assumptions as load_screening
+
+    screening = load_screening()
+    out = {}
+    for name in ("completion_ratio_adu", "completion_ratio_small", "completion_ratio_mf"):
+        spec = screening.parameters[name]
+        out[name] = {
+            "low": spec["low"],
+            "central": spec["central"],
+            "high": spec["high"],
+            "unit": spec.get("unit", "share"),
+            "group": "completion",
+            "label": spec.get("label", name),
+            "rationale": (
+                "D12, decided. Same band as config/assumptions.yaml. "
+                "ADU lots use completion_ratio_adu; mm2 and mm4 use completion_ratio_small; "
+                "mm6 uses completion_ratio_mf. Drawn in the Lab Monte Carlo."
+            ),
+            "ui": False,
+            "monte_carlo": True,
+            "tag": "assumed",
+        }
+    return out
+
+
 @lru_cache(maxsize=None)
 def load_assumptions() -> dict[str, Any]:
     doc = _read_yaml(CONFIG_DIR / "assumptions.yaml")
+    doc["params"].update(_screening_completion_ratios())
     for name, spec in doc["params"].items():
         for key in ("low", "central", "high", "unit", "group", "label", "rationale"):
             if key not in spec:
@@ -73,7 +101,15 @@ def load_evidence(code: str) -> dict[str, Any]:
 
 
 def central_params() -> dict[str, float]:
-    return {name: float(spec["central"]) for name, spec in load_assumptions()["params"].items()}
+    params = load_assumptions()["params"]
+    values = {
+        name: float(spec["central"])
+        for name, spec in params.items()
+        if not spec.get("derived")
+    }
+    share = values.get("adu_feasible_share_ca") or 0.5
+    values["hazard_homeowner_feasible"] = values["hazard_homeowner"] / share
+    return values
 
 
 def ui_params() -> list[str]:

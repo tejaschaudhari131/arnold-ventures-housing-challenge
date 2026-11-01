@@ -43,7 +43,7 @@ def test_comparison_reads_both_engines_and_both_fees():
     assert doc["core_adu"] > doc["lab_adu"]
     assert doc["after_lags"] > 0
     assert doc["lab_baseline"] == int(round(lab["statewide"]["results"]["baseline"]["central"]))
-    assert doc["core_baseline"] == 108950
+    assert doc["core_baseline"] == 113269
     assert "2023-2025" in doc["baseline_note"]
     assert doc["provenance"]["lab_adu"]["tag"] == "calculated"
     assert doc["provenance"]["lab_fee"]["tag"] == "assumed"

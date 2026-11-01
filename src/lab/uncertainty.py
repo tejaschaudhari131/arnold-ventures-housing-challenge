@@ -56,13 +56,32 @@ def compared_scenarios() -> list[str]:
 
 
 def envelope_params() -> list[str]:
-    return [name for name in ui_params() if not param_spec(name).get("zoning_bound")]
+    names = [
+        name
+        for name in ui_params()
+        if not param_spec(name).get("zoning_bound") and not param_spec(name).get("derived")
+    ]
+    for name, spec in load_assumptions()["params"].items():
+        if spec.get("monte_carlo") and name not in names and not spec.get("derived"):
+            names.append(name)
+    # Drawn last so the existing common-random stream, including Pennsylvania, is unchanged.
+    tail = "nh_detached_adu_already_legal"
+    if tail in names:
+        names = [name for name in names if name != tail] + [tail]
+    return names
 
 
 def sample_params(draws: int, seed: int, base: dict[str, float] | None = None) -> list[dict[str, float]]:
-    """Seeded triangular draws for every envelope parameter."""
+    """Seeded triangular draws for every envelope parameter.
+
+    The New Hampshire already-legal share uses its own stream so it does not
+    shift the draws shared with Pennsylvania.
+    """
+    side_name = "nh_detached_adu_already_legal"
+    names = [name for name in envelope_params() if name != side_name]
+    draw_side = side_name in envelope_params()
     rng = random.Random(seed)
-    names = envelope_params()
+    side_rng = random.Random(f"{seed}:{side_name}")
     base = dict(base or central_params())
     samples = []
     for _ in range(draws):
@@ -78,6 +97,11 @@ def sample_params(draws: int, seed: int, base: dict[str, float] | None = None) -
                 p[name] = ELASTICITY_TO_SIGMA / max(eps, 1e-9)
             else:
                 p[name] = rng.triangular(float(spec["low"]), float(spec["high"]), float(spec["central"]))
+        if draw_side:
+            spec = param_spec(side_name)
+            p[side_name] = side_rng.triangular(float(spec["low"]), float(spec["high"]), float(spec["central"]))
+        share = p.get("adu_feasible_share_ca") or 0.5
+        p["hazard_homeowner_feasible"] = p["hazard_homeowner"] / share
         samples.append(p)
     return samples
 

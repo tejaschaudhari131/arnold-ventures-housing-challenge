@@ -108,7 +108,7 @@ scenarios:
     definition: >-
       Minimum parking requirements for new residential development are
       eliminated. Developers then provide the market ratio in
-      config/lab/assumptions.yaml (parking_market_*): 0.5 spaces per home in
+      config/lab/assumptions.yaml (parking_market_*): 0.9 spaces per home in
       urban tracts, 1.25 suburban, 1.75 rural, and single-family builders keep
       providing the driveway or garage the mandate required
       (parking_sf_gap_share = 0). Nothing about approvals, review time, or

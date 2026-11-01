@@ -320,6 +320,11 @@ def test_custom_mix_csv_labels_overlap_and_rejects_unknown_reforms():
         for path, payload in (
             ("/api/lab/why", {"state": "PA", "county": "Adams", "scenario": "selection", "reforms": ["adu", "not_a_reform"]}),
             ("/api/lab/why", {"state": "PA", "county": "Adams", "scenario": "selection", "reforms": ["not_a_reform"]}),
+            ("/api/lab/why", {"state": "PA", "county": "Adams", "scenario": "selection", "reforms": ["package"]}),
+            ("/api/lab/why", {"state": "PA", "county": "Adams", "scenario": "selection", "reforms": ["approval"]}),
+            ("/api/lab/why", {"state": "PA", "county": "Adams", "scenario": "selection", "reforms": ["baseline"]}),
+            ("/api/lab/why", {"state": "PA", "county": "Adams", "scenario": "selection", "reforms": ["tod"]}),
+            ("/api/lab/recompute", {"state": "PA", "reforms": ["approval"]}),
             ("/api/lab/export", {"state": "PA", "format": "csv", "reforms": ["not_a_reform"]}),
             ("/api/lab/export", {"state": "PA", "format": "md", "reforms": ["adu", "missing_middle", "nope"]}),
             ("/api/lab/export", {"state": "PA", "format": "html", "reforms": ["ADU"]}),
@@ -331,6 +336,20 @@ def test_custom_mix_csv_labels_overlap_and_rejects_unknown_reforms():
             assert "not_a_reform" not in dumped
             assert "nope" not in dumped
             assert "ADU" not in dumped
+        for path in (
+            "/api/lab/why?state=PA&county=Adams&scenario=selection&reforms=not_a_reform",
+            "/api/lab/why?state=PA&county=Adams&scenario=selection&reforms=adu,approval",
+            "/api/lab/why?state=PA&county=Adams&scenario=selection&reforms=adu&reforms=tod",
+        ):
+            try:
+                _get(base, path)
+            except HTTPError as exc:
+                assert exc.code == 400, path
+                body = json.loads(exc.read().decode("utf-8"))
+                assert body["error"] == "Unknown reform.", body
+                assert "not_a_reform" not in json.dumps(body)
+                continue
+            raise AssertionError(path)
     finally:
         httpd.shutdown()
         httpd.server_close()
@@ -684,6 +703,17 @@ def test_client_csv_has_a_constant_column_count():
     )
     assert proc.returncode == 0, proc.stderr + proc.stdout
     assert "16 subsets" in proc.stdout
+
+
+def test_browser_qa_funnel_band_and_unknown_selection():
+    proc = subprocess.run(
+        ["node", "tests/js/browser_qa.mjs"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr + proc.stdout
+    assert "browser qa ok" in proc.stdout
 
 
 def test_lab_url_round_trip_keeps_an_empty_selection(tmp_path):

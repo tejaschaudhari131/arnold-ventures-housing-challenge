@@ -69,7 +69,10 @@
   function oneDecimal(value) {
     var n = Number(value);
     if (!isFinite(n)) return "—";
-    return n.toLocaleString("en-US", { maximumFractionDigits: 1, minimumFractionDigits: 0 });
+    if (Object.is(n, -0)) n = 0;
+    var text = n.toLocaleString("en-US", { maximumFractionDigits: 1, minimumFractionDigits: 0 });
+    if (text === "-0" || text === "−0") return "0";
+    return text;
   }
 
   function unitSuffix(unit) {
@@ -96,13 +99,25 @@
     return " " + String(unit).replace(/_/g, " ");
   }
 
-  function formatBand(low, high) {
+  function permitVintageText(meta) {
+    var vintage = meta && meta.permit_vintage;
+    return vintage ? String(vintage) : "—";
+  }
+
+  function formatBand(low, high, spec) {
     var a = Number(low);
     var b = Number(high);
-    if (Math.abs(a) < 1e-9) a = 0;
-    if (Math.abs(b) < 1e-9) b = 0;
-    if (a === 0 && b === 0) return "0";
-    return oneDecimal(a) + " to " + oneDecimal(b);
+    if (!isFinite(a) || !isFinite(b)) return "—";
+    var left = oneDecimal(a);
+    var right = oneDecimal(b);
+    if (left === "—" || right === "—") return "—";
+    if (left === "0" && right === "0") {
+      var label = (spec && spec.label) || "";
+      var name = (spec && spec.name) || "";
+      if (name === "permit_growth_rate" || /trend/i.test(label)) return "0 (no trend)";
+      return "0";
+    }
+    return left + " to " + right;
   }
 
   function formatSetting(spec, value) {
@@ -190,7 +205,9 @@
         "<strong>" + escapeHtml(state.name) + "</strong>" +
         '<span class="pill ' + (state.tier === 1 ? "t1" : "t2") + '">Tier ' + state.tier + "</span>" +
         "<span>" + integer(state.housing_units) + " homes " + badge("observed") +
-        " · completeness " + score + "% " + badge("calculated") + "</span>" +
+        " · completeness " + score + "% " + badge("calculated") +
+        (state.permit_vintage ? " · Permit data " + escapeHtml(state.permit_vintage) + " " + badge("observed") : "") +
+        "</span>" +
         '<span class="meter" aria-hidden="true"><i style="width:' + score + '%"></i></span>';
       button.addEventListener("click", function () {
         mapScope = "state";
@@ -476,7 +493,8 @@
         "<td>" + tagged(row.completions_5yr, "calculated", integer) + "</td>" +
         "<td>" + (id === "baseline" ? "—" : tagged(row.incremental_completions, "calculated", integer)) + "</td>" +
         "<td>" + tagged(row.annualized_completions, "calculated", integer) + "</td>" +
-        "<td>" + (id === "baseline" ? "—" : tagged(row.lift_pct, "calculated", signedPercent)) + "</td>";
+        "<td>" + (id === "baseline" ? "—" : tagged(row.lift_pct, "calculated", signedPercent)) + "</td>" +
+        "<td>" + escapeHtml(permitVintageText(result.meta)) + "</td>";
       void net;
       void lift;
       function choose() { selectScenario(id); }
@@ -642,7 +660,7 @@
       var current = sliderValue(spec);
       return "<tr><td>" + escapeHtml(spec.label) + "</td><td>" +
         escapeHtml(formatSetting(spec, current)) + badge("assumed") + "</td><td>" +
-        escapeHtml(formatBand(spec.low, spec.high)) + "</td></tr>";
+        escapeHtml(formatBand(spec.low, spec.high, spec)) + "</td></tr>";
     }).join("");
     var close = closeCallFor(scenarioId);
     briefEl.innerHTML =

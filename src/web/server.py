@@ -52,6 +52,20 @@ _PERMISSIONS = (
 )
 
 
+def _reforms_query(query: dict[str, list[str]]) -> list[str]:
+    """Reform ids from a query string. Commas and repeated keys are one list.
+
+    An empty value is an empty selection. Unknown ids are not dropped here;
+    ``why_county`` rejects them with the same 400 as ``POST /api/lab/recompute``.
+    """
+    chosen: list[str] = []
+    for raw in query.get("reforms") or []:
+        for part in str(raw).split(","):
+            if part:
+                chosen.append(part)
+    return chosen
+
+
 def public_error(message: str) -> str:
     """Short 400 text. User input is not repeated."""
     cleaned = []
@@ -138,6 +152,8 @@ HTML_PATHS = {"/", "/index.html", "/lab", "/lab.html"}
 
 
 def _state_catalog(fixtures: dict[str, Any]) -> list[dict[str, Any]]:
+    from src.model.permits import ensure_permit_vintage
+
     catalog = []
     for code in CHALLENGE_STATES:
         state = fixtures["states"][code]
@@ -149,6 +165,7 @@ def _state_catalog(fixtures: dict[str, Any]) -> list[dict[str, Any]]:
                 "completeness": state.get("completeness", 0),
                 "housing_units": state["housing_units"],
                 "median_value": state["median_value"],
+                "permit_vintage": ensure_permit_vintage(fixtures, code),
             }
         )
     return catalog
@@ -168,6 +185,8 @@ class App:
             "state": state,
             "legal_note": meta.get("legal_note", ""),
             "parameters": self.assumptions.ui_parameters(state),
+            "completion_ratios": self.assumptions.completion_ratios(),
+            "lab_completion_lot": self.assumptions.lab_completion_lot(),
         }
 
     def simulate(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -189,6 +208,7 @@ class App:
             parcel_mode=parcel_mode,
             resolution=resolution,
             reform_weights=self._reforms(payload.get("reforms")),
+            with_decomposition=True,
         )
 
     def case_study(self, payload: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -493,16 +513,14 @@ def make_handler(app: App):
                 elif path == "/api/lab/assumptions":
                     self._json(200, app.lab_assumptions())
                 elif path == "/api/lab/why":
-                    self._json(
-                        200,
-                        app.lab_why(
-                            {
-                                "state": query.get("state", ["PA"])[0],
-                                "county": query.get("county", ["Allegheny"])[0],
-                                "scenario": query.get("scenario", ["adu"])[0],
-                            }
-                        ),
-                    )
+                    why_payload = {
+                        "state": query.get("state", ["PA"])[0],
+                        "county": query.get("county", ["Allegheny"])[0],
+                        "scenario": query.get("scenario", ["adu"])[0],
+                    }
+                    if "reforms" in query:
+                        why_payload["reforms"] = _reforms_query(query)
+                    self._json(200, app.lab_why(why_payload))
                 elif path == "/api/lab/export":
                     county = query.get("county", [None])[0]
                     fmt = query.get("format", ["md"])[0]

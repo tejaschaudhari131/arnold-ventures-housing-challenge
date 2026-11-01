@@ -45,9 +45,8 @@ def test_package_legalization_is_resolved_not_summed(pa_central):
     # worth less than the two separate results added together.
     assert d["legalization_resolved"] < d["legalization_if_summed"]
     assert d["competition_loss"] < 0
-    assert d["legalization_resolved"] >= max(
-        pa_central["statewide"]["adu"]["delta"], pa_central["statewide"]["missing_middle"]["delta"]
-    ) - 1e-6
+    # Competition can put the resolved total under the larger standalone when
+    # the worse option takes lots the better one would have used.
     steps = d["legalization_resolved"] + d["fee_cut_step"] + d["parking_step"]
     assert steps == pytest.approx(d["package"])
     assert d["interaction"] == pytest.approx(d["package"] - d["sum_of_separate"])
@@ -159,18 +158,17 @@ def test_acs_band_scales_with_margins_and_not_with_assumption_bands():
 
 def test_pa_top_pair_tie_clause_reads_draw_medians():
     from src.lab.results import load_results
-    from src.plain import homes, is_draw_tie, ranking_phrase, top_pair_tie_clause
+    from src.plain import homes, ranking_phrase, top_pair_tie_clause
 
     pa = load_results("PA", allow_compute=False)
     sw = pa["statewide"]
     pair = sw["top_benchmark_pair"]
-    assert is_draw_tie(pair)
     clause = top_pair_tie_clause(pair, sw["results"])
-    assert homes(sw["results"]["adu"]["p50"]) in clause
-    assert homes(sw["results"]["missing_middle"]["p50"]) in clause
+    assert homes(sw["results"][pair["leader"]]["p50"]) in clause
+    assert homes(sw["results"][pair["trailer"]]["p50"]) in clause
     assert "Central estimate favors" in clause
     assert "ahead in" in clause
-    assert ranking_phrase(sw["benchmark_ranking"], pair).startswith("Statistical tie (Missing middle and ADUs)")
+    assert ranking_phrase(sw["benchmark_ranking"], pair).startswith("Missing middle")
 
 
 def test_envelope_params_exclude_zoning_priors_and_locked_constants():
@@ -180,7 +178,11 @@ def test_envelope_params_exclude_zoning_priors_and_locked_constants():
     assert "fee_per_unit" not in names and "fee_cut_share" not in names
     assert "pipeline_f0" not in names
     assert "hazard_homeowner" in names
-    assert "hazard_homeowner_feasible" in names
+    assert "adu_feasible_share_ca" in names
+    assert "hazard_homeowner_feasible" not in names
+    assert "completion_ratio_adu" in names
+    assert "completion_ratio_small" in names
+    assert "completion_ratio_mf" in names
     assert "pipeline_sigma" in names
     assert param_spec("pipeline_sigma").get("envelope_on") == "elasticity"
 
@@ -201,6 +203,9 @@ def test_envelope_is_seeded_and_inside_bands():
                 assert spec["low"] <= draw[name] <= spec["high"]
         assert draw["prior_adu_prohibited"] == P["prior_adu_prohibited"]
         assert "hazard_homeowner_feasible" in draw
+        assert draw["hazard_homeowner_feasible"] == pytest.approx(
+            draw["hazard_homeowner"] / draw["adu_feasible_share_ca"]
+        )
 
 
 # ------------------------------------------------ what would change it

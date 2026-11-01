@@ -1,18 +1,18 @@
 {
-  "note": "Observations of the engines on main 8952914 after the capacity-label work in PR #22. Entries with a defect id are known-wrong as a single answer. They are not accepted results.",
+  "note": "Observations after the Phase 4 economics. Entries with a defect id are still not a single accepted answer: the two engines answer different questions.",
   "screening_pa": {
-    "baseline_completions_5yr": {"value": 108950.1, "role": "characterized"},
-    "adu_incremental_completions": {"value": 46261.1, "role": "characterized", "defect": 6, "note": "Not interchangeable with the Lab ADU central."},
-    "package_incremental_completions": {"value": 74114.5, "role": "characterized"},
-    "package_capacity_completions": {"value": 75780.7, "role": "characterized", "defect": 9, "note": "Capacity is an overlap-adjusted total before ceilings. The economics of the gap are Phase 4."},
+    "baseline_completions_5yr": {"value": 113268.85, "role": "characterized"},
+    "adu_incremental_completions": {"value": 30212.8, "role": "characterized", "defect": 6, "note": "Not interchangeable with the Lab ADU central."},
+    "package_incremental_completions": {"value": 46219.0, "role": "characterized"},
+    "package_capacity_completions": {"value": 46772.1, "role": "characterized", "defect": 9, "note": "Capacity is an overlap-adjusted total before ceilings."},
     "baseline_capacity_basis": "level",
     "reform_capacity_basis": "increment"
   },
   "lab_pa": {
-    "baseline_central": {"value": 111060.9, "role": "characterized", "defect": 6},
-    "adu_central": {"value": 5617.3, "role": "characterized", "defect": 6},
-    "package_central": {"value": 18023.0, "role": "characterized"},
-    "adu_mm_joint": {"value": 8543.9, "role": "characterized", "defect": 4, "note": "package_decomposition.legalization_resolved"},
-    "adu_mm_sum": {"value": 12021.0, "role": "characterized", "defect": 4, "note": "package_decomposition.legalization_if_summed. The UI still labels partial packages as a simple sum."}
+    "baseline_central": {"value": 113304.6, "role": "characterized", "defect": 6},
+    "adu_central": {"value": 2741.7, "role": "characterized", "defect": 6},
+    "package_central": {"value": 13284.9, "role": "characterized"},
+    "adu_mm_joint": {"value": 5423.7, "role": "characterized", "defect": 4, "note": "package_decomposition.legalization_resolved"},
+    "adu_mm_sum": {"value": 8517.0, "role": "characterized", "defect": 4, "note": "package_decomposition.legalization_if_summed. The UI still labels partial packages as a simple sum."}
   }
 }

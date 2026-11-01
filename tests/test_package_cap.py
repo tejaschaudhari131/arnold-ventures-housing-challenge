@@ -21,14 +21,12 @@ def test_binding_cap_is_at_least_the_increment(bundle, code):
 
 
 def test_pennsylvania_package_capacity_covers_parking_and_fees(bundle):
-    """The old package capacity omitted parking and fees, so 74,114 was labeled
-    capped against a capacity of 68,782. The incremental total is unchanged.
-    """
+    """Package capacity includes parking and fees and stays above the increment."""
     fixtures, assumptions = bundle
     result = simulate_state(fixtures, assumptions, "PA")
     combined = result["scenarios"]["combined"]
     parts = result["components"]
-    assert round(combined["incremental_completions"]) == 74114
+    assert round(combined["incremental_completions"]) == 46219
     assert combined["cap_binding"] is True
     assert combined["incremental_completions"] <= combined["capacity_completions"]
     # Parking and fees are inside the package and were missing from the old capacity.

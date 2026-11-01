@@ -85,10 +85,12 @@ def _baseline_note(lab_base: float, core_base: float, host_adj: float = 0.0) -> 
     window = homes(permit_piece, signed=True)
     return (
         f"The Lab baseline ({lab}) and the core baseline ({core}) differ by "
-        f"{homes(gap, signed=True)}. They use the same completion shares "
-        "(0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 "
-        f"permit average and the core uses 2022-2024 ({window}). The Lab also adds "
-        f"a {host} host adjustment for already-legal homes."
+        f"{homes(gap, signed=True)}. Pennsylvania's core permits are the same "
+        "2023-2025 county files as the Lab. The Lab pipeline uses the same "
+        "never-complete shares as the core (0.93/0.90/0.90), including "
+        "completion_ratio_mf for 5+ homes, so the pipeline baselines match. "
+        f"The residual after the host term is {window}. The Lab also adds a {host} "
+        "host adjustment for already-legal homes the permit window cannot contain yet."
     )
 
 

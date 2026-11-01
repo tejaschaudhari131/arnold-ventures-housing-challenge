@@ -7,17 +7,23 @@ state-average pro forma is reported only as a cross-check, because feasibility
 is nonlinear: the average of county results is not the result at the average
 county. See ``resolution="state"`` for that cruder screen.
 
-Baseline production is the 2022–2024 Building Permits Survey run-rate extended
-over the challenge's 5-year horizon. Policy scenarios add units on top of that
+Baseline production is the Building Permits Survey run-rate extended over
+the challenge's 5-year horizon. The vintage is the file actually loaded:
+BPS 2023-2025 where a county file exists (Pennsylvania and New Hampshire)
+and BPS 2022-2024 otherwise. Policy scenarios add units on top of that
 baseline. They do not replace it. Net completions subtract homes demolished
 by a teardown or a TOD rebuild. Permits count every unit in the new building,
-including replacements.
+including replacements. Best use inside a package is chosen at county level.
 """
 
 from __future__ import annotations
 
+import itertools
+import math
+from dataclasses import dataclass
 from typing import Any
 
+from src.model.permits import ensure_permit_vintage
 from src.model.provenance import LEGEND, stamp_tree
 from src.model.equations import (
     adu_hazard,
@@ -37,6 +43,54 @@ from src.model.equations import (
 )
 
 REFORM_IDS = ("adu", "missing_middle", "tod", "parking", "fees")
+METHOD_VERSION = 2
+
+
+@dataclass(frozen=True)
+class Regime:
+    """Which package levers are inside this pro forma.
+
+    A reform that is off contributes nothing, including inside the other
+    reforms' pro formas. Standalone runs use both flags false.
+    """
+
+    fees_on: bool
+    parking_on: bool
+
+
+def segment_fee_savings(segment_fee: float, params: dict[str, float]) -> float:
+    """Half the segment's own fee (the challenge cut), not a flat $25,000."""
+    return float(segment_fee) * float(params["fee_reduction_fraction"])
+
+
+def _active_window(params: dict[str, float], *lag_names: str) -> float:
+    """Years in which a reform cohort both starts and finishes.
+
+    The first name is the adoption lag. Later names are build lags. Option (b),
+    the rejected alternative, drops the build lags and keeps adoption only.
+    Returns 0 when the horizon is shorter than the lags.
+    """
+    horizon = float(params["horizon_years"])
+    include_build = float(params.get("_include_build_lags", 1.0)) > 0.0
+    names = lag_names if include_build else lag_names[:1]
+    return max(0.0, horizon - sum(float(params[name]) for name in names))
+
+
+def _pipeline_fraction(params: dict[str, float], segment: str) -> float:
+    """Share of the horizon in which a baseline project both responds and finishes."""
+    horizon = float(params["horizon_years"])
+    if horizon <= 0:
+        return 0.0
+    include_build = float(params.get("_include_build_lags", 1.0)) > 0.0
+    build_name = {
+        "sf": "build_lag_sf_years",
+        "small": "build_lag_newbuild_years",
+        "mf": "build_lag_newbuild_years",
+    }[segment]
+    lag = float(params["adoption_lag_years"]) + float(params["pipeline_response_lag_years"])
+    if include_build:
+        lag += float(params[build_name])
+    return max(0.0, horizon - lag) / horizon
 
 SCENARIO_ORDER = (
     "baseline",
@@ -270,15 +324,17 @@ def evaluate_county(
     national: dict[str, float],
     lot_share: float,
     walkshed_units: float,
-    package: bool,
+    regime: bool | Regime,
     explain: bool,
 ) -> dict[str, Any]:
     """One county, one fee/parking regime.
 
-    ``package=False`` is the standalone pro forma (each zoning reform on its
+    ``regime=False`` is the standalone pro forma (each zoning reform on its
     own, fees at the segment assumption, missing-middle parking still mandated).
-    ``package=True`` cuts segment fees and lets missing-middle parking fall to
-    the market ratio. Overlap across reforms is applied by the caller.
+    A ``Regime`` cuts segment fees only when fees are in the package and lets
+    missing-middle parking fall to the market ratio only when parking is in
+    the package. A reform that is off contributes nothing here. Overlap across
+    reforms is applied by the caller. A bool is the old both-or-neither switch.
     """
     context = _context(county, params)
     value, rent = _prices(county, params)
@@ -288,8 +344,13 @@ def evaluate_county(
     space = _space_cost(context, params, mf_index if context == "urban" else sf_index)
     p_min = params[f"parking_p_min_{context}"]
     p_mkt = min(params[f"parking_p_mkt_{context}"], p_min)
-    fee_factor = (1.0 - params["fee_reduction_fraction"]) if package else 1.0
-    mm_spaces = p_mkt if package else p_min
+    if isinstance(regime, bool):
+        fees_on = parking_on = regime
+    else:
+        fees_on = regime.fees_on
+        parking_on = regime.parking_on
+    fee_factor = (1.0 - params["fee_reduction_fraction"]) if fees_on else 1.0
+    mm_spaces = p_mkt if parking_on else p_min
     baseline = _baseline(county, params)
     sigma = params["feasibility_sigma"]
     threshold = params["feasibility_threshold"]
@@ -313,7 +374,7 @@ def evaluate_county(
     adu_value = max(homeowner_value, market_sale)
     adu_margin = margin_from_value(adu_value, adu_cost)
     hazard = adu_hazard(params["adu_hazard0"], params["adu_hazard_beta"], adu_margin, params["adu_hazard_max"])
-    adoption = cumulative_hazard(hazard, params["horizon_years"])
+    adoption = cumulative_hazard(hazard, _active_window(params, "adoption_lag_years", "build_lag_adu_years"))
     adu_raw_permits = eligible * adoption
     adu_cap = eligible * params["adu_stock_cap_share"]
     adu_capped = adu_raw_permits > adu_cap + 1e-6 and adu_cap >= 0
@@ -324,7 +385,8 @@ def evaluate_county(
     # --- Missing middle: teardown, then conversion on what remains ----------
     sf_homes = county["sf_detached"] * params["geography_eligible_share"]
     mm_gap = 1.0 - params["mm_already_legal_share"]
-    pace = cumulative_hazard(params["mm_pace_hazard"], params["horizon_years"])
+    pace = cumulative_hazard(params["mm_pace_hazard"], _active_window(params, "adoption_lag_years", "build_lag_newbuild_years"))
+    pace_c = cumulative_hazard(params["mm_pace_hazard"], _active_window(params, "adoption_lag_years", "build_lag_conversion_years"))
     obsolete = sf_homes * county["pre1940_share"] * params["mm_obsolete_share_of_older_stock"] * mm_gap
     units_per = params["mm_expected_units"]
     hard_t = params["mm_cost_psf"] * small_index * params["mm_unit_sqft"] * units_per
@@ -362,7 +424,7 @@ def evaluate_county(
     )
     conv_margin = margin_from_value(conv_unit_value * added, conv_cost)
     conv_feas = feasibility_share(conv_margin, threshold, sigma)
-    conv_homes = convertible * conv_feas * pace
+    conv_homes = convertible * conv_feas * pace_c
     conv_net = conv_homes * added
     mm_net = teardown_net + conv_net
     mm_permits = teardown_permits + conv_net
@@ -401,16 +463,21 @@ def evaluate_county(
         cost_base = hard_per_unit + soft_cost + mandated_parking + segment_fee
         spaces_saved = p_min - p_mkt
         parking_savings = spaces_saved * space
-        fee_savings = params["fee_challenge_baseline"] * params["fee_reduction_fraction"]
-        # Fee denominator uses the challenge stack, not the lower segment fee,
-        # because scenario 5 is defined on the $50,000 comparability case.
-        fee_cost_base = hard_per_unit + soft_cost + mandated_parking + params["fee_challenge_baseline"]
+        fee_savings = segment_fee_savings(segment_fee, params)
+        # The denominator is this segment's own cost stack. Newly feasible
+        # projects are already inside the elasticity, so they are not added again.
+        fee_cost_base = cost_base
         park_units = elasticity_increment(base_permits, parking_savings, cost_base, params["supply_elasticity"])
         park_units += base_permits * parking_yield_fraction(
             spaces_saved, params["parking_sqft_per_space"], unit_sqft, p_mkt, constrained
         )
         fee_units = elasticity_increment(base_permits, fee_savings, fee_cost_base, params["supply_elasticity"])
-        return {"parking_permits": max(0.0, park_units), "fee_permits": max(0.0, fee_units)}
+        frac = _pipeline_fraction(params, segment)
+        return {
+            "parking_permits": max(0.0, park_units) * frac,
+            "fee_permits": max(0.0, fee_units) * frac,
+            "fee_savings": fee_savings,
+        }
 
     constrained = {
         "urban": params["parking_constrained_urban"],
@@ -512,7 +579,9 @@ def evaluate_county(
             "space": space,
             "parking_permits": parking_permits,
             "fee_permits": fee_permits,
-            "fee_savings": params["fee_challenge_baseline"] * params["fee_reduction_fraction"],
+            "fee_savings": pipelines["sf"]["fee_savings"],
+            "fee_savings_small": pipelines["small"]["fee_savings"],
+            "fee_savings_mf": pipelines["mf"]["fee_savings"],
             "merchant_cap": merchant_cap,
             "value": value,
             "rent": rent,
@@ -666,7 +735,11 @@ def _explanation(
         f"The worked example is {focus_name}."
     )
     if scenario_id == "combined":
-        text += " The package removes overlap among the reforms that are switched on. It is not the sum of the five standalone totals."
+        text += (
+            " The package removes overlap among the reforms that are switched on. "
+            "It is not the sum of the five standalone totals. "
+            "Best use is chosen at county level: inside a transit walkshed the county takes the larger of the TOD path and the path without that TOD claim."
+        )
         if mix_note:
             text += " " + mix_note
     return text
@@ -736,6 +809,17 @@ def _combined_row(
     # still applies to that larger pipeline.
     open_adu = float(packaged.get("adu_capacity", packaged["adu_completions"])) * open_scale * mix["adu"]
     capacity = open_adu + raw_mm + raw_tod + parking_completions + fee_completions
+    binding_amount = max(0.0, capacity - completions)
+    absorption_gap = max(0.0, (raw_mm + raw_tod) - (mm_completions + tod_completions))
+    adu_gap = max(0.0, open_adu - adu_completions)
+    if merchant_binding and adu_binding:
+        binding_reason = "absorption" if absorption_gap >= adu_gap else "adu_stock"
+    elif merchant_binding:
+        binding_reason = "absorption"
+    elif adu_binding:
+        binding_reason = "adu_stock"
+    else:
+        binding_reason = ""
     return {
         "completions": completions,
         "permits": permits,
@@ -748,6 +832,8 @@ def _combined_row(
         "merchant_binding": merchant_binding,
         "merchant_cap": float(packaged["merchant_cap"]) if merchant_binding else 0.0,
         "capacity": capacity,
+        "binding_amount": binding_amount,
+        "binding_reason": binding_reason,
     }
 
 
@@ -831,7 +917,7 @@ def build_trace(
                 f"SF ratio {params['completion_ratio_sf']:.2f}, small {params['completion_ratio_small']:.2f}, multifamily {params['completion_ratio_mf']:.2f}",
                 base["completions"]["total"],
                 "completions",
-                "A steady pipeline means homes permitted just before the window offset homes permitted at the end of it. What remains is cancellation and the longer multifamily schedule.",
+                "A steady pipeline means homes permitted just before the window offset homes permitted at the end of it. What the ratio removes is the never-complete share. The build lag, not this ratio, handles the schedule.",
             )
         )
     elif kind == "adu":
@@ -863,7 +949,7 @@ def build_trace(
                 ),
                 _step(
                     "Adoption over five years",
-                    "hazard = min(max, hazard0 x exp(beta x margin)); share = 1 - exp(-hazard x 5)",
+                    "hazard = min(max, hazard0 x exp(beta x margin)); share = 1 - exp(-hazard x max(0, T - adoption lag - build lag))",
                     f"margin {info.get('adu_margin', 0):.2f}, hazard {info.get('hazard', 0):.4f}, share {info.get('adoption', 0):.3f}",
                     focus["adu_completions"],
                     "completions",
@@ -944,11 +1030,11 @@ def build_trace(
         steps.append(
             _step(
                 "Challenge fee shock",
-                "dQ = Q x elasticity x ((0.5 x $50,000) / (hard + soft + mandated parking + $50,000))",
-                f"savings {_fmt(info.get('fee_savings', 0))} per unit, elasticity {params['supply_elasticity']:.2f}",
+                "dQ = Q x elasticity x ((0.5 x segment fee) / (hard + soft + mandated parking + segment fee))",
+                f"SF savings {_fmt(info.get('fee_savings', 0))}, 2–4 {_fmt(info.get('fee_savings_small', 0))}, 5+ {_fmt(info.get('fee_savings_mf', 0))}",
                 focus["fee_completions"],
                 "completions",
-                "The $50,000 stack is applied even where the zoning pro formas use a lower segment fee. That is the cross-submission comparison the challenge asked for. It is not a claim that every state charges $50,000 today.",
+                "The saving is half of that segment's own fee, on baseline-pipeline units only. Homes the zoning reforms create already carry the fee cut inside their own pro forma when fees are in the package.",
             )
         )
     elif kind == "combined":
@@ -1041,14 +1127,21 @@ def simulate_state(
     neutral: bool = False,
     sigma_scale: float = 1.0,
     reform_weights: dict[str, Any] | None = None,
+    include_build_lags: bool = True,
+    with_decomposition: bool = False,
 ) -> dict[str, Any]:
     """Run baseline and all five reforms plus the package for one state.
+
+    ``include_build_lags=False`` is the rejected option (b): adoption lag stays,
+    build lags do not. Production calls leave it on.
+    ``with_decomposition=True`` adds ordered and Shapley shares for the package.
 
     ``parcel_mode="imputed"`` hides lot-size extracts and, where a tier-1 land
     use wall was measured, pretends that wall was never observed.
     ``resolution="state"`` collapses counties to one screen at the state median.
     ``neutral=True`` is the identity check: no incremental reform.
     """
+    permit_vintage = ensure_permit_vintage(fixtures, state_code)
     state = fixtures["states"][state_code]
     params = assumptions.resolve(state_code, overrides)
     if neutral:
@@ -1072,6 +1165,8 @@ def simulate_state(
             "The tier-2 screen does not see Hawaii's State Land Use districts, "
             "so it treats the entire single-family stock as geographically eligible."
         )
+    params = dict(params)
+    params["_include_build_lags"] = 1.0 if include_build_lags else 0.0
     lot_share, lot_note, lot_tag = lot_feasibility(state, params, parcel_mode)
     if geography_note:
         lot_note = lot_note + " " + geography_note
@@ -1098,10 +1193,6 @@ def simulate_state(
     walks = allocate_walkshed(counties, shed, params["tod_shed_density"])
     standalone_rows = [
         evaluate_county(county, params, indexes, national, lot_share, walk, False, False)
-        for county, walk in zip(counties, walks)
-    ]
-    packaged_rows = [
-        evaluate_county(county, params, indexes, national, lot_share, walk, True, False)
         for county, walk in zip(counties, walks)
     ]
     focus_index = max(range(len(counties)), key=lambda i: counties[i]["housing_units"])
@@ -1138,7 +1229,18 @@ def simulate_state(
     baseline_permits = _sum_baseline(standalone_rows, "permits")
     weights = _reform_weights(reform_weights)
     mix_note = _mix_note(weights)
+    regime = Regime(fees_on=weights["fees"] > 0.0, parking_on=weights["parking"] > 0.0)
+    packaged_rows = [
+        evaluate_county(county, params, indexes, national, lot_share, walk, regime, False)
+        for county, walk in zip(counties, walks)
+    ]
     combined_bits = [_combined_row(left, right, weights) for left, right in zip(standalone_rows, packaged_rows)]
+    if weights["tod"] > 0.0:
+        no_tod = dict(weights)
+        no_tod["tod"] = 0.0
+        alt = [_combined_row(left, right, no_tod) for left, right in zip(standalone_rows, packaged_rows)]
+        # County-level best use: the walkshed takes the TOD path or the path without it.
+        combined_bits = [chosen if chosen["completions"] >= other["completions"] else other for chosen, other in zip(combined_bits, alt)]
     combined_c = sum(bit["completions"] for bit in combined_bits)
     combined_p = sum(bit["permits"] for bit in combined_bits)
     combined_binding = any(bit["binding"] for bit in combined_bits)
@@ -1254,14 +1356,35 @@ def simulate_state(
                 "bps_reporting": county["bps_reporting"],
                 "close_call": close,
                 "close_call_reason": reason,
+                "binding_amount": combined_bits[index]["binding_amount"],
+                "binding_reason": combined_bits[index]["binding_reason"],
             }
         )
 
     hpi_2020 = state["fhfa_hpi_2020"]
     hpi_change = 0.0 if hpi_2020 == 0 else state["fhfa_hpi_latest"] / hpi_2020 - 1.0
+    absorption_reasons = [bit["binding_reason"] for bit in combined_bits if bit["binding_reason"]]
+    if "absorption" in absorption_reasons and "adu_stock" in absorption_reasons:
+        package_reason = "absorption" if sum(
+            bit["binding_amount"] for bit in combined_bits if bit["binding_reason"] == "absorption"
+        ) >= sum(bit["binding_amount"] for bit in combined_bits if bit["binding_reason"] == "adu_stock") else "adu_stock"
+    elif absorption_reasons:
+        package_reason = absorption_reasons[0]
+    else:
+        package_reason = ""
+    scenarios["combined"]["binding_amount"] = sum(bit["binding_amount"] for bit in combined_bits)
+    scenarios["combined"]["binding_reason"] = package_reason
+
     payload = {
         "state": state_code,
         "name": state["name"],
+        "method_version": METHOD_VERSION,
+        "meta": {
+            "method_version": METHOD_VERSION,
+            "permit_vintage": permit_vintage,
+            "permit_source": state.get("_permit_source", ""),
+            "best_use": "county",
+        },
         "tier": state["tier"],
         "completeness": state.get("completeness", 0),
         "parcel_mode": parcel_mode,
@@ -1308,7 +1431,91 @@ def simulate_state(
             "standalone_fees": metrics["fees"][0],
         },
     }
+    if with_decomposition:
+        payload["decomposition"] = package_decomposition(
+            fixtures,
+            assumptions,
+            state_code,
+            overrides=overrides,
+            parcel_mode=parcel_mode,
+            resolution=resolution,
+            neutral=neutral,
+            sigma_scale=sigma_scale,
+            include_build_lags=include_build_lags,
+        )
     return stamp_tree(payload)
+
+
+def package_decomposition(
+    fixtures: dict[str, Any],
+    assumptions: Any,
+    state_code: str,
+    order: list[str] | tuple[str, ...] | None = None,
+    overrides: dict[str, Any] | None = None,
+    parcel_mode: str = "observed",
+    resolution: str = "county",
+    neutral: bool = False,
+    sigma_scale: float = 1.0,
+    include_build_lags: bool = True,
+) -> dict[str, Any]:
+    """Ordered steps and Shapley weights from the 32 subset runs.
+
+    Both sum to the full package. The same parameter draw is used for every
+    subset, so an uncertainty loop can call this once per draw (common random
+    numbers) and then take percentiles.
+    """
+    names = list(REFORM_IDS)
+    sequence = list(order) if order is not None else list(names)
+    unknown = [name for name in sequence if name not in names]
+    if unknown or len(sequence) != len(names):
+        raise ValueError("order must be a permutation of the five reforms")
+    totals: dict[tuple[int, ...], float] = {}
+
+    def run(bits: tuple[int, ...]) -> float:
+        if bits not in totals:
+            weights = {name: float(bit) for name, bit in zip(names, bits)}
+            result = simulate_state(
+                fixtures,
+                assumptions,
+                state_code,
+                overrides=overrides,
+                parcel_mode=parcel_mode,
+                resolution=resolution,
+                neutral=neutral,
+                sigma_scale=sigma_scale,
+                reform_weights=weights,
+                include_build_lags=include_build_lags,
+                with_decomposition=False,
+            )
+            totals[bits] = float(result["scenarios"]["combined"]["incremental_completions"])
+        return totals[bits]
+
+    for bits in itertools.product((0, 1), repeat=len(names)):
+        run(tuple(bits))
+    index = {name: i for i, name in enumerate(names)}
+    bits_list = [0] * len(names)
+    previous = run(tuple(bits_list))
+    steps = []
+    for name in sequence:
+        bits_list[index[name]] = 1
+        current = run(tuple(bits_list))
+        steps.append({"reform": name, "increment": current - previous, "total": current})
+        previous = current
+    n = len(names)
+    shapley: dict[str, float] = {}
+    for i, name in enumerate(names):
+        share = 0.0
+        for bits in itertools.product((0, 1), repeat=n):
+            if bits[i] != 0:
+                continue
+            k = sum(bits)
+            flipped = list(bits)
+            flipped[i] = 1
+            weight = math.factorial(k) * math.factorial(n - k - 1) / math.factorial(n)
+            share += weight * (run(tuple(flipped)) - run(bits))
+        shapley[name] = share
+    full = run(tuple(1 for _ in names))
+    return {"ordered": steps, "shapley": shapley, "order": sequence, "total": full}
 
 
 def _sum_baseline(rows: list[dict[str, Any]], kind: str) -> float:

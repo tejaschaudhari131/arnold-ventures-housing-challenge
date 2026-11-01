@@ -14,7 +14,7 @@ Pennsylvania is tier 2 (observed classification in the benchmark). The legal scr
 
 ## 2. Observed inputs for Allegheny County
 
-Housing units, structure mix, median value ($216,700, observed), median rent ($1,111, observed), income, the pre-1940 share, and the transit-commute share come from ACS 2019–2023 summary tables. Annual permits come from the Building Permits Survey for 2022–2024, about 2,591 units a year (calculated from observed segments) after the county file is reconciled to the state file. Land area and the interior point on the map come from the 2024 Census gazetteer. The state price path comes from the FHFA index. None of these is a modeled household.
+Housing units, structure mix, median value ($216,700, observed), median rent ($1,111, observed), income, the pre-1940 share, and the transit-commute share come from ACS 2019–2023 summary tables. Annual permits come from the Building Permits Survey for 2022–2024, about 3,121 units a year (calculated from observed segments) after the county file is reconciled to the state file. Land area and the interior point on the map come from the 2024 Census gazetteer. The state price path comes from the FHFA index. None of these is a modeled household.
 
 | Figure | Value | Tag | Source |
 | ------ | ----: | --- | ------ |
@@ -27,10 +27,10 @@ Housing units, structure mix, median value ($216,700, observed), median rent ($1
 | Pre-1940 share of units | 28.2% | observed | ACS 2019–2023 B25034 |
 | Public-transit commute share | 6.2% | observed | ACS 2019–2023 B08301 |
 | Land area | 730.0 sq mi | observed | Census 2024 county gazetteer |
-| Annual single-family permits | 1,253.0 | observed | BPS 2022–2024, reconciled to the state |
-| Annual 2-unit permits | 15.3 | observed | BPS 2022–2024, reconciled to the state |
-| Annual 3–4 unit permits | 16.3 | observed | BPS 2022–2024, reconciled to the state |
-| Annual 5+ unit permits | 1,306.7 | observed | BPS 2022–2024, reconciled to the state |
+| Annual single-family permits | 1,297.0 | observed | BPS 2022–2024, reconciled to the state |
+| Annual 2-unit permits | 6.7 | observed | BPS 2022–2024, reconciled to the state |
+| Annual 3–4 unit permits | 12.7 | observed | BPS 2022–2024, reconciled to the state |
+| Annual 5+ unit permits | 1,804.7 | observed | BPS 2022–2024, reconciled to the state |
 | Counties in the state sum | 67 | observed | Census geography for Pennsylvania |
 
 County permit segments are the Building Permits Survey. They are scaled so the counties add up to the state permit file. That cleaning step is documented in `docs/DATA_PROVENANCE.md`. The segments stay tagged observed because they are the survey, reconciled, not a policy scenario.
@@ -56,29 +56,29 @@ Lot-screen note from the engine: Imputed from the tier-1 screening share. This s
 
 ## 4. Calculated county results
 
-Under current rules, Allegheny's rounded five-year baseline is 11,457 completions (calculated). On top of that, the standalone reforms add about 4,435 ADU completions (calculated), 394 missing-middle completions (calculated), 55 transit-oriented completions (calculated), 835 from parking reform (calculated), and 748 from the fee cut (calculated). The package, after overlap, is 6,574 net completions (calculated). Each of those reform figures is calculated. The prices and the stock underneath them are observed. The lot screen and the fee stack underneath them are assumed. Allegheny's margins are not sitting on the feasibility hurdle in the central case.
+Under current rules, Allegheny's rounded five-year baseline is 14,239 completions (calculated). On top of that, the standalone reforms add about 2,894 ADU completions (calculated), 255 missing-middle completions (calculated), 33 transit-oriented completions (calculated), 430 from parking reform (calculated), and 249 from the fee cut (calculated). The package, after overlap, is 4,081 net completions (calculated). Each of those reform figures is calculated. The prices and the stock underneath them are observed. The lot screen and the fee stack underneath them are assumed. Allegheny's margins are not sitting on the feasibility hurdle in the central case.
 
 Integer units use largest-remainder rounding. Tags on this table are calculated.
 
 | Pathway | Allegheny County | Pennsylvania |
 | ------- | ---------------: | -----------: |
-| Core baseline completions, 5 years | 11,457 | 108,950 |
-| ADUs, net | 4,435 | 46,261 |
-| Missing middle, net | 394 | 14,111 |
-| Transit-oriented density, net | 55 | 1,038 |
-| Parking reform, net | 835 | 3,373 |
-| Fee reduction, net | 748 | 6,490 |
-| Package, net | 6,574 | 74,114 |
+| Core baseline completions, 5 years | 14,239 | 113,269 |
+| ADUs, net | 2,894 | 30,213 |
+| Missing middle, net | 255 | 9,613 |
+| Transit-oriented density, net | 33 | 612 |
+| Parking reform, net | 430 | 1,458 |
+| Fee reduction, net | 249 | 1,524 |
+| Package, net | 4,081 | 46,219 |
 
-Lab at the Handbook's $50,000 fee: +5,617. Lab at a $6,000 fee: +13,130. Core at a $6,000 fee: +46,261. The same $6,000 fee does not match because the Lab is a county-level model and the core uses a different adoption and valuation model. The Lab's Pennsylvania ADU increment (+5,617) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +46,261. Walking the Lab toward the core: value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+12,463); then drop adoption and build lags (+19,761), within about 57 percent of the core. The Lab numbers answer the Handbook scenarios (Handbook $50,000 per-home fees, county-level model). The core numbers are an eleven-state screening model with a $6,000 ADU fee. Pennsylvania package: Lab +18,023, core +74,114. See the Lab at https://stateframe-housing.vercel.app/lab and the core engine at https://stateframe-housing.vercel.app/. The Lab baseline (111,061) and the core baseline (108,950) differ by +2,111. They use the same completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 permit average and the core uses 2022-2024 (+1,988). The Lab also adds a +123 host adjustment for already-legal homes.
+Lab at the Handbook's $50,000 fee: +2,742. Lab at a $6,000 fee: +5,652. Core at a $6,000 fee: +30,213. The same $6,000 fee does not match because the Lab is a county-level model and the core uses a different adoption and valuation model. The Lab's Pennsylvania ADU increment (+2,742) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +30,213. Walking the Lab toward the core: value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+14,392); then drop adoption and build lags (+22,481), within about 26 percent of the core. The Lab numbers answer the Handbook scenarios (Handbook $50,000 per-home fees, county-level model). The core numbers are an eleven-state screening model with a $6,000 ADU fee. Pennsylvania package: Lab +13,285, core +46,219. See the Lab at https://stateframe-housing.vercel.app/lab and the core engine at https://stateframe-housing.vercel.app/. The Lab baseline (113,305) and the core baseline (113,269) differ by +36. Pennsylvania's core permits are the same 2023-2025 county files as the Lab. The Lab pipeline uses the same never-complete shares as the core (0.93/0.90/0.90), including completion_ratio_mf for 5+ homes, so the pipeline baselines match. The residual after the host term is +0. The Lab also adds a +36 host adjustment for already-legal homes the permit window cannot contain yet.
 
 Plain language for the state package:
 
-Combined package adds about 74,114 (calculated) net completions in Pennsylvania over five years, 68.0 percent (calculated) above the baseline of 108,950 (calculated). After the reform, five-year completions are about 183,065 (calculated). The worked example is Philadelphia County. The package removes overlap among the reforms that are switched on. It is not the sum of the five standalone totals.
+Combined package adds about 46,219 (calculated) net completions in Pennsylvania over five years, 40.8 percent (calculated) above the baseline of 113,269 (calculated). After the reform, five-year completions are about 159,488 (calculated). The worked example is Philadelphia County. The package removes overlap among the reforms that are switched on. It is not the sum of the five standalone totals. Best use is chosen at county level: inside a transit walkshed the county takes the larger of the TOD path and the path without that TOD claim.
 
 ## 5. The sum is the result
 
-Largest-remainder rounding forces the county integers to add up to the rounded state total. Baseline completions: the counties sum to 108,950, and the rounded state total is 108,950. Package net completions: the counties sum to 74,114, and the rounded state total is 74,114. Allegheny County is 8.9 percent of that package. The unrounded state package is 74,114 net completions over five years. A single pro forma at Pennsylvania's median price would not reproduce that total, because feasibility is curved. That is why the official result is the sum.
+Largest-remainder rounding forces the county integers to add up to the rounded state total. Baseline completions: the counties sum to 113,269, and the rounded state total is 113,269. Package net completions: the counties sum to 46,219, and the rounded state total is 46,219. Allegheny County is 8.8 percent of that package. The unrounded state package is 46,219 net completions over five years. A single pro forma at Pennsylvania's median price would not reproduce that total, because feasibility is curved. That is why the official result is the sum.
 
 Counties sum to the rounded state total: true.
 

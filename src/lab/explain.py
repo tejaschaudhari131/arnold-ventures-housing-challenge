@@ -85,17 +85,17 @@ FORMULAS = [
     },
     {
         "id": "adu_gate",
-        "label": "ADU economics gate",
-        "formula": "gate = min(1, Φ(x_ADU / σ) / Φ(x_ADU,ref / σ))",
-        "tags": ["calculated", "assumed"],
-        "note": "x_ref is the same ADU with fee = 0 and no parking. CA Gov. Code 65852.2(f)(3) (now 66311.5(c)(1)) exempts ADUs of 750 sq ft or less from impact fees. The Lab prototype is 600 sq ft.",
+        "label": "ADU hazard re-base",
+        "formula": "λ_ADU = λ_all / F_CA; F = Φ(x / σ)",
+        "tags": ["assumed", "calculated"],
+        "note": "F_CA is judgmental (central 0.5, shown range 0.3 to 0.7). Delivery uses F, the same share as the other options. The old gate F/F_ref is not used.",
     },
     {
         "id": "delivery",
         "label": "Host delivery",
-        "formula": "N = Σ H × F × p(T) × d  (ADU: N = Σ H × gate × p(T) × d)",
+        "formula": "N = Σ H × F × p(T) × d × completion",
         "tags": ["calculated"],
-        "note": "Each lot takes at most one option. d is net homes that option adds. ADUs use the CA all-lots rate times a fee/parking gate normalized to CA conditions (fee 0 and no parking). mm2 uses a feasible-lot hazard and F.",
+        "note": "Each lot takes at most one option. completion is the screening ratio: ADU lots use completion_ratio_adu, mm2 and mm4 use completion_ratio_small, and mm6 uses completion_ratio_mf.",
     },
     {
         "id": "increment",
@@ -136,6 +136,14 @@ def clamp_overrides(raw: Any) -> dict[str, float]:
     return out
 
 
+def _screening_completion_block() -> tuple[dict[str, Any], dict[str, Any]]:
+    """Same completion ratios and D12 mapping as /api/assumptions."""
+    from src.model.assumptions import load_assumptions as load_screening
+
+    assumptions = load_screening()
+    return assumptions.completion_ratios(), assumptions.lab_completion_lot()
+
+
 def assumption_catalog() -> dict[str, Any]:
     doc = load_assumptions()
     params = []
@@ -152,7 +160,7 @@ def assumption_catalog() -> dict[str, Any]:
                 "high": spec["high"],
                 "rationale": spec["rationale"],
                 "zoning_bound": bool(spec.get("zoning_bound")),
-                "tag": "assumed",
+                "tag": "judgmental" if spec.get("klass") == "judgmental" else "assumed",
             }
         )
     return {
@@ -164,6 +172,8 @@ def assumption_catalog() -> dict[str, Any]:
         "seed": doc["monte_carlo_seed"],
         "reconciliation_note": load_ui()["reconciliation_note"],
         "parameters": params,
+        "completion_ratios": _screening_completion_block()[0],
+        "lab_completion_lot": _screening_completion_block()[1],
         "scenarios": [
             {
                 "id": sid,
@@ -350,7 +360,12 @@ def why_county(
         raise AssumptionError("Unknown scenario.")
     multi = scenario == "selection"
     p = central_params()
+    explicit = set(overrides or {})
     p.update(overrides or {})
+    if "hazard_homeowner_feasible" in explicit:
+        p["_use_hhf_override"] = 1.0
+    elif p.get("adu_feasible_share_ca"):
+        p["hazard_homeowner_feasible"] = p["hazard_homeowner"] / p["adu_feasible_share_ca"]
     values = state_unit_values(state)
     evaluated = evaluate_county(
         county, state, p, state_values=values, variants=package_variants(p)
@@ -433,7 +448,7 @@ def why_county(
                 "id": name,
                 "label": spec["label"],
                 "value": p[name],
-                "tag": "assumed",
+                "tag": "judgmental" if spec.get("klass") == "judgmental" else "assumed",
                 "unit": spec["unit"],
                 "rationale": spec["rationale"],
                 "locked": bool(spec.get("locked")),
@@ -493,6 +508,7 @@ def why_county(
             "host_delta": row.get("host_delta", 0.0) if scenario != "baseline" else row.get("host_adjustment", {}).get("delivered", 0.0),
             "pipeline_delta": row.get("pipeline_delta", 0.0) if scenario != "baseline" else row.get("pipeline_adjustment", 0.0),
             "by_option": row.get("by_option", {}),
+            "funnel": None if multi or scenario == "baseline" else row.get("funnel"),
             "tag": "calculated",
         },
         "coverage": coverage,
@@ -527,7 +543,14 @@ def _with_reference(row: dict[str, Any], locked_row: dict[str, Any] | None) -> d
     return out
 
 
-def _layer_row(sid: str, central: dict[str, Any], bounds: dict[str, float], moe: float) -> dict[str, Any]:
+def _layer_row(
+    sid: str,
+    central: dict[str, Any],
+    bounds: dict[str, float],
+    moe: float,
+    *,
+    keep_baseline: bool = True,
+) -> dict[str, Any]:
     field = "delivery" if sid == "baseline" else "delta"
     source = central[sid]
     out = {
@@ -547,6 +570,9 @@ def _layer_row(sid: str, central: dict[str, Any], bounds: dict[str, float], moe:
         for key in ("eligible", "feasible", "host_delta", "pipeline_delta", "timing_delta"):
             out[key] = source.get(key, 0.0)
         out["by_option"] = {k: v for k, v in source.get("by_option", {}).items() if abs(v) >= 0.05}
+        from src.lab.results import _funnel
+
+        out["funnel"] = _funnel(source.get("funnel"), keep_baseline=keep_baseline)
     return out
 
 
@@ -648,7 +674,13 @@ def recompute(code: str, overrides: dict[str, float] | None = None, county_key: 
                 "name": row["name"],
                 "results": {
                     sid: _with_reference(
-                        _layer_row(sid, row["scenarios"], cb[sid], moe["county"][index][sid]),
+                        _layer_row(
+                            sid,
+                            row["scenarios"],
+                            cb[sid],
+                            moe["county"][index][sid],
+                            keep_baseline=False,
+                        ),
                         locked_cells.get(sid),
                     )
                     for sid in ["baseline"] + sids

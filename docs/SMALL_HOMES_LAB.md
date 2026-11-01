@@ -12,7 +12,7 @@ For each county and scenario the Lab reports three numbers:
 | ------ | ------- |
 | Eligible capacity | Homes that become legal and physically fit on a lot: Σ H × max d over options that are legal and fit |
 | Feasible capacity | Of those, homes on lots whose pro forma clears the hurdle: Σ H × F × d |
-| Delivery | Expected completions in five years: N = Σ H × F × p(T) × d. ADU uses the all-lots hazard times a fee/parking gate: N_ADU = Σ H × gate × p(T) × d. |
+| Delivery | Expected completions in five years: N = Σ H × F × p(T) × d × completion. ADU hazard is the all-lots rate divided by judgmental F_CA, and delivery uses the same F as the other options. completion is the screening ratio for the chosen option. |
 
 ## 2. Hosts
 
@@ -47,7 +47,7 @@ The terms in the table are defined as follows:
 - **Feasibility.** Each lot's own margin is the group margin plus a lot-specific shock with spread σ (central 0.25). The shock is common across options, so the same option is best for the whole slice and **F = Φ(x_best / σ)**.
 - **Timing.** **p(T) = 1 − exp(−λ × max(0, T − legal lag − build lag))**, with T = 5.
   - The legal lag is 1 year for a reform adopted at the start of the window. For a rule enacted shortly before the window it is whatever remains of that year; Pittsburgh's ordinance (2026-10-29), for example, has 0.82 years left.
-  - λ for ADUs is 0.15% a year on all lots (not only feasible lots). This is the 2017–21 mean of California HCD APR ADU permits divided by the DOF E-5 single-detached stock. The first year was 0.06%; the 2022 steady state was 0.31%. Those CA figures already include CA feasibility, so the ADU delivery term multiplies by a gate instead of F: gate = min(1, Φ(x_ADU/σ) / Φ(x_ref/σ)), where x_ref is the same ADU with fee = 0 and no parking. CA Gov. Code 65852.2(f)(3) (recodified as 66311.5(c)(1)) exempts ADUs of 750 sq ft or less from impact fees; the Lab prototype is 600 sq ft. mm2 uses a feasible-lot homeowner hazard of 0.30% a year (the all-lots band ÷ an assumed CA F of 0.5; ASSUMPTION until F_CA is computed) and still multiplies by F. Developers rebuilding a lot use half that feasible-lot rate (0.15%), still times F. Sourced from HCD APR / CA DOF E-5.
+  - λ for ADUs is the 2017–21 mean of California HCD APR ADU permits divided by the DOF E-5 single-detached stock (0.15% a year on all lots), divided by F_CA. F_CA is judgmental, central 0.5, shown range 0.3 to 0.7. Delivery then multiplies by F = Φ(x/σ), the same share as the other options, and by the screening completion ratio (ADU 0.92, mm2 and mm4 0.90, mm6 0.90). mm2 uses hazard_homeowner / F_CA and still multiplies by F. Developers rebuilding a lot use half that feasible-lot rate, still times F. Sourced from HCD APR / CA DOF E-5. The Census 93% completion citation is not a Census abandonment rate; it is assumed.
 - **Transition between options.** A newly legal option can beat one that is already legal, for example 2–6 homes on a Pittsburgh lot where ADUs are already allowed. Lots keep building the incumbent option until the new option's legal lag ends. After that, lots are split by a common shock: the overlap (lots that pencil for both) stays with the ADU; mm2 takes only the lots that work for mm2 but not for an ADU, take = max(0, Φ(x_mm/σ) − Φ(x_ADU/σ)). Legalizing a better option therefore never strands lots that were already building.
 - **Why the package is not a sum.** Separate scenarios each assume a lot can do their one option. The package lets every option compete for the same lot, so a lot that would add an ADU under one reform and a second home under another adds only one of them.
 
@@ -62,9 +62,9 @@ The terms in the table are defined as follows:
 
 ## 6. Baseline and increments
 
-**Pipeline baseline.** The 2023–2025 Building Permits Survey county average, by structure size, × 5 years × completion share. Completion shares are 0.93 for 1-unit, 0.90 for 2–4, and 0.84 for 5+.
+**Pipeline baseline.** The 2023–2025 Building Permits Survey county average, by structure size, × 5 years × an assumed completion share. Shares are 0.93 for 1-unit, 0.90 for 2–4, and `completion_ratio_mf` (0.90) for 5+. Census does not publish an abandonment rate, so those shares are labeled assumed. The lot path uses the same screening ratios (ADU 0.92, 2–4 0.90, 5+ 0.90).
 
-The Lab baseline (111,061) and the core baseline (108,950) use the same completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 permit average and the core uses 2022-2024. That moves Pennsylvania by +1,988, mostly from 5+ unit permits (+2,170). The Lab also adds a +123 host adjustment for already-legal homes.
+For Pennsylvania the Lab pipeline baseline equals the core screening baseline (113,269). The published Lab baseline is higher by the host adjustment for homes the permit window cannot contain yet. New Hampshire matches the same way on the pipeline; its headline baseline also includes the host adjustment and the parking-cap response.
 
 **Baseline adjustments.** Homes the permit window cannot contain yet are added to Baseline:
 
@@ -129,21 +129,21 @@ The screening Monte Carlo (`src/model/sensitivity.py`, also section 12 of `docs/
 
 **Auckland ceiling.** Greenaway-McGrevy & Phillips 2023 (JUE 136:103555; https://doi.org/10.1016/j.jue.2023.103555) report 21,808 extra dwellings permitted over five years, about 4.11% of Auckland's regional dwelling stock. Five-year Missing Middle, ADU + Missing Middle, and package net completions divided by ACS B25001 housing stock must stay at or under 4.1% for every state and county output (`tests/test_lab_engine.py`). Any result above that needs explicit justification.
 
-In Pennsylvania, Central estimate favors Missing middle; ADUs ahead in 63% of draws (draw medians ADU 6,390 vs MM 5,063) (1258 of 2,000). It would flip at any of these values:
+In Pennsylvania, Central estimate favors Missing middle; Fees ahead in 46% of draws (draw medians Fees 4,134 vs MM 4,346) (922 of 2,000). The Lab envelope is 2,000 assumption draws. It would flip at any of these values:
 
-- homeowner uptake hazard (feasible lots) 0.27% a year (central 0.30% a year)
-- conversion / addition hard cost per added home $167,311 (central $160,000)
-- homeowner uptake hazard (all lots) 0.17% a year (central 0.15% a year)
-- capitalization rate 6.2% (central 6.0%)
-- new-home rent premium over acs median 105.8% (central 110.0%)
-- operating cost share 32.7% (central 30.0%)
-- lot-to-lot margin spread 0.295 (central 0.25)
-- soft costs 22.6% (central 18.0%)
-- homeowner hurdle margin 0.055 (central 0)
-- adu hard cost $337 (central $275)
-- conversion / addition permit-to-completion 1.35 (central 1)
-- adu size 751.13 (central 600)
-- cost elasticity of 0 (`pipeline_sigma` → 1,000): fees +85, parking +94 (central ε 1.76)
+- project-to-project margin spread 0.4821 (central 0.52)
+- homeowner uptake hazard (feasible lots) 0.28% a year (central 0.30% a year)
+- conversion / addition hard cost per added home $164,301 (central $160,000)
+- capitalization rate 6.1% (central 6.0%)
+- new-home rent premium over ACS median 107.6% (central 110.0%)
+- operating cost share 31.5% (central 30.0%)
+- homeowner hurdle margin 0.0191 (central 0)
+- lot-to-lot margin spread 0.2149 (central 0.25)
+- pipeline response lag 0.5858 (central 0.75)
+- small multifamily permit-to-completion 1.19 (central 1.5)
+- conversion / addition permit-to-completion 1.21 (central 1)
+- soft costs 23.0% (central 18.0%)
+- cost elasticity of 0 (`pipeline_sigma` → 1,000): fees +27, parking +100 (central ε 1.76)
 
 
 **Package decomposition.** The package is decomposed in steps, and each step is an exact model run:
@@ -156,30 +156,30 @@ The decomposition also reports the separate scenarios summed, to show what doubl
 
 | PA step | Homes |
 | ------- | ----- |
-| Legalization if summed (ADU + missing middle) | 12,021 |
-| Legalization resolved, one option per lot | 8,544 |
-| + fee cut | +8,957 |
-| + parking minimums removed | +522 |
-| **Package** | **18,023** |
-| Sum of the four separate scenarios | 17,584 |
+| Legalization if summed (ADU + missing middle) | 8,517 |
+| Legalization resolved, one option per lot | 5,424 |
+| + fee cut | +7,321 |
+| + parking minimums removed | +540 |
+| **Package** | **13,285** |
+| Sum of the four separate scenarios | 14,178 |
 
-Resolution removes 3,477 double-counted homes. The fee cut adds more inside the package than alone (5,280), because it also improves the newly legal options. The net interaction is +439.
+Resolution removes 3,093 double-counted homes. The fee cut adds more inside the package (7,321) than the fee scenario alone (5,360), because it also improves the newly legal options. The net interaction is −893.
 
 ## 9. Why the Lab's ADU total differs from the core engine's
 
-Lab at the Handbook's $50,000 fee: +5,617. Lab at a $6,000 fee: +13,130. Core at a $6,000 fee: +46,261. The same $6,000 fee does not match because the Lab is a county-level model and the core uses a different adoption and valuation model. The Lab's Pennsylvania ADU increment (+5,617) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +46,261. Walking the Lab toward the core: value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+12,463); then drop adoption and build lags (+19,761), within about 57 percent of the core. The Lab numbers answer the Handbook scenarios (Handbook $50,000 per-home fees, county-level model). The core numbers are an eleven-state screening model with a $6,000 ADU fee. Pennsylvania package: Lab +18,023, core +74,114. See the Lab at https://stateframe-housing.vercel.app/lab and the core engine at https://stateframe-housing.vercel.app/. The Lab baseline (111,061) and the core baseline (108,950) differ by +2,111. They use the same completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 permit average and the core uses 2022-2024 (+1,988). The Lab also adds a +123 host adjustment for already-legal homes.
+Lab at the Handbook's $50,000 fee: +2,742. Lab at a $6,000 fee: +5,652. Core at a $6,000 fee: +30,213. The same $6,000 fee does not match because the Lab is a county-level model and the core uses a different adoption and valuation model. The Lab's Pennsylvania ADU increment (+2,742) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +30,213. Walking the Lab toward the core: value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+14,392); then drop adoption and build lags (+22,481), within about 26 percent of the core. The Lab numbers answer the Handbook scenarios (Handbook $50,000 per-home fees, county-level model). The core numbers are an eleven-state screening model with a $6,000 ADU fee. Pennsylvania package: Lab +13,285, core +46,219. See the Lab at https://stateframe-housing.vercel.app/lab and the core engine at https://stateframe-housing.vercel.app/. The Lab baseline (113,305) and the core baseline (113,269) differ by +36. Pennsylvania's core permits are the same 2023-2025 county files as the Lab. The Lab pipeline uses the same never-complete shares as the core (0.93/0.90/0.90), including completion_ratio_mf for 5+ homes, so the pipeline baselines match. The residual after the host term is +0. The Lab also adds a +36 host adjustment for already-legal homes the permit window cannot contain yet.
 
 
 The two engines also answer different questions. The table below moves the Lab's assumptions toward the core engine's one at a time, cumulatively.
 
 | Step | PA ADU homes |
 | ---- | ------------ |
-| Lab central (Handbook $50,000 fee per home, investor yield, adoption and build lags) | 5,617 |
-| Lab with a $6,000 fee instead of the Handbook's $50,000 | 13,130 |
-| Homeowner yield: cap rate 4.5%, no operating share, rent × 0.85 | 12,463 |
-| No adoption lag and no build lag | 19,761 |
+| Lab central (Handbook $50,000 fee per home, investor yield, adoption and build lags) | 2,742 |
+| Lab with a $6,000 fee instead of the Handbook's $50,000 | 5,652 |
+| Homeowner yield: cap rate 4.5%, no operating share, rent × 0.85 | 14,392 |
+| No adoption lag and no build lag | 22,481 |
 
-The two engines also define hosts and lots differently, and after the ADU gate the last step lands about 57% from the core figure rather than on it. The remaining gap is the one-engine-versus-two question, which this milestone does not change.
+The two engines also define hosts and lots differently, and the last step is within about 26 percent of the core figure rather than on it. The remaining gap is the one-engine-versus-two question, which this milestone does not change.
 
 Three choices explain the gap:
 
