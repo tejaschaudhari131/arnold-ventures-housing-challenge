@@ -120,6 +120,12 @@ def test_answer_matches_selection_and_plain_tie_badge():
     assert 'Your package: about " + integer(t.c)' in LAB_JS
     assert "All four reforms together add" not in LAB_JS
     assert "comes out ahead in" in LAB_JS
+    assert "typical result " in LAB_JS
+    assert "draw medians" not in LAB_JS.split("rankingBadge")[1] if "rankingBadge" in LAB_JS else True
+    assert 'extra homes (likely "' in LAB_JS
+    assert "<nav" in INDEX and 'role="tablist"' in INDEX
+    assert re.search(r"<nav[^>]*role=", INDEX) is None
+    assert re.search(r"#methods a\s*\{[^}]*min-height:\s*24px", LAB_CSS)
     assert "In \" + name + \":" in LAB_JS or "In \" + name + \" County" in LAB_JS
     assert "countyPhrase" in LAB_JS
     assert "mapId" in LAB_JS

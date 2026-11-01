@@ -469,6 +469,12 @@
 .lab-body .assumptions { background: #efeae0; }
 
 #extra-scenarios h3 { font-size: 16px; margin: 8px 0; }
+#methods a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  line-height: 24px;
+}
 
 .brief-print { display: none; }
 

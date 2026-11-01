@@ -400,7 +400,7 @@
       return '<span class="badge-close" title="The envelope median ranking disagrees with the central ranking. The ' +
         escapeHtml(threshold) + ' is 10 percent of draws.">Ranking is a tie: ' +
         escapeHtml(scenarioLabel(pair.trailer)) + " comes out ahead in " +
-        Math.round(pair.flip_share * 100) + " of 100 test runs (draw medians " +
+        Math.round(pair.flip_share * 100) + " of 100 test runs (typical result " +
         integer(trail.p50) + " vs " + integer(lead.p50) + ").</span>";
     }
     var keep = pair.flip_share != null ? Math.max(1, Math.round((1 - pair.flip_share) * 5)) : 4;
@@ -507,7 +507,14 @@
     var mini = document.getElementById("mini-total");
     if (mini) {
       mini.hidden = !on.size;
-      mini.textContent = on.size ? ("Your package: +" + integer(t.c) + " extra homes") : "";
+      if (!on.size) {
+        mini.textContent = "";
+      } else if (t.exact) {
+        mini.textContent = "Your package: +" + integer(t.c) + " extra homes (likely " +
+          integer(t.lo) + "–" + integer(t.hi) + ")";
+      } else {
+        mini.textContent = "Your package: +" + integer(t.c) + " extra homes";
+      }
     }
   }
 
