@@ -14,7 +14,7 @@ authors = [
   {name = "Yoon Yik Ng", email = "yoonyikn@andrew.cmu.edu"},
   {name = "Christopher Severns", email = "cseverns@andrew.cmu.edu"},
 ]
-dependencies = ["PyYAML==6.0.2"]
+dependencies = ["PyYAML==6.0.3"]
 
 [project.optional-dependencies]
 dev = ["pytest==8.3.5"]
