@@ -112,14 +112,14 @@ def test_shareable_url_and_exports_and_reduced_motion():
     assert "window.print" in LAB_JS
     assert "prefers-reduced-motion" in LAB_CSS
     assert "prefers-reduced-motion" not in LAB
-    assert re.search(r"outline:\s*3px solid var\\(--navy\\)", (ROOT / "src" / "web" / "static" / "styles.css").read_text())
+    assert re.search(r"outline:\s*3px solid var\(--navy\)", (ROOT / "src" / "web" / "static" / "styles.css").read_text())
 
 
 def test_playhouse_license_and_boundary_disclosures():
     assert "license: null" in DISCLOSURES
     assert "No PlayHouse source file" in DISCLOSURES
     assert "cartographic boundary" in DISCLOSURES.lower()
-    assert "PA_counties.geo.json" in DISCLOSURES
+    assert "counties.geo.json" in DISCLOSURES
     assert "StudioTour" in DISCLOSURES
     ui = (ROOT / "config" / "lab" / "ui.yaml").read_text(encoding="utf-8")
     assert "reconciliation_note" in ui
