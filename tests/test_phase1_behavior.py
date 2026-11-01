@@ -13,6 +13,8 @@ import io
 import json
 import subprocess
 import threading
+
+import pytest
 from http.server import ThreadingHTTPServer
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
@@ -188,6 +190,59 @@ def test_draws_reject_unicode_digits_and_non_integers():
                 assert body["error"] == message
                 assert "²" not in body["error"]
                 assert "٢٠" not in body["error"]
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_why_and_csv_for_a_custom_mix_are_not_the_baseline():
+    httpd = _server()
+    base = f"http://127.0.0.1:{httpd.server_address[1]}"
+    try:
+        code, empty, _ = _post(
+            base,
+            "/api/lab/why",
+            {"state": "PA", "county": "Allegheny", "scenario": "selection", "reforms": []},
+        )
+        assert code == 200
+        assert empty["empty"] is True
+        assert empty["result"]["delivery"] == 0
+        code, adu, _ = _post(
+            base, "/api/lab/why", {"state": "PA", "county": "Allegheny", "scenario": "adu"}
+        )
+        code, fees, _ = _post(
+            base, "/api/lab/why", {"state": "PA", "county": "Allegheny", "scenario": "fees"}
+        )
+        code, mix, _ = _post(
+            base,
+            "/api/lab/why",
+            {"state": "PA", "county": "Allegheny", "scenario": "selection", "reforms": ["adu", "fees"]},
+        )
+        assert code == 200
+        assert mix["scenario"] == "selection"
+        assert mix["result"]["eligible"] == adu["result"]["eligible"] + fees["result"]["eligible"]
+        assert mix["result"]["feasible"] == adu["result"]["feasible"] + fees["result"]["feasible"]
+        assert "not computed" in mix["note"]
+        status, csv_body, _ = _post(
+            base, "/api/lab/export", {"state": "PA", "format": "csv", "reforms": ["adu", "fees"]}
+        )
+        assert status == 200
+        rows = list(csv.DictReader(io.StringIO(csv_body.decode("utf-8"))))
+        allegheny = next(row for row in rows if row["fips"] == "42003")
+        assert allegheny["scenario"] == "selection"
+        assert allegheny["envelope_p10"] == ""
+        assert allegheny["zoning_low"] == ""
+        assert "Reference range (defaults)" in allegheny["range_role"]
+        assert float(allegheny["eligible"]) == pytest.approx(
+            adu["result"]["eligible"] + fees["result"]["eligible"], abs=0.2
+        )
+        status, brief, _ = _post(
+            base, "/api/lab/export", {"state": "PA", "format": "md", "reforms": []}
+        )
+        text = brief.decode("utf-8")
+        assert status == 200
+        assert "Selected reforms: none" in text
+        assert "not computed" in text or "Extra homes from that selection: 0" in text
     finally:
         httpd.shutdown()
         httpd.server_close()

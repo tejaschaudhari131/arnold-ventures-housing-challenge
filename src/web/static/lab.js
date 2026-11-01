@@ -150,13 +150,35 @@
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
+  var TIP_TEXT = {
+    observed: "Measured in a public dataset and stored for this place.",
+    assumed: "A published assumption or an imputation. It is not a measurement for this place.",
+    calculated: "Arithmetic in the model, using observed inputs and published assumptions."
+  };
+  var tipSerial = 0;
+
+  function tipControl(label, tip, className) {
+    if (!tip) return escapeHtml(label);
+    var id = "tip-" + (++tipSerial);
+    return '<button type="button" class="tip' + (className ? " " + className : "") + '" aria-describedby="' + id +
+      '" aria-expanded="false">' + escapeHtml(label) + '</button><span class="tip-pop" id="' + id +
+      '" role="tooltip" hidden>' + escapeHtml(tip) + "</span>";
+  }
+
+  function closeTips() {
+    document.querySelectorAll("button.tip[aria-expanded='true']").forEach(function (btn) {
+      btn.setAttribute("aria-expanded", "false");
+      var pop = document.getElementById(btn.getAttribute("aria-describedby"));
+      if (pop) pop.hidden = true;
+    });
+  }
+
   function jargon(term, text) {
-    var tip = TIPS[term] || "";
-    return '<abbr title="' + escapeHtml(tip) + '">' + escapeHtml(text || term) + "</abbr>";
+    return tipControl(text || term, TIPS[term] || "");
   }
 
   function tag(kind) {
-    return '<abbr class="tag ' + kind + '" title="' + kind + '">' + kind + "</abbr>";
+    return tipControl(kind, TIP_TEXT[kind] || kind, "tag " + kind);
   }
 
   function scenarioLabel(sid) {
@@ -278,15 +300,25 @@
     return "In " + name + ":";
   }
 
+  function fetchWithTimeout(url, options) {
+    var controller = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = setTimeout(function () {
+      if (controller) controller.abort();
+    }, 20000);
+    var opts = Object.assign({}, options || {});
+    if (controller) opts.signal = controller.signal;
+    return fetch(url, opts).finally(function () { clearTimeout(timer); });
+  }
+
   function get(path) {
-    return fetch(path).then(function (res) {
+    return fetchWithTimeout(path).then(function (res) {
       if (!res.ok) return res.json().then(function (body) { throw new Error(body.error || res.statusText); });
       return res.json();
     });
   }
 
   function post(path, payload) {
-    return fetch(path, {
+    return fetchWithTimeout(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -1081,12 +1113,12 @@
     var W = 720, rowH = 28, H = 40 + rows.length * rowH;
     var bars = rows.map(function (row, i) {
       var v = countyMapValue(row);
-      var env = lockedCell(row.fips, sid) || cell(row, sid);
+      var env = (sid && sid !== "selection") ? (lockedCell(row.fips, sid) || cell(row, sid)) : null;
       var y = 24 + i * rowH;
       var x0 = 180, usable = 500;
       var x = x0 + Math.max(0, v) / max * usable;
-      var lo = x0 + Math.max(0, env.p10) / max * usable;
-      var hi = x0 + Math.max(0, env.p90) / max * usable;
+      var lo = env ? x0 + Math.max(0, env.p10) / max * usable : x;
+      var hi = env ? x0 + Math.max(0, env.p90) / max * usable : x;
       return '<text x="8" y="' + (y + 12) + '" font-size="12" fill="#1c2430">' +
         escapeHtml(row.name.replace(/ County$/, "")) + "</text>" +
         '<rect x="' + x0 + '" y="' + (y + 4) + '" width="' + Math.max(1, x - x0) +
@@ -1137,16 +1169,26 @@
     if (focus) focus.focus();
   }
 
+  function sigFigs(n, digits) {
+    var abs = Math.abs(n);
+    if (!isFinite(abs) || abs === 0) return "0";
+    var exp = Math.floor(Math.log10(abs));
+    var places = Math.max(0, digits - 1 - exp);
+    var rounded = Math.round(abs * Math.pow(10, places)) / Math.pow(10, places);
+    return (n < 0 ? "−" : "") + rounded.toFixed(places);
+  }
+
   function sliderValueText(spec, value) {
     var n = Number(value);
     if (!isFinite(n)) return "—";
-    if (spec.unit === "share" || spec.unit === "probability" || spec.unit.indexOf("share") === 0) {
+    var unit = spec.unit || "";
+    if (unit === "per year" || (Math.abs(n) > 0 && Math.abs(n) < 0.1 && unit.indexOf("share") < 0 && unit.charAt(0) !== "$")) {
+      return sigFigs(n, 3) + (unit === "per year" ? " a year" : "");
+    }
+    if (unit === "share" || unit === "probability" || unit.indexOf("share") === 0) {
       return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 3 });
     }
-    if (spec.unit.charAt(0) === "$" || spec.unit === "$ per home" || spec.unit === "$ per sq ft") return money(value);
-    if (spec.unit === "per year") {
-      return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 3 }) + " a year";
-    }
+    if (unit.charAt(0) === "$" || unit === "$ per home" || unit === "$ per sq ft") return money(value);
     if (Math.abs(n) >= 1000) return integer(n);
     var digits = Math.abs(n) >= 10 ? 2 : 3;
     return n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: digits });
@@ -1244,20 +1286,49 @@
 
   function loadWhy() {
     if (!selectedFips) { whyBody.innerHTML = "<p>Pick a county.</p>"; return; }
-    var sid = mapScenarioId();
-    var payload = { state: stateCode, county: selectedFips, scenario: sid === "package" ? "package" : sid, overrides: overrides };
+    var ids = selectedIds();
+    var sid = !ids.length || (ids.length > 1 && ids.length < 4) ? "selection" : (ids.length === 4 ? "package" : ids[0]);
+    var payload = {
+      state: stateCode,
+      county: selectedFips,
+      scenario: sid,
+      reforms: ids,
+      overrides: overrides
+    };
     post("/api/lab/why", payload).then(function (doc) {
       whyDoc = doc;
       renderWhy();
       renderKeyPoints();
       renderSources();
-    }).catch(function (err) {
-      whyBody.innerHTML = "<p>" + escapeHtml(err.message) + "</p>";
+    }).catch(function () {
+      whyBody.textContent = "";
+      whyBody.appendChild(document.createTextNode("Couldn't load this explanation. "));
+      var retry = document.createElement("button");
+      retry.type = "button";
+      retry.textContent = "Retry";
+      retry.addEventListener("click", loadWhy);
+      whyBody.appendChild(retry);
     });
   }
 
   function renderWhy() {
     if (!whyDoc) return;
+    if (whyDoc.empty) {
+      whyBody.innerHTML = "<p>No reforms selected. Turn one on to see why this county would change.</p>";
+      return;
+    }
+    if (whyDoc.per_reform && whyDoc.per_reform.length) {
+      var lines = whyDoc.per_reform.map(function (part) {
+        return "<li>" + escapeHtml(scenarioLabel(part.id)) + ": " + signed(part.delivery) +
+          " extra homes, eligible " + integer(part.eligible) + ", feasible " + integer(part.feasible) + ".</li>";
+      }).join("");
+      whyBody.innerHTML =
+        "<h3>Why this selection</h3><p>" + escapeHtml(whyDoc.note || "") + "</p><ul>" + lines +
+        "</ul><p>Together, as a simple sum: " + signed(whyDoc.result.delivery) +
+        " extra homes. Eligible " + integer(whyDoc.result.eligible) +
+        ", feasible " + integer(whyDoc.result.feasible) + ".</p>";
+      return;
+    }
     var sw = docStatewide();
     var decomp = (live && live.county && live.county.package_decomposition) || whyDoc.package_decomposition;
     var wwc = locked.statewide.what_would_change;
@@ -1318,6 +1389,12 @@
     var list = document.getElementById("keypoints-list");
     if (!list || !locked) return;
     var sid = mapScenarioId();
+    if (!sid || sid === "selection") {
+      list.innerHTML = "<li>" + (!sid
+        ? "No reforms selected."
+        : "This mix is the sum of the selected reforms. Eligible and feasible in the Why drawer are that sum, not a joint count. A likely range is not computed for the mix.") + "</li>";
+      return;
+    }
     var row = selectedFips ? countyRow(selectedFips) : null;
     var current = row ? cell(row, sid) : docStatewide().results[sid];
     var eligible = current.eligible;
@@ -1492,10 +1569,36 @@
   }
 
   function exportCsv() {
+    var ids = selectedIds();
     var sid = mapScenarioId();
+    var custom = !ids.length || (ids.length > 1 && ids.length < 4);
     var header = ["county", "fips", "extra_homes", "eligible", "feasible", "p10", "p90", "range_role", "zoning_low", "zoning_high", "acs_moe"];
     var lines = [header.join(",")];
     docCounties().forEach(function (row) {
+      if (custom) {
+        var eligible = 0;
+        var feasible = 0;
+        ids.forEach(function (id) {
+          var part = row.results[id];
+          if (!part) return;
+          eligible += Number(part.eligible) || 0;
+          feasible += Number(part.feasible) || 0;
+        });
+        lines.push([
+          csvCell(row.name),
+          row.fips,
+          ids.length ? Math.round(countyMapValue(row)) : 0,
+          ids.length ? Math.round(eligible) : "",
+          ids.length ? Math.round(feasible) : "",
+          "",
+          "",
+          "Reference range (defaults) not computed for this mix",
+          "",
+          "",
+          ""
+        ].join(","));
+        return;
+      }
       var current = cell(row, sid);
       var env = lockedCell(row.fips, sid) || current;
       var role = (live && current.interval_status === "reference")
@@ -1573,6 +1676,21 @@
     applyWalk();
   });
 
+  document.addEventListener("click", function (event) {
+    var btn = event.target.closest ? event.target.closest("button.tip") : null;
+    if (!btn) {
+      closeTips();
+      return;
+    }
+    event.preventDefault();
+    var open = btn.getAttribute("aria-expanded") === "true";
+    closeTips();
+    if (!open) {
+      btn.setAttribute("aria-expanded", "true");
+      var pop = document.getElementById(btn.getAttribute("aria-describedby"));
+      if (pop) pop.hidden = false;
+    }
+  });
   whyToggle.addEventListener("click", function () {
     setWhy(!whyOpen);
   });
@@ -1584,6 +1702,11 @@
   });
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
+      if (document.querySelector("button.tip[aria-expanded='true']")) {
+        event.preventDefault();
+        closeTips();
+        return;
+      }
       if (!document.getElementById("tour").hidden) {
         event.preventDefault();
         showTour(99);

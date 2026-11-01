@@ -218,7 +218,29 @@ def _option_row(result: Any, illustrative: bool) -> dict[str, Any]:
     }
 
 
-def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dict[str, float] | None = None) -> dict[str, Any]:
+_SELECTABLE = ("adu", "missing_middle", "parking", "fees")
+_MIX_NOTE = (
+    "Eligible and feasible are the sum of the selected reforms, not a joint count. "
+    "A likely range is not computed for this mix. "
+    "Reference range (defaults) applies only to one reform or all four together."
+)
+
+
+def _selected_reforms(raw: Any) -> list[str]:
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise AssumptionError("reforms must be a list.")
+    return [str(item) for item in raw if str(item) in _SELECTABLE]
+
+
+def why_county(
+    code: str,
+    county_key: str,
+    scenario: str = "adu",
+    overrides: dict[str, float] | None = None,
+    reforms: Any = None,
+) -> dict[str, Any]:
     """Observed / assumed / calculated inputs for one county and scenario."""
     code = check_state(code)
     state = load_state(code)
@@ -227,15 +249,51 @@ def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dic
     except KeyError:
         raise AssumptionError("Unknown county.") from None
     scenarios = load_scenarios()["scenarios"]
-    if scenario not in scenarios:
+    chosen = _selected_reforms(reforms)
+    if scenario in {"selection", "none", ""}:
+        if not chosen:
+            from src.plain import snap_tree
+
+            return snap_tree(
+                {
+                    "state": code,
+                    "county": {"fips": county.fips, "name": county.name},
+                    "scenario": "selection",
+                    "empty": True,
+                    "reforms": [],
+                    "note": "No reforms selected.",
+                    "overrides": overrides or {},
+                    "inputs": [],
+                    "assumptions": [],
+                    "options": [],
+                    "formulas": [],
+                    "per_reform": [],
+                    "result": {
+                        "delivery": 0.0,
+                        "eligible": 0.0,
+                        "feasible": 0.0,
+                        "host_delta": 0.0,
+                        "pipeline_delta": 0.0,
+                        "by_option": {},
+                        "tag": "calculated",
+                    },
+                }
+            )
+        if len(chosen) == 1:
+            scenario = chosen[0]
+        elif len(chosen) == 4:
+            scenario = "package"
+    if scenario not in scenarios and scenario != "selection":
         raise AssumptionError("Unknown scenario.")
+    multi = scenario == "selection"
+    econ_scenario = chosen[0] if multi else scenario
     p = central_params()
     p.update(overrides or {})
     values = state_unit_values(state)
     evaluated = evaluate_county(
         county, state, p, state_values=values, variants=package_variants(p)
     )
-    econ = scenario_econ(scenario if scenario != "baseline" else "baseline", p)
+    econ = scenario_econ(econ_scenario if econ_scenario != "baseline" else "baseline", p)
     adu_spaces = 1.0
     options = []
     for opt in ("adu", "mm2", "mm4", "mm6"):
@@ -316,7 +374,30 @@ def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dic
                 "locked": bool(spec.get("locked")),
             }
         )
-    row = evaluated["scenarios"][scenario]
+    per_reform = None
+    if multi:
+        per_reform = []
+        for sid in chosen:
+            src = evaluated["scenarios"][sid]
+            per_reform.append(
+                {
+                    "id": sid,
+                    "delivery": src.get("delta", 0.0),
+                    "eligible": src.get("eligible", 0.0),
+                    "feasible": src.get("feasible", 0.0),
+                    "tag": "calculated",
+                }
+            )
+        row = {
+            "delta": sum(item["delivery"] for item in per_reform),
+            "eligible": sum(item["eligible"] for item in per_reform),
+            "feasible": sum(item["feasible"] for item in per_reform),
+            "host_delta": sum(evaluated["scenarios"][sid].get("host_delta", 0.0) for sid in chosen),
+            "pipeline_delta": sum(evaluated["scenarios"][sid].get("pipeline_delta", 0.0) for sid in chosen),
+            "by_option": {},
+        }
+    else:
+        row = evaluated["scenarios"][scenario]
     from src.plain import snap_tree
 
     decomp = package_decomposition(evaluated["scenarios"], key="scenarios")
@@ -329,7 +410,11 @@ def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dic
     payload = {
         "state": code,
         "county": {"fips": county.fips, "name": county.name},
-        "scenario": scenario,
+        "scenario": "selection" if multi else scenario,
+        "empty": False,
+        "reforms": chosen if multi else [],
+        "per_reform": per_reform or [],
+        "note": _MIX_NOTE if multi else "",
         "overrides": overrides or {},
         "inputs": inputs,
         "assumptions": used,
@@ -587,16 +672,24 @@ def brief_markdown(
         selected = [sid for sid in reforms if sid in ("adu", "missing_middle", "parking", "fees")]
         if not selected:
             lines.append("Selected reforms: none. Extra homes from that selection: 0.")
+            lines.append("Range for this mix: not computed. Blank cells are not the baseline range.")
         elif len(selected) == 1:
             lines.append(f"Selected reform: {selected[0]}.")
         elif len(selected) == 4:
             lines.append("Selected reforms: all four Handbook reforms.")
         else:
             total = sum(float(results[sid]["central"]) for sid in selected)
+            eligible = sum(float(results[sid].get("eligible", 0.0)) for sid in selected)
+            feasible = sum(float(results[sid].get("feasible", 0.0)) for sid in selected)
             lines.append(
                 "Selected reforms: "
                 + ", ".join(selected)
-                + f". Simple sum of those centrals: {homes(total, signed=True)} (not a modeled package)."
+                + f". Simple sum of those centrals: {homes(total, signed=True)} (not a modeled package). "
+                + f"Eligible {homes(eligible)}, feasible {homes(feasible)}, summed from the selected reforms, not a joint count."
+            )
+            lines.append(
+                "Range for this mix: not computed. Reference range (defaults) applies only to one reform or all four. "
+                "Blank range cells are not the baseline range."
             )
         lines.append("")
     lines += [
@@ -761,7 +854,7 @@ def brief_html(markdown: str) -> str:
     )
 
 
-def county_csv(code: str, live: dict[str, Any] | None = None) -> str:
+def county_csv(code: str, live: dict[str, Any] | None = None, reforms: list[str] | None = None) -> str:
     locked = locked_results(check_state(code))
     counties = live["counties"] if live and live.get("counties") else locked["counties"]
     locked_map = {row["fips"]: row for row in locked["counties"]}
@@ -776,7 +869,39 @@ def county_csv(code: str, live: dict[str, Any] | None = None) -> str:
         ]
     )
     range_role = "reference_at_default_settings" if live else "conditional_on_published_assumptions"
+    selected = _selected_reforms(reforms) if reforms is not None else None
+    custom = selected is not None and len(selected) not in (1, 4)
     sids = ["baseline"] + list(compared_scenarios())
+    if custom:
+        for row in counties:
+            if not selected:
+                central, eligible, feasible = 0.0, None, None
+            else:
+                parts = [row["results"][sid] for sid in selected if sid in row["results"]]
+                central = sum(float(part.get("central", 0.0)) for part in parts)
+                eligible = sum(float(part.get("eligible", 0.0)) for part in parts)
+                feasible = sum(float(part.get("feasible", 0.0)) for part in parts)
+            writer.writerow(
+                [
+                    csv_cell(value)
+                    for value in (
+                        row["fips"],
+                        row["name"],
+                        "selection" if selected else "none",
+                        f"{central:.1f}",
+                        "",
+                        "",
+                        "Reference range (defaults) not computed for this mix",
+                        "",
+                        "",
+                        "",
+                        "" if eligible is None else f"{eligible:.1f}",
+                        "" if feasible is None else f"{feasible:.1f}",
+                        "no",
+                    )
+                ]
+            )
+        return buf.getvalue()
     for row in counties:
         locked_row = locked_map[row["fips"]]
         close = False
@@ -816,7 +941,7 @@ def export_brief(
     live = recompute(code, overrides, county_key) if overrides else None
     stem = f"lab-{check_state(code).lower()}"
     if fmt == "csv":
-        return county_csv(code, live).encode("utf-8"), "text/csv; charset=utf-8", f"{stem}-counties.csv"
+        return county_csv(code, live, reforms).encode("utf-8"), "text/csv; charset=utf-8", f"{stem}-counties.csv"
     markdown = brief_markdown(code, county_key, live, reforms)
     if fmt == "html":
         return brief_html(markdown).encode("utf-8"), "text/html; charset=utf-8", f"{stem}-brief.html"

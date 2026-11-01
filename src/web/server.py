@@ -268,6 +268,7 @@ class App:
             str(payload.get("county", "Allegheny")),
             str(payload.get("scenario", "adu")),
             clamp_overrides(payload.get("overrides")),
+            payload.get("reforms"),
         )
 
     def lab_recompute(self, payload: dict[str, Any]) -> dict[str, Any]:

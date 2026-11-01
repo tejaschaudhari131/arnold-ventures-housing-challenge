@@ -67,7 +67,10 @@
   background: var(--green-soft);
   color: var(--tag-calculated-fg);
   font-weight: 600;
+  flex: 1 0 100%;
+  overflow-wrap: anywhere;
 }
+.sf-top .state-notice { flex: 1 0 100%; overflow-wrap: anywhere; }
 
 .hero {
   background: linear-gradient(135deg, #1d3557 0%, #0e6e5c 100%);
@@ -455,9 +458,12 @@
 
 .tour {
   position: fixed;
-  left: 24px;
-  bottom: 24px;
-  width: 340px;
+  top: 88px;
+  left: 16px;
+  bottom: auto;
+  width: 300px;
+  max-height: min(420px, calc(100vh - 120px));
+  overflow: auto;
   background: #fff;
   border-radius: var(--radius);
   box-shadow: 0 12px 40px #0004;
@@ -465,6 +471,27 @@
   border-top: 6px solid var(--sun);
   z-index: 12;
 }
+button.tip {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-bottom: 1px dotted currentColor;
+  padding: 0;
+  cursor: pointer;
+  text-align: inherit;
+}
+.tip-pop {
+  display: block;
+  max-width: min(36ch, 100%);
+  margin: 4px 0;
+  padding: 6px 8px;
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.tip-pop[hidden] { display: none; }
 .mapcard .legend {
   position: relative;
   z-index: 30;
@@ -515,6 +542,15 @@
 .lab-body .skip:focus,
 .lab-body .skip:focus-visible {
   top: 48px;
+}
+
+@media (max-width: 360px) {
+  .start-here, .help, .state-notice, .legend, .countyline, .hero, .panel, .lab-body main {
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+  .start-here, .hero, .lab-body main, .panel { padding-left: 12px; padding-right: 12px; }
+  .sf-top button, .sf-top select, .btn { max-width: 100%; white-space: normal; }
 }
 
 @media (max-width: 700px) {

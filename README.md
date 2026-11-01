@@ -95,6 +95,7 @@ The committed extract used that workbook on 2026-10-31. Pass it with `python -m 
 | `data/sample/` | Small committed benchmark so tests run with no network |
 | `src/web/` | Standard-library server and the single-page app |
 | `docs/MODEL_AND_ASSUMPTIONS.md` | Equations, calibration, and limits |
+| `docs/API.md` | HTTP routes, including `draws: null` |
 | `docs/POLICY_SCENARIO_COMPARISON.md` | Lab comparison (≤4 pages) and the eleven-state core table |
 | `docs/SMALL_HOMES_LAB.md` | Lab method: hosts, options, uncertainty, core-engine gap |
 | `docs/NH_PORTABILITY.md` | New Hampshire as the lower-data portability test |
