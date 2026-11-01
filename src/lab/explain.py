@@ -558,7 +558,7 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
     ):
         median_src = locked["statewide"]["results"]
     if is_draw_tie(top):
-        pair_line = top_pair_tie_clause(top, median_src)
+        pair_line = "Statistical tie. " + top_pair_tie_clause(top, median_src)
     else:
         pair_line = f"Top pair: {leader} leads {trailer} by {homes(top['gap'])} homes."
     lines += [
@@ -578,7 +578,12 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
             f"Envelope sampling error (bootstrap SE of P50, {locked['draws']:,} draws, seed {locked['seed']}): "
             + "; ".join(se_bits) + "."
         )
-    if top["close_call"]:
+    if is_draw_tie(top):
+        lines.append(
+            f"**Statistical tie.** The central estimate favors {leader}; "
+            f"{trailer} is ahead in {float(top['flip_share']):.0%} of assumption draws."
+        )
+    elif top["close_call"]:
         lines.append("**Ranking is close.** " + "; ".join(top["reasons"]) + ".")
     decomp = sw["package_decomposition"]
     lines += [

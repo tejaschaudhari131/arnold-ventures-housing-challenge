@@ -108,8 +108,9 @@ def is_draw_tie(pair: dict[str, Any] | None) -> bool:
 def ranking_phrase(ids: list[str], pair: dict[str, Any] | None = None) -> str:
     labels = [SCENARIO_SHORT.get(sid, sid) for sid in ids]
     if is_draw_tie(pair) and len(labels) >= 2:
-        labels[0] = f"{labels[0]} ≈ {labels[1]}"
-        labels.pop(1)
+        tied = f"Statistical tie ({labels[0]} and {labels[1]})"
+        rest = labels[2:]
+        return " > ".join([tied, *rest]) if rest else tied
     return " > ".join(labels)
 
 
@@ -117,7 +118,7 @@ def top_pair_tie_clause(pair: dict[str, Any], results: dict[str, Any]) -> str:
     """Tie line from the locked results: medians and flip share, never hard-coded."""
     leader, trailer = pair["leader"], pair["trailer"]
     return (
-        f"{SCENARIO_SHORT.get(leader, leader)} ≈ {SCENARIO_SHORT.get(trailer, trailer)}; "
+        f"Central estimate favors {SCENARIO_SHORT.get(leader, leader)}; "
         f"{SCENARIO_SHORT.get(trailer, trailer)} ahead in {float(pair['flip_share']):.0%} of draws "
         f"(draw medians {MEDIAN_SHORT.get(trailer, trailer)} {homes(results[trailer]['p50'])} vs "
         f"{MEDIAN_SHORT.get(leader, leader)} {homes(results[leader]['p50'])})"

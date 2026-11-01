@@ -11,6 +11,7 @@ toward the core one assumption at a time so the note can say why they differ.
 from __future__ import annotations
 
 from functools import lru_cache
+from html import escape
 from typing import Any
 
 from src.bundle import load_bundle
@@ -59,7 +60,7 @@ def _waterfall(state: Any, lab_fee: float, core_fee: float, core_cap: float, cor
 
     run(f"Lab central (Handbook {_money(lab_fee)} fee per home)")
     params["fee_per_unit"] = core_fee
-    run(f"Core ADU fee of {_money(core_fee)} instead of {_money(lab_fee)}")
+    run(f"Lab with a {_money(core_fee)} fee instead of the Handbook's {_money(lab_fee)}")
     params["cap_rate"] = core_cap
     params["opex_share"] = 0.0
     params["new_unit_rent_premium"] = core_rent
@@ -73,16 +74,21 @@ def _waterfall(state: Any, lab_fee: float, core_fee: float, core_cap: float, cor
     return steps
 
 
-def _baseline_note(lab_base: float, core_base: float, host_adj: float = 78.0) -> str:
+def _baseline_note(lab_base: float, core_base: float, host_adj: float = 0.0) -> str:
+    """Baseline gap from the two engines. The permit-window piece is the residual."""
     lab = homes(lab_base)
     core = homes(core_base)
+    gap = _round_homes(lab_base) - _round_homes(core_base)
+    host_n = _round_homes(host_adj)
+    permit_piece = gap - host_n
     host = homes(host_adj, signed=True)
+    window = homes(permit_piece, signed=True)
     return (
-        f"The Lab baseline ({lab}) and the core baseline ({core}) use the same "
-        "completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab "
-        "uses the 2023-2025 permit average and the core uses 2022-2024. That "
-        "moves Pennsylvania by +1,988, mostly from 5+ unit permits (+2,170). "
-        f"The Lab also adds a {host} host adjustment for already-legal homes."
+        f"The Lab baseline ({lab}) and the core baseline ({core}) differ by "
+        f"{homes(gap, signed=True)}. They use the same completion shares "
+        "(0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 "
+        f"permit average and the core uses 2022-2024 ({window}). The Lab also adds "
+        f"a {host} host adjustment for already-legal homes."
     )
 
 
@@ -93,6 +99,7 @@ def comparison(state: str = "PA") -> dict[str, Any]:
     lab = load_results(code, allow_compute=False)
     lab_adu = float(lab["statewide"]["results"]["adu"]["central"])
     lab_base = float(lab["statewide"]["results"]["baseline"]["central"])
+    lab_package = float(lab["statewide"]["results"]["package"]["central"])
     host_adj = float(lab["statewide"]["results"]["baseline"].get("host_adjustment", 0.0))
     lab_fee = float(central_params()["fee_per_unit"])
 
@@ -100,6 +107,7 @@ def comparison(state: str = "PA") -> dict[str, Any]:
     core = simulate_state(fixtures, assumptions, code)
     core_adu = float(core["scenarios"]["adu"]["incremental_completions"])
     core_base = float(core["baseline_completions_5yr"])
+    core_package = float(core["scenarios"]["combined"]["incremental_completions"])
     catalog = load_assumptions()
     core_fee = float(catalog.spec("adu_fee_per_unit")["central"])
     core_cap = float(catalog.spec("adu_homeowner_cap_rate")["central"])
@@ -113,8 +121,11 @@ def comparison(state: str = "PA") -> dict[str, Any]:
 
     payload = {
         "state": code,
+        "state_name": str(lab.get("name") or core.get("name") or code),
         "lab_adu": _round_homes(lab_adu),
         "core_adu": _round_homes(core_adu),
+        "lab_package": _round_homes(lab_package),
+        "core_package": _round_homes(core_package),
         "lab_baseline": _round_homes(lab_base),
         "core_baseline": _round_homes(core_base),
         "lab_fee": _round_homes(lab_fee),
@@ -131,17 +142,27 @@ def comparison(state: str = "PA") -> dict[str, Any]:
             "lab_adu": tag_block(
                 _round_homes(lab_adu),
                 "calculated",
-                "data/sample/lab/results_PA.json statewide.results.adu.central",
+                f"data/sample/lab/results_{code}.json statewide.results.adu.central",
+            ),
+            "lab_package": tag_block(
+                _round_homes(lab_package),
+                "calculated",
+                f"data/sample/lab/results_{code}.json statewide.results.package.central",
             ),
             "core_adu": tag_block(
                 _round_homes(core_adu),
                 "calculated",
                 "src/model/engine.py scenarios.adu.incremental_completions",
             ),
+            "core_package": tag_block(
+                _round_homes(core_package),
+                "calculated",
+                "src/model/engine.py scenarios.combined.incremental_completions",
+            ),
             "lab_baseline": tag_block(
                 _round_homes(lab_base),
                 "calculated",
-                "data/sample/lab/results_PA.json statewide.results.baseline.central",
+                f"data/sample/lab/results_{code}.json statewide.results.baseline.central",
             ),
             "core_baseline": tag_block(
                 _round_homes(core_base),
@@ -196,11 +217,59 @@ def comparison(state: str = "PA") -> dict[str, Any]:
         "docs": _compose(payload, "docs"),
         "core_html": _compose(payload, "core", html=True),
         "lab_html": _compose(payload, "lab", html=True),
+        "engine_gap_core": engine_gap_text(payload, "core"),
+        "engine_gap_lab": engine_gap_text(payload, "lab"),
+        "engine_gap_docs": engine_gap_text(payload, "docs"),
+        "engine_gap_core_html": engine_gap_text(payload, "core", html=True),
+        "engine_gap_lab_html": engine_gap_text(payload, "lab", html=True),
     }
     return payload
 
 
+def _link(href: str, label: str) -> str:
+    return f'<a href="{href}" style="display:inline-block;min-height:24px">{label}</a>'
+
+
+def engine_gap_text(doc: dict[str, Any], audience: str, html: bool = False) -> str:
+    """Why the two pages disagree, from the same engines as the headline numbers."""
+    place = doc.get("state_name") or doc["state"]
+    lab_fee = _money(doc["lab_fee"])
+    core_fee = _money(doc["core_fee"])
+    lab_pkg = _homes(doc["lab_package"])
+    core_pkg = _homes(doc["core_package"])
+    if audience == "core":
+        text = (
+            f"These headline numbers are the core screening model. It uses a {core_fee} ADU fee. "
+            f"The Handbook scenarios are answered on the Small Homes Policy Lab, which uses the "
+            f"Handbook's {lab_fee} per-home fees and a county-level model. For {place} the Lab "
+            f"package is {lab_pkg}, not the {core_pkg} shown here."
+        )
+        href, label = "/lab", "Open the Lab"
+        plain = f" See the Lab at {LAB_URL}."
+    elif audience == "lab":
+        text = (
+            f"These headline numbers answer the Handbook scenarios. The Lab uses the Handbook's "
+            f"{lab_fee} per-home fees and a county-level model. The core Stateframe page uses a "
+            f"{core_fee} ADU fee and a statewide screening model. For {place} that core package "
+            f"is {core_pkg}, against {lab_pkg} here."
+        )
+        href, label = "/", "Open the core page"
+        plain = f" See the core engine at {CORE_URL}."
+    else:
+        text = (
+            f"The Lab numbers answer the Handbook scenarios (Handbook {lab_fee} per-home fees, "
+            f"county-level model). The core numbers are an eleven-state screening model with a "
+            f"{core_fee} ADU fee. {place} package: Lab {lab_pkg}, core {core_pkg}."
+        )
+        href, label = LAB_URL, "Open the Lab"
+        plain = f" See the Lab at {LAB_URL} and the core engine at {CORE_URL}."
+    if html:
+        return f"{escape(text)} {_link(href, label)}."
+    return text + plain
+
+
 def _compose(doc: dict[str, Any], audience: str, html: bool = False) -> str:
+    place = doc.get("state_name") or "Pennsylvania"
     lab = _homes(doc["lab_adu"])
     core = _homes(doc["core_adu"])
     lab_fee = _money(doc["lab_fee"])
@@ -211,9 +280,13 @@ def _compose(doc: dict[str, Any], audience: str, html: bool = False) -> str:
     cap = _pct(doc["core_cap_rate"])
     rent = f"{doc['core_rent_ratio']:g}"
     close = f"{doc['close_share'] * 100:.0f} percent"
-    policy = (
-        f"ADU results depend heavily on local ADU fees. At the Handbook's {lab_fee} fee: "
-        f"{lab}. At a {core_fee} fee: {fee_step}. Our headline uses the Handbook fee."
+    # after_fee is the Lab engine with the core fee, not the core engine's result.
+    fees = (
+        f"Lab at the Handbook's {lab_fee} fee: {lab}. "
+        f"Lab at a {core_fee} fee: {fee_step}. "
+        f"Core at a {core_fee} fee: {core}. "
+        f"The same {core_fee} fee does not match because the Lab is a county-level model "
+        "and the core uses a different adoption and valuation model."
     )
     walk = (
         f"Walking the Lab toward the core: value the ADU the way a homeowner does — "
@@ -222,7 +295,7 @@ def _compose(doc: dict[str, Any], audience: str, html: bool = False) -> str:
     )
     if audience == "core":
         lead = (
-            f"This page's ADU number ({core} in Pennsylvania) uses the core engine's "
+            f"This page's ADU number ({core} in {place}) uses the core engine's "
             f"{core_fee} per-home ADU fee. The Small Homes Policy Lab applies the "
             f"Handbook's {lab_fee} fee to ADUs and reports {lab}."
         )
@@ -230,7 +303,7 @@ def _compose(doc: dict[str, Any], audience: str, html: bool = False) -> str:
         href, label = "/lab", "Lab ADU number"
     elif audience == "lab":
         lead = (
-            f"This page's ADU number ({lab} in Pennsylvania) applies the Handbook's "
+            f"This page's ADU number ({lab} in {place}) applies the Handbook's "
             f"{lab_fee} per-home fee to ADUs. The core Stateframe engine uses its own "
             f"{core_fee} ADU fee and reports {core}."
         )
@@ -238,24 +311,22 @@ def _compose(doc: dict[str, Any], audience: str, html: bool = False) -> str:
         href, label = "/", "core ADU number"
     else:
         lead = (
-            f"The Lab's Pennsylvania ADU increment ({lab}) applies the Handbook's "
+            f"The Lab's {place} ADU increment ({lab}) applies the Handbook's "
             f"{lab_fee} per-home fee to ADUs. The core Stateframe engine uses its own "
             f"{core_fee} ADU fee and reports {core}."
         )
         other = f"See the Lab at {LAB_URL} and the core engine at {CORE_URL}."
         href, label = LAB_URL, "Lab ADU number"
-    why = "That fee gap is why the two numbers differ."
+    handbook = "The Lab numbers answer the Handbook scenarios."
     if html and audience in {"core", "lab"}:
-        other = (
-            f'See the <a href="{href}" style="display:inline-block;min-height:24px">'
-            f"{label}</a>."
-        )
-        details = f"<details><summary>How the two ADU numbers connect</summary><p>{walk}</p></details>"
+        other = f"See the {_link(href, label)}."
+        # The bridge stays outside <details> so the two $6,000 figures are explained on screen.
         gap = f"<p class='baseline-gap'>{doc['baseline_note']}</p>"
-        return f"{policy} {lead} {why} {other} {details}{gap}"
+        return f"{fees} {lead} {handbook} {walk} {other} {gap}"
     if audience == "docs":
-        return f"{policy} {lead} {why} {walk} {other} {doc['baseline_note']}"
-    return f"{policy} {lead} {why} {walk} {other}"
+        # engine_gap_text already names the Handbook scenarios and links both pages.
+        return f"{fees} {lead} {walk} {engine_gap_text(doc, 'docs')} {doc['baseline_note']}"
+    return f"{fees} {lead} {handbook} {walk} {other}"
 
 
 def note_text(audience: str = "docs") -> str:
@@ -264,4 +335,9 @@ def note_text(audience: str = "docs") -> str:
 
 def note_html(audience: str) -> str:
     key = "lab_html" if audience == "lab" else "core_html"
+    return comparison()["notes"][key]
+
+
+def engine_gap_html(audience: str) -> str:
+    key = "engine_gap_lab_html" if audience == "lab" else "engine_gap_core_html"
     return comparison()["notes"][key]

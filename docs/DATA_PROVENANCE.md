@@ -79,7 +79,7 @@ The Lab (`src/lab/`, https://stateframe-housing.vercel.app/lab in the simulator)
 
 **WPRDC.** The query is aggregate SQL against the CKAN datastore: `COUNT(*)` by area, host type, and lot-area bin, plus the median of `FAIRMARKETLAND / LOTAREA`. It never selects owner, mailing-address (`CHANGENOTICE*`), or parcel-ID fields, and a test enforces that. The land value per square foot is Allegheny County's 2012 base-year assessment. It is shown for context and is not used as a current land price.
 
-**HUD.** `www.huduser.gov` answered the acquisition script's honest user agent with an HTTP 202 challenge page. The script does not work around that. It skips HUD and exits normally, or reads a workbook downloaded by hand with `--hud-file FY26_FMRs.xlsx`. The committed extract used a hand-downloaded copy of the public FY2026 workbook. New Hampshire FMRs are published by town and are population-weighted to counties.
+**HUD.** `www.huduser.gov` answered the acquisition script's honest user agent with an HTTP 202 challenge page. The script does not work around that. It skips HUD and exits normally, or reads a workbook downloaded by hand with `--hud-file FY26_FMRs.xlsx`. The public file is `https://www.huduser.gov/portal/datasets/fmr/fmr2026/FY26_FMRs.xlsx` (FY2026, accessed 2026-10-31). The committed extract used that hand-downloaded workbook. New Hampshire FMRs are published by town and are population-weighted to counties. The values are an optional rent cross-check in the Why drawer. They are not a model input, and Lab results do not change when `hud_fmr` is missing.
 
 **Allowlist.** Lab acquisition reaches only www2.census.gov, data.wprdc.org, and www.huduser.gov.
 

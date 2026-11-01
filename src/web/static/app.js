@@ -924,8 +924,11 @@
 
   function fillAduFeeNote() {
     var el = document.getElementById("adu-fee-note");
-    if (!el || !aduCompare) return;
-    el.innerHTML = aduCompare.notes.core_html;
+    if (el && aduCompare) el.innerHTML = aduCompare.notes.core_html;
+    var gap = document.getElementById("engine-gap");
+    if (gap && aduCompare && aduCompare.notes.engine_gap_core_html) {
+      gap.innerHTML = aduCompare.notes.engine_gap_core_html;
+    }
   }
 
   function loadCaseStudy() {

@@ -50,10 +50,14 @@ The same three targets exist in the `Makefile` (`make setup`, `make test`, `make
 Lab results, from a clean checkout after setup:
 
 ```bash
-PYTHONPATH=. .venv/bin/python -m src.lab.results          # compare to data/sample/lab/results_*.json
+PYTHONPATH=. .venv/bin/python -m src.lab.check            # fingerprint check, a few seconds
+PYTHONPATH=. .venv/bin/python -m src.lab.results          # full regeneration, about 7 minutes
+PYTHONPATH=. .venv/bin/python -m src.lab.results --draws 20   # quicker smoke run, not the published envelope
 PYTHONPATH=. .venv/bin/python -m src.lab.run --state PA --county Allegheny
 bash scripts/run.sh                                       # then open http://127.0.0.1:8080/lab
 ```
+
+`python -m src.lab.results` recomputes the 2,000-draw envelope and writes `data/cache/lab/`. On an 8-core machine that is about 7 minutes (Pennsylvania about 6 minutes, New Hampshire about 1 minute). `python -m src.lab.check` compares the committed fingerprints in `data/sample/lab/results_*.json` with a fresh hash of the inputs and exits nonzero on a mismatch. It does not rerun the envelope. `--draws` shortens a regeneration; those files will not match the published fingerprints.
 
 Write the comparison files instead of starting the server:
 
@@ -68,7 +72,15 @@ One state, from the command line after setup:
 PYTHONPATH=. .venv/bin/python -m src.cli run --state PA --out output
 ```
 
-`scripts/get_data.sh` streams Census ACS, Building Permits Survey, population estimates, the county gazetteer, and the FHFA state house-price index. It does not need an API key. If the download fails, it prints a fallback message and exits 0 so CI and offline checkouts keep using `data/sample/`.
+`scripts/get_data.sh` streams Census ACS, Building Permits Survey, population estimates, the county gazetteer, and the FHFA state house-price index. It does not need an API key. If the download fails, or the acquirer exits for any other reason, it prints a fallback message and exits 0 so CI and offline checkouts keep using `data/sample/`.
+
+### HUD Fair Market Rents are fetched by hand
+
+`scripts/get_lab_data.sh` refreshes Census, gazetteer, and boundary files. It does not download HUD Fair Market Rents. `www.huduser.gov` answers the script's user agent with an HTTP 202 challenge page, and the script does not work around that. Download the FY2026 workbook by hand:
+
+https://www.huduser.gov/portal/datasets/fmr/fmr2026/FY26_FMRs.xlsx
+
+The committed extract used that workbook on 2026-10-31. Pass it with `python -m src.lab.acquire --hud-file FY26_FMRs.xlsx` if you refresh the sample. Fair Market Rents are an optional rent cross-check in the Why drawer. They are not a model input: Lab results stay the same when the field is missing.
 
 ## How the model is organized
 
