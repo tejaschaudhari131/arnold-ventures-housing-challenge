@@ -18,6 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 LAB_SAMPLE = ROOT / "data" / "sample" / "lab"
+STAMP_PATH = ROOT / "src" / "build_stamp.json"
 
 
 def _git(*args: str) -> str:
@@ -42,11 +43,31 @@ def _sha() -> str:
     return _git("rev-parse", "HEAD")
 
 
+def _stamp_file() -> dict[str, str]:
+    """Written by scripts/write_build_stamp.py during the Vercel build.
+
+    The serverless function does not have a git checkout, and Vercel does not
+    set VERCEL_GIT_COMMIT_DATE, so the build records the commit date here.
+    """
+    if not STAMP_PATH.is_file():
+        return {}
+    try:
+        doc = json.loads(STAMP_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(doc, dict):
+        return {}
+    return {key: str(doc.get(key) or "") for key in ("sha", "date")}
+
+
 def _date(sha: str) -> str:
     for key in ("VERCEL_GIT_COMMIT_DATE", "GITHUB_COMMIT_DATE"):
         value = os.environ.get(key, "").strip()
         if value:
             return value[:10]
+    stamped = _stamp_file().get("date", "").strip()
+    if stamped:
+        return stamped[:10]
     if sha:
         committed = _git("log", "-1", "--format=%cs", sha)
         if committed:

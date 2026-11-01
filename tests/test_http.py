@@ -39,7 +39,7 @@ def test_pages_name_the_team_and_simulate_pennsylvania():
     httpd = _server()
     base = f"http://127.0.0.1:{httpd.server_address[1]}"
     try:
-        status, page, _headers = _get(base, "/")
+        status, page, page_headers = _get(base, "/")
         text = page.decode("utf-8")
         assert status == 200
         assert "Stateframe" in text
@@ -62,12 +62,25 @@ def test_pages_name_the_team_and_simulate_pennsylvania():
         assert health_doc["fingerprints"]["PA"] == "18b20e94b790213c"
         assert health_doc["fingerprints"]["NH"] == "f0a85db0ee26fda1"
         assert health_headers["Cache-Control"] == "no-store"
+        assert "s-maxage=60" in page_headers["Cache-Control"]
+        assert "stale-while-revalidate=60" in page_headers["Cache-Control"]
+        assert "s-maxage=86400" not in page_headers["Cache-Control"]
+        assert b"styles.css?v=" in page
         _status, _css, css_headers = _get(base, "/styles.css")
-        assert css_headers["Cache-Control"] == "public, max-age=300, s-maxage=86400"
+        assert css_headers["Cache-Control"] == "public, max-age=60, s-maxage=60, stale-while-revalidate=60"
+        _status, _versioned, versioned_headers = _get(base, "/styles.css?v=abc123")
+        assert versioned_headers["Cache-Control"] == "public, max-age=300, s-maxage=86400"
         _status, _lab, lab_headers = _get(base, "/api/lab/results?state=PA")
         assert lab_headers["Cache-Control"] == "public, max-age=300, s-maxage=86400"
         _status, _geo, geo_headers = _get(base, "/api/lab/geo?state=PA")
         assert geo_headers["Cache-Control"] == "public, max-age=300, s-maxage=86400"
+        try:
+            urlopen(base + "/api/map?state=ZZ", timeout=10)
+            assert False, "unknown map state should fail"
+        except HTTPError as exc:
+            assert exc.code == 400
+        map_ok, _, _ = _get(base, "/api/map?state=PA")
+        assert map_ok == 200
         catalog_status, catalog_body, _ = _get(base, "/api/assumptions?state=PA")
         catalog = json.loads(catalog_body.decode("utf-8"))
         assert catalog_status == 200

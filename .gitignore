@@ -64,4 +64,5 @@ __pycache__/
 .coverage
 htmlcov/
 output/
+src/build_stamp.json
 data/cache/

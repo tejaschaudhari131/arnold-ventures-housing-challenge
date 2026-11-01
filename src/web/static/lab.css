@@ -57,6 +57,7 @@
   border: 0;
 }
 
+.state-notice { margin: 12px 28px 0; }
 .lab-body .start-here {
   margin: 0;
   padding: 12px 28px;

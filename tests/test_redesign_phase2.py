@@ -123,6 +123,9 @@ def test_answer_matches_selection_and_plain_tie_badge():
     assert "typical result " in LAB_JS
     assert "Statistical tie" in LAB_JS
     assert "placeLabel" in LAB_JS
+    assert 'id="state-notice"' in LAB
+    assert "Unknown state " in LAB_JS
+    assert "showing PA." in LAB_JS
     assert "draw medians" not in LAB_JS.split("rankingBadge")[1] if "rankingBadge" in LAB_JS else True
     assert 'extra homes (likely "' in LAB_JS
     assert "<nav" in INDEX and 'role="tablist"' in INDEX

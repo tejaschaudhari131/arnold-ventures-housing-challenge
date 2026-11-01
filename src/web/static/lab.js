@@ -241,10 +241,30 @@
     });
   }
 
+  var unknownState = "";
+
+  function renderStateNotice() {
+    var el = document.getElementById("state-notice");
+    if (!el) return;
+    if (!unknownState) {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    el.hidden = false;
+    el.textContent = "Unknown state " + unknownState + ", showing PA.";
+  }
+
   function parseUrl() {
     var q = new URLSearchParams(location.search);
     var st = (q.get("st") || "").toUpperCase();
-    if (st === "PA" || st === "NH") stateCode = st;
+    if (st && st !== "PA" && st !== "NH") {
+      unknownState = st;
+      stateCode = "PA";
+    } else if (st === "PA" || st === "NH") {
+      unknownState = "";
+      stateCode = st;
+    }
     var raw = q.get("on");
     if (raw) {
       on = new Set();
@@ -278,6 +298,7 @@
     if (selectedFips) q.set("county", selectedFips);
     q.set("view", view);
     history.replaceState(null, "", "?" + q.toString() + location.hash);
+    renderStateNotice();
   }
 
   function loadAduCompare(code) {
@@ -342,6 +363,7 @@
   }
 
   function renderAll() {
+    renderStateNotice();
     if (!locked || locked.state !== stateCode) return;
     renderHeadline();
     renderCount();
@@ -363,6 +385,7 @@
   }
 
   function changeState(code) {
+    unknownState = "";
     stateCode = code;
     selectedFips = code === "PA" ? "42003" : null;
     walkStep = 0;
@@ -1473,6 +1496,7 @@
   });
 
   parseUrl();
+  renderStateNotice();
   var bootName = document.getElementById("state-name");
   if (bootName) bootName.textContent = stateNameOf(stateCode);
   if (stateSelect) stateSelect.value = stateCode;

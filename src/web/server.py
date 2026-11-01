@@ -41,7 +41,12 @@ STATIC_FILES = {
 MAX_BODY = 64_000
 # Static files and the fingerprinted Lab results/geo payloads. HTML is
 # included because the injected notes change only when the build changes.
-PUBLIC_CACHE = "public, max-age=300, s-maxage=86400"
+# HTML is rebuilt on each deploy (fee note, engine gap, build stamp). A day-long
+# CDN cache would keep that copy after a data refresh. Versioned asset URLs
+# (?v=<sha>) and the fingerprinted Lab results may stay cached.
+HTML_CACHE = "public, max-age=60, s-maxage=60, stale-while-revalidate=60"
+ASSET_CACHE = "public, max-age=300, s-maxage=86400"
+HTML_PATHS = {"/", "/index.html", "/lab", "/lab.html"}
 
 
 def _state_catalog(fixtures: dict[str, Any]) -> list[dict[str, Any]]:
@@ -285,9 +290,9 @@ def make_handler(app: App):
             if path in STATIC_FILES:
                 name, content_type = STATIC_FILES[path]
                 body = (STATIC_DIR / name).read_bytes()
-                if path in {"/", "/index.html", "/lab", "/lab.html"}:
+                if path in HTML_PATHS:
                     body = _with_page_notes(body, path)
-                self._send(200, body, content_type, cache_control=PUBLIC_CACHE)
+                self._send(200, body, content_type, cache_control=_static_cache(path, parse_qs(parsed.query)))
                 return
             query = parse_qs(parsed.query)
             try:
@@ -306,13 +311,16 @@ def make_handler(app: App):
                     body, mime, filename = app.export(state, fmt)
                     self._send(200, body, mime, filename)
                 elif path == "/api/map":
+                    raw_state = query.get("state")
+                    if raw_state is not None:
+                        app._check_state(raw_state[0])
                     self._json(200, app.map_points())
                 elif path == "/api/case-study":
                     self._json(200, app.case_study())
                 elif path == "/api/lab/results":
-                    self._json(200, app.lab_results(query.get("state", ["PA"])[0]), cache_control=PUBLIC_CACHE)
+                    self._json(200, app.lab_results(query.get("state", ["PA"])[0]), cache_control=ASSET_CACHE)
                 elif path == "/api/lab/geo":
-                    self._json(200, app.lab_geo(query.get("state", ["PA"])[0]), cache_control=PUBLIC_CACHE)
+                    self._json(200, app.lab_geo(query.get("state", ["PA"])[0]), cache_control=ASSET_CACHE)
                 elif path == "/api/lab/assumptions":
                     self._json(200, app.lab_assumptions())
                 elif path == "/api/lab/why":
@@ -379,12 +387,33 @@ def make_handler(app: App):
 ADU_NOTE_MARKER = b"<!-- ADU_FEE_NOTE -->"
 ENGINE_GAP_MARKER = b"<!-- ENGINE_GAP -->"
 BUILD_STAMP_MARKER = b"<!-- BUILD_STAMP -->"
+_VERSIONED_ASSETS = (b"/tokens.css", b"/styles.css", b"/lab.css", b"/app.js", b"/lab.js")
+
+
+def _static_cache(path: str, query: dict[str, list[str]]) -> str:
+    """HTML stays fresh. Long caching is only for ?v= assets and, separately, Lab results."""
+    if path in HTML_PATHS:
+        return HTML_CACHE
+    version = (query.get("v") or [""])[0]
+    if version:
+        return ASSET_CACHE
+    return HTML_CACHE
+
+
+def _version_asset_urls(body: bytes, version: str) -> bytes:
+    if not version or version == "unknown":
+        return body
+    token = version.encode("utf-8")
+    for asset in _VERSIONED_ASSETS:
+        body = body.replace(asset + b'"', asset + b"?v=" + token + b'"')
+        body = body.replace(asset + b"'", asset + b"?v=" + token + b"'")
+    return body
 
 
 def _with_page_notes(body: bytes, path: str) -> bytes:
     """Fill the fee note, the engine-gap callout, and the build stamp."""
     from src.adu_fee_note import engine_gap_html, note_html
-    from src.version import stamp_html
+    from src.version import build_info, stamp_html
 
     audience = "lab" if "lab" in path else "core"
     if ADU_NOTE_MARKER in body:
@@ -394,7 +423,7 @@ def _with_page_notes(body: bytes, path: str) -> bytes:
         body = body.replace(ENGINE_GAP_MARKER, gap)
     if BUILD_STAMP_MARKER in body:
         body = body.replace(BUILD_STAMP_MARKER, stamp_html().encode("utf-8"))
-    return body
+    return _version_asset_urls(body, str(build_info()["short_sha"]))
 
 
 def serve(host: str = "127.0.0.1", port: int = 8080) -> None:

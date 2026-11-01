@@ -58,11 +58,22 @@ def comparison_rows(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "lift_pct": round(scenario["lift_pct"], 2),
                 "cap_binding": scenario["cap_binding"],
                 "capacity_completions": round(scenario["capacity_completions"], 1),
+                "uncapped_potential": (
+                    round(scenario["uncapped_potential"], 1) if scenario_id == "combined" else ""
+                ),
+                "absorption_cap": (
+                    round(scenario["absorption_cap"], 1)
+                    if scenario_id == "combined" and scenario.get("absorption_cap_binding")
+                    else ""
+                ),
                 "completeness_source": COMPLETENESS_SOURCE,
             }
             for key, value in list(row.items()):
                 if _is_number(value):
                     row[f"{key}_provenance"] = _EXPORT_TAGS.get(key, "calculated")
+            # Present on every row so the CSV header matches the package columns.
+            row.setdefault("uncapped_potential_provenance", "")
+            row.setdefault("absorption_cap_provenance", "")
             rows.append(row)
     return rows
 
@@ -106,12 +117,16 @@ def to_markdown(results: list[dict[str, Any]]) -> str:
     lines.append("Figures are 5-year net completions added by the reform, except the baseline column, which is total completions under current rules. The package is not the sum of the five reforms.")
     lines.append(
         "The missing-middle cap_binding flag applies to merchant completions only "
-        "(teardown and conversion). The CSV exports that capacity as capacity_completions "
+        "(teardown and conversion). The CSV keeps capacity_completions for every scenario "
         "and splits the old annualized_completions column into annualized_level "
         "(five-year completions / 5) and annualized_increment (net new / 5). "
-        "For the combined package, capacity_completions is the overlap-adjusted total "
-        "before the absorption cap and the ADU stock ceiling, and it includes parking "
-        "and fees. A capped package is therefore not larger than its capacity. "
+        "For the combined package, that figure is the uncapped potential: the "
+        "overlap-adjusted total before the absorption cap and the ADU stock ceiling, "
+        "including parking and fees. The CSV repeats it as uncapped_potential. "
+        "absorption_cap is the merchant ceiling summed over the counties where that "
+        "cap binds, and it is blank when the absorption cap does not bind. "
+        "Package missing middle can exceed standalone missing middle because the fee "
+        "cut and market parking are in the package pro forma. "
         "Tier is a classification. Completeness is a calculated score; see "
         "docs/DATA_PROVENANCE.md."
     )

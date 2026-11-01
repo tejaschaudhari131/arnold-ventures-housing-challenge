@@ -1,4 +1,5 @@
 {
+  "buildCommand": "python3 scripts/write_build_stamp.py",
   "functions": {
     "api/index.py": {
       "includeFiles": "{src,config,data/sample}/**"
