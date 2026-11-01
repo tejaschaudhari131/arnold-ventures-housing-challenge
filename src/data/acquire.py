@@ -29,8 +29,6 @@ import csv
 import io
 import json
 import sys
-import urllib.error
-import urllib.request
 import zipfile
 from collections import defaultdict
 from pathlib import Path
@@ -117,19 +115,13 @@ class AcquireError(RuntimeError):
     """A required public file could not be read."""
 
 
-def _request(url: str, timeout: int = 180) -> urllib.request.Request:
-    host = urllib.request.urlparse(url).hostname
-    if host not in ALLOWED_HOSTS:
-        raise AcquireError(f"Host is not on the acquisition allowlist: {host}")
-    return urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-
-
 def fetch_bytes(url: str, timeout: int = 180) -> bytes:
+    from src.data.safe_url import FetchDenied, fetch_bytes as safe_fetch
+
     try:
-        with urllib.request.urlopen(_request(url), timeout=timeout) as response:
-            return response.read()
-    except urllib.error.URLError as exc:
-        raise AcquireError(f"Failed to fetch {url}: {exc}") from exc
+        return safe_fetch(url, ALLOWED_HOSTS, timeout, USER_AGENT)
+    except FetchDenied as exc:
+        raise AcquireError(str(exc)) from exc
 
 
 def fetch_text(url: str) -> str:
@@ -156,11 +148,12 @@ def stream_acs_table(table: str, columns: dict[str, str]) -> dict[str, dict[str,
     """Stream one ACS table and keep state and county rows for the 11 states."""
     url = ACS_BASE + f"acsdt5y2023-{table}.dat"
     print(f"  ACS {table}", flush=True)
-    request = _request(url)
+    from src.data.safe_url import FetchDenied, open_url
+
     try:
-        response = urllib.request.urlopen(request, timeout=240)
-    except urllib.error.URLError as exc:
-        raise AcquireError(f"Failed to fetch {url}: {exc}") from exc
+        response = open_url(url, ALLOWED_HOSTS, 240, USER_AGENT)
+    except FetchDenied as exc:
+        raise AcquireError(str(exc)) from exc
     kept: dict[str, dict[str, float | None]] = {}
     with response:
         header_line = response.readline().decode("latin1").rstrip("\n")

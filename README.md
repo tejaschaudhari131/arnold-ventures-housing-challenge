@@ -101,7 +101,7 @@ The committed extract used that workbook on 2026-10-31. Pass it with `python -m 
 | `docs/DATA_PROVENANCE.md` | Sources, vintages, cleaning, and privacy |
 | `docs/DISCLOSURES.md` | AI use, prior work, datasets, dependencies, and external services |
 | `docs/CASE_STUDY_PA_ALLEGHENY.md` | Allegheny County to Pennsylvania, with observed and imputed inputs separated |
-| `docs/sbom.cdx.json` | CycloneDX bill of materials for the direct pins |
+| `docs/sbom.cdx.json` | CycloneDX bill of materials for the resolved app and dev trees |
 | `data/sample/county_points.json` | Census 2024 gazetteer interior points for the eleven states |
 
 ## Tests that lock the economics

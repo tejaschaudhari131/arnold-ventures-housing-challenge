@@ -14,15 +14,31 @@ import io
 import json
 from typing import Any
 
+from src.export.csvsafe import csv_cell
 from src.model.engine import SCENARIO_ORDER, simulate_state
 from src.model.provenance import LEGEND, TAGS
 
 
-def simulate_many(fixtures: dict[str, Any], assumptions: Any, states: list[str] | None = None) -> list[dict[str, Any]]:
+def simulate_many(
+    fixtures: dict[str, Any],
+    assumptions: Any,
+    states: list[str] | None = None,
+    overrides: dict[str, Any] | None = None,
+    reform_weights: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     codes = states or list(fixtures["states"].keys())
     # Stable challenge order, not alphabetical.
     order = [code for code in ("PA", "CT", "WI", "UT", "OR", "HI", "AZ", "VA", "TN", "RI", "NH") if code in codes]
-    return [simulate_state(fixtures, assumptions, code) for code in order]
+    return [
+        simulate_state(
+            fixtures,
+            assumptions,
+            code,
+            overrides=overrides,
+            reform_weights=reform_weights,
+        )
+        for code in order
+    ]
 
 
 _EXPORT_TAGS = {
@@ -58,6 +74,8 @@ def comparison_rows(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "lift_pct": round(scenario["lift_pct"], 2),
                 "cap_binding": scenario["cap_binding"],
                 "capacity_completions": round(scenario["capacity_completions"], 1),
+                "capacity_completions_basis": scenario.get("capacity_completions_basis")
+                or ("level" if scenario_id == "baseline" else "increment"),
                 "uncapped_potential": (
                     round(scenario["uncapped_potential"], 1) if scenario_id == "combined" else ""
                 ),
@@ -84,15 +102,19 @@ def to_csv(results: list[dict[str, Any]]) -> str:
     fieldnames = list(rows[0].keys()) if rows else ["state"]
     writer = csv.DictWriter(buffer, fieldnames=fieldnames)
     writer.writeheader()
-    writer.writerows(rows)
+    for row in rows:
+        writer.writerow({key: csv_cell(row.get(key, "")) for key in fieldnames})
     return buffer.getvalue()
 
 
-def to_json(results: list[dict[str, Any]]) -> str:
-    return json.dumps({"provenance_legend": LEGEND, "results": results}, indent=2)
+def to_json(results: list[dict[str, Any]], scenario: dict[str, Any] | None = None) -> str:
+    payload: dict[str, Any] = {"provenance_legend": LEGEND, "results": results}
+    if scenario:
+        payload["scenario"] = scenario
+    return json.dumps(payload, indent=2)
 
 
-def to_markdown(results: list[dict[str, Any]]) -> str:
+def to_markdown(results: list[dict[str, Any]], note: str = "") -> str:
     """A policymaker table: baseline completions and net new completions by scenario."""
     lines = [
         "| State | Tier | Baseline completions | ADUs | Missing middle | TOD | Parking | Fees | Package |",
@@ -127,6 +149,8 @@ def to_markdown(results: list[dict[str, Any]]) -> str:
         "cap binds, and it is blank when the absorption cap does not bind. "
         "Package missing middle can exceed standalone missing middle because the fee "
         "cut and market parking are in the package pro forma. "
+        "capacity_completions is the five-year level on the baseline row and the "
+        "incremental capacity on reform rows. "
         "Tier is a classification. Completeness is a calculated score; see "
         "docs/DATA_PROVENANCE.md."
     )
@@ -135,6 +159,8 @@ def to_markdown(results: list[dict[str, Any]]) -> str:
     lines.append(note_text("docs"))
     lines.append("Tags: observed = public measurement; assumed = published assumption or imputation; calculated = equation output; classification = documented grouping. Every completion figure in this table is calculated.")
     lines.append("Allowed tags: " + ", ".join(TAGS) + ".")
+    if note:
+        lines.append(note)
     return "\n".join(lines) + "\n"
 
 

@@ -10,6 +10,7 @@ sensitivity range the documentation describes.
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 from typing import Any
 
@@ -94,11 +95,13 @@ class Assumptions:
             values[name] = float(self.states[state][name]["central"])
         for key, raw_value in (overrides or {}).items():
             if key not in values or key == "horizon_years":
-                raise AssumptionError(f"Cannot override '{key}'")
+                raise AssumptionError("Cannot override that parameter.")
             try:
                 value = float(raw_value)
             except (TypeError, ValueError) as exc:
-                raise AssumptionError(f"Override '{key}' must be a number") from exc
+                raise AssumptionError("Override must be a finite number.") from exc
+            if not math.isfinite(value):
+                raise AssumptionError("Override must be a finite number.")
             low, _central, high = self.band(key, state)
             if value < low or value > high:
                 value = min(high, max(low, value))

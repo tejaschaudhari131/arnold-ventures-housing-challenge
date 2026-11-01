@@ -29,9 +29,7 @@ import csv
 import io
 import json
 import sys
-import urllib.error
 import urllib.parse
-import urllib.request
 import zipfile
 from datetime import date
 from pathlib import Path
@@ -85,21 +83,13 @@ class AcquireError(RuntimeError):
     """A required public file could not be read."""
 
 
-def _request(url: str) -> urllib.request.Request:
-    host = urllib.parse.urlparse(url).hostname
-    if host not in ALLOWED_HOSTS:
-        raise AcquireError(f"Host is not on the Lab acquisition allowlist: {host}")
-    return urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-
-
 def fetch_bytes(url: str, timeout: int = 240) -> bytes:
+    from src.data.safe_url import FetchDenied, fetch_bytes as safe_fetch
+
     try:
-        with urllib.request.urlopen(_request(url), timeout=timeout) as response:
-            if response.status != 200:
-                raise AcquireError(f"{url} returned HTTP {response.status}")
-            return response.read()
-    except urllib.error.URLError as exc:
-        raise AcquireError(f"Failed to fetch {url}: {exc}") from exc
+        return safe_fetch(url, ALLOWED_HOSTS, timeout, USER_AGENT, require_status=200)
+    except FetchDenied as exc:
+        raise AcquireError(str(exc)) from exc
 
 
 # ACS summary-file annotation codes. Estimates with these values are missing
@@ -179,10 +169,12 @@ def acs_keep(state_fips: set[str], place_ids: set[str]) -> Any:
 def stream_acs(table: str, keep: Any) -> dict[str, dict[str, dict[str, float | None]]]:
     url = ACS_URL.format(year=ACS_YEAR, table=table)
     print(f"  ACS {ACS_YEAR} 5-year {table.upper()}", flush=True)
+    from src.data.safe_url import FetchDenied, open_url
+
     try:
-        response = urllib.request.urlopen(_request(url), timeout=300)
-    except urllib.error.URLError as exc:
-        raise AcquireError(f"Failed to fetch {url}: {exc}") from exc
+        response = open_url(url, ALLOWED_HOSTS, 300, USER_AGENT)
+    except FetchDenied as exc:
+        raise AcquireError(str(exc)) from exc
     with response:
         lines = (raw.decode("latin1") for raw in response)
         return parse_acs_lines(lines, ACS_TABLES[table], keep)

@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
+from datetime import date
 from functools import lru_cache
 from html import escape
 from pathlib import Path
@@ -19,6 +21,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 LAB_SAMPLE = ROOT / "data" / "sample" / "lab"
 STAMP_PATH = ROOT / "src" / "build_stamp.json"
+# Screening model identity. The date is the committed fixture access date in
+# src/data/acquire.py, not the git commit date shown in the footer.
+MODEL_VERSION = "1.0.0"
+MODEL_DATE = "2026-10-25"
+_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def _git(*args: str) -> str:
@@ -35,12 +42,26 @@ def _git(*args: str) -> str:
     return out.strip()
 
 
+def _valid_date(value: str) -> str:
+    text = (value or "").strip()[:10]
+    if not _DATE.match(text):
+        return ""
+    try:
+        date.fromisoformat(text)
+    except ValueError:
+        return ""
+    return text
+
+
 def _sha() -> str:
     for key in ("VERCEL_GIT_COMMIT_SHA", "GITHUB_SHA"):
         value = os.environ.get(key, "").strip()
         if value:
             return value
-    return _git("rev-parse", "HEAD")
+    git_sha = _git("rev-parse", "HEAD")
+    if git_sha:
+        return git_sha
+    return _stamp_file().get("sha", "").strip()
 
 
 def _stamp_file() -> dict[str, str]:
@@ -62,17 +83,16 @@ def _stamp_file() -> dict[str, str]:
 
 def _date(sha: str) -> str:
     for key in ("VERCEL_GIT_COMMIT_DATE", "GITHUB_COMMIT_DATE"):
-        value = os.environ.get(key, "").strip()
-        if value:
-            return value[:10]
-    stamped = _stamp_file().get("date", "").strip()
+        valid = _valid_date(os.environ.get(key, ""))
+        if valid:
+            return valid
+    stamped = _valid_date(_stamp_file().get("date", ""))
     if stamped:
-        return stamped[:10]
+        return stamped
     if sha:
-        committed = _git("log", "-1", "--format=%cs", sha)
-        if committed:
-            return committed
-    return _git("log", "-1", "--format=%cs")
+        # A SHA that is not in this checkout must not inherit HEAD's date.
+        return _valid_date(_git("log", "-1", "--format=%cs", sha))
+    return _valid_date(_git("log", "-1", "--format=%cs"))
 
 
 def _fingerprints() -> dict[str, str]:
@@ -97,6 +117,8 @@ def build_info() -> dict[str, object]:
         "sha": sha,
         "short_sha": short,
         "date": _date(sha if sha != "unknown" else ""),
+        "model_version": MODEL_VERSION,
+        "model_date": MODEL_DATE,
         "fingerprints": _fingerprints(),
     }
 

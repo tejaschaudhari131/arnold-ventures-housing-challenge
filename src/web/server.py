@@ -10,6 +10,7 @@ clamped by the assumption loader before they reach the equations.
 from __future__ import annotations
 
 import json
+import math
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -39,6 +40,56 @@ STATIC_FILES = {
     "/lab.js": ("lab.js", "text/javascript; charset=utf-8"),
 }
 MAX_BODY = 64_000
+_ERROR_LIMIT = 160
+_CSP = (
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; "
+    "object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+)
+_PERMISSIONS = (
+    "accelerometer=(), camera=(), geolocation=(), gyroscope=(), "
+    "magnetometer=(), microphone=(), payment=(), usb=()"
+)
+
+
+def public_error(message: str) -> str:
+    """Short 400 text. User input is not repeated."""
+    cleaned = []
+    for ch in " ".join(str(message).split()):
+        if ch in "<>\"'`":
+            continue
+        if 32 <= ord(ch) < 127:
+            cleaned.append(ch)
+    text = "".join(cleaned).strip()
+    if len(text) > _ERROR_LIMIT:
+        text = text[:_ERROR_LIMIT].rstrip()
+    return text or "Bad request"
+
+
+def finite_draws(raw: Any, default: int, low: int, high: int) -> int:
+    if raw is None:
+        raw = default
+    if isinstance(raw, bool) or not isinstance(raw, (int, float, str)):
+        raise AssumptionError("draws must be a finite integer.")
+    try:
+        number = float(raw)
+    except (TypeError, ValueError) as exc:
+        raise AssumptionError("draws must be a finite integer.") from exc
+    if not math.isfinite(number):
+        raise AssumptionError("draws must be a finite integer.")
+    return max(low, min(int(number), high))
+
+
+def read_doc(path: str) -> bytes | None:
+    """Serve one committed markdown file. Nothing else under /docs/."""
+    name = path.removeprefix("/docs/")
+    if not name or "/" in name or "\\" in name or name.startswith(".") or not name.endswith(".md"):
+        return None
+    docs = (ROOT / "docs").resolve()
+    target = (docs / name).resolve()
+    if target.parent != docs or not target.is_file():
+        return None
+    return target.read_bytes()
 # Static files and the fingerprinted Lab results/geo payloads. HTML is
 # included because the injected notes change only when the build changes.
 # HTML is rebuilt on each deploy (fee note, engine gap, build stamp). A day-long
@@ -122,16 +173,38 @@ class App:
         state = self._check_state(str(payload.get("state", "PA")))
         scenario = str(payload.get("scenario", "combined"))
         self._check_scenario(scenario)
-        draws = int(payload.get("draws", 80))
-        draws = max(20, min(draws, 400))
+        draws = finite_draws(payload.get("draws", 80), 80, 20, 400)
+        overrides = payload.get("overrides") or {}
+        if not isinstance(overrides, dict):
+            raise AssumptionError("overrides must be an object.")
+        reforms = self._reforms(payload.get("reforms"))
         return {
-            "tornado": tornado(self.fixtures, self.assumptions, state, scenario),
-            "monte_carlo": monte_carlo(self.fixtures, self.assumptions, state, scenario, draws=draws),
+            "tornado": tornado(
+                self.fixtures,
+                self.assumptions,
+                state,
+                scenario,
+                overrides=overrides,
+                reform_weights=reforms,
+            ),
+            "monte_carlo": monte_carlo(
+                self.fixtures,
+                self.assumptions,
+                state,
+                scenario,
+                draws=draws,
+                overrides=overrides,
+                reform_weights=reforms,
+            ),
+            "scenario_label": (
+                "Current scenario, including the active assumption overrides and reform mix."
+            ),
+            "reference": False,
         }
 
     def crossval(self, payload: dict[str, Any]) -> dict[str, Any]:
         scope = str(payload.get("scope", "tier1"))
-        draws = max(20, min(int(payload.get("draws", 40)), 200))
+        draws = finite_draws(payload.get("draws", 40), 40, 20, 200)
         if scope == "tier1":
             return cross_validate_tier1(self.fixtures, self.assumptions, draws=draws)
         state = self._check_state(str(payload.get("state", "CT")))
@@ -172,37 +245,81 @@ class App:
             str(county) if county else None,
         )
 
-    def lab_export(self, state: str, fmt: str, county: str | None, overrides: dict[str, Any] | None) -> tuple[bytes, str, str]:
+    def lab_export(
+        self,
+        state: str,
+        fmt: str,
+        county: str | None,
+        overrides: dict[str, Any] | None,
+        reforms: Any = None,
+    ) -> tuple[bytes, str, str]:
         from src.lab.explain import clamp_overrides, export_brief
 
-        return export_brief(state, fmt, county, clamp_overrides(overrides) if overrides else None)
+        selected: list[str] | None
+        if reforms is None:
+            selected = None
+        elif isinstance(reforms, list):
+            selected = [str(item) for item in reforms]
+        else:
+            raise AssumptionError("reforms must be a list.")
+        return export_brief(
+            state,
+            fmt,
+            county,
+            clamp_overrides(overrides) if overrides else None,
+            selected,
+        )
 
     def adu_compare(self, state: str = "PA") -> dict[str, Any]:
         from src.adu_fee_note import comparison
 
         return comparison(self._check_state(state))
 
-    def export(self, state: str, fmt: str) -> tuple[bytes, str, str]:
+    def export(
+        self,
+        state: str,
+        fmt: str,
+        overrides: dict[str, Any] | None = None,
+        reforms: Any = None,
+    ) -> tuple[bytes, str, str]:
         if fmt not in {"csv", "json", "md"}:
             raise AssumptionError("format must be csv, json, or md")
+        if overrides is not None and not isinstance(overrides, dict):
+            raise AssumptionError("overrides must be an object.")
+        weights = self._reforms(reforms) if reforms is not None else None
+        custom = bool(overrides) or weights is not None
         if state == "all":
+            if custom:
+                raise AssumptionError("A custom export covers one state.")
             results = simulate_many(self.fixtures, self.assumptions)
             stem = "stateframe-all-states"
+            scenario = None
         else:
-            results = simulate_many(self.fixtures, self.assumptions, [self._check_state(state)])
-            stem = f"stateframe-{state}"
+            code = self._check_state(state)
+            results = simulate_many(
+                self.fixtures,
+                self.assumptions,
+                [code],
+                overrides=overrides,
+                reform_weights=weights,
+            )
+            stem = f"stateframe-{code}"
+            scenario = {"state": code, "overrides": overrides or {}, "reforms": weights} if custom else None
+        note = ""
+        if scenario:
+            note = "This export uses the posted assumption overrides and reform mix, not the published defaults."
         if fmt == "csv":
             body, mime = to_csv(results), "text/csv; charset=utf-8"
         elif fmt == "md":
-            body, mime = to_markdown(results), "text/markdown; charset=utf-8"
+            body, mime = to_markdown(results, note), "text/markdown; charset=utf-8"
         else:
-            body, mime = to_json(results), "application/json; charset=utf-8"
+            body, mime = to_json(results, scenario), "application/json; charset=utf-8"
         return body.encode("utf-8"), mime, f"{stem}.{fmt if fmt != 'md' else 'md'}"
 
     def _check_state(self, state: str) -> str:
         code = state.strip().upper()
         if code not in self.fixtures["states"]:
-            raise AssumptionError(f"Unknown state '{state}'")
+            raise AssumptionError("Unknown state.")
         return code
 
     @staticmethod
@@ -214,27 +331,31 @@ class App:
         weights: dict[str, float] = {}
         for key, value in raw.items():
             if key not in REFORM_IDS:
-                raise AssumptionError(f"Unknown reform '{key}'")
+                raise AssumptionError("Unknown reform.")
             if isinstance(value, bool):
                 weights[key] = 1.0 if value else 0.0
             elif isinstance(value, (int, float)):
+                if not math.isfinite(float(value)):
+                    raise AssumptionError("Reform weight must be a finite number.")
                 weights[key] = float(value)
             elif isinstance(value, dict):
                 turned_on = bool(value.get("on", True))
                 try:
                     weight = float(value.get("weight", 1.0))
                 except (TypeError, ValueError) as exc:
-                    raise AssumptionError(f"Reform '{key}' weight must be a number") from exc
+                    raise AssumptionError("Reform weight must be a finite number.") from exc
+                if not math.isfinite(weight):
+                    raise AssumptionError("Reform weight must be a finite number.")
                 weights[key] = weight if turned_on else 0.0
             else:
-                raise AssumptionError(f"Reform '{key}' must be a number or an object")
+                raise AssumptionError("Reform must be a number or an object.")
         return weights
 
     @staticmethod
     def _check_scenario(scenario: str) -> None:
         allowed = {"baseline", "adu", "missing_middle", "tod", "parking", "fees", "combined"}
         if scenario not in allowed:
-            raise AssumptionError(f"Unknown scenario '{scenario}'")
+            raise AssumptionError("Unknown scenario.")
 
 
 def make_handler(app: App):
@@ -257,6 +378,8 @@ def make_handler(app: App):
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("X-Frame-Options", "DENY")
             self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header("Content-Security-Policy", _CSP)
+            self.send_header("Permissions-Policy", _PERMISSIONS)
             self.send_header("Cache-Control", cache_control or "no-store")
             if filename:
                 self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
@@ -272,7 +395,11 @@ def make_handler(app: App):
             )
 
         def _read_json(self) -> dict[str, Any]:
-            length = int(self.headers.get("Content-Length", "0"))
+            raw_length = self.headers.get("Content-Length", "0")
+            try:
+                length = int(raw_length)
+            except (TypeError, ValueError) as exc:
+                raise AssumptionError("Content-Length must be an integer.") from exc
             if length < 0 or length > MAX_BODY:
                 raise AssumptionError("Request body is too large")
             raw = self.rfile.read(length) if length else b"{}"
@@ -295,6 +422,13 @@ def make_handler(app: App):
                 self._send(200, body, content_type, cache_control=_static_cache(path, parse_qs(parsed.query)))
                 return
             query = parse_qs(parsed.query)
+            if path.startswith("/docs/"):
+                body = read_doc(path)
+                if body is None:
+                    self._json(404, {"error": "Not found"})
+                else:
+                    self._send(200, body, "text/plain; charset=utf-8")
+                return
             try:
                 if path == "/api/health":
                     from src.version import build_info
@@ -344,7 +478,7 @@ def make_handler(app: App):
                 else:
                     self._json(404, {"error": "Not found"})
             except AssumptionError as exc:
-                self._json(400, {"error": str(exc)})
+                self._json(400, {"error": public_error(str(exc))})
             except Exception:
                 self._json(500, {"error": "Server error"})
 
@@ -364,18 +498,27 @@ def make_handler(app: App):
                     self._json(200, app.lab_recompute(payload))
                 elif parsed.path == "/api/lab/why":
                     self._json(200, app.lab_why(payload))
+                elif parsed.path == "/api/export":
+                    body, mime, filename = app.export(
+                        str(payload.get("state", "PA")),
+                        str(payload.get("format", "csv")),
+                        payload.get("overrides"),
+                        payload.get("reforms"),
+                    )
+                    self._send(200, body, mime, filename)
                 elif parsed.path == "/api/lab/export":
                     body, mime, filename = app.lab_export(
                         str(payload.get("state", "PA")),
                         str(payload.get("format", "md")),
                         str(payload["county"]) if payload.get("county") else None,
                         payload.get("overrides"),
+                        payload.get("reforms"),
                     )
                     self._send(200, body, mime, filename)
                 else:
                     self._json(404, {"error": "Not found"})
             except AssumptionError as exc:
-                self._json(400, {"error": str(exc)})
+                self._json(400, {"error": public_error(str(exc))})
             except json.JSONDecodeError:
                 self._json(400, {"error": "Body is not valid JSON"})
             except Exception:

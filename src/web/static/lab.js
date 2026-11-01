@@ -58,6 +58,7 @@
   var catalog = null;
   var whyDoc = null;
   var overrides = {};
+  var urlOverridesPending = false;
   var walkStep = 0;
   var whyOpen = false;
   var timer = null;
@@ -92,6 +93,43 @@
     var n = Number(value);
     if (!isFinite(n)) return "—";
     return Math.round(n).toLocaleString("en-US");
+  }
+
+  function csvCell(value) {
+    var text = String(value);
+    if (/^[=+\-@\t\r]/.test(text) && !/^[+\-]?(\d+(\.\d*)?|\.\d+)([eE][+\-]?\d+)?$/.test(text)) {
+      text = "'" + text;
+    }
+    if (/[",\n]/.test(text)) return '"' + text.replace(/"/g, '""') + '"';
+    return text;
+  }
+
+  function describeRange(row) {
+    if (!row || row.interval_status === "unavailable" || !isFinite(Number(row.p10)) || !isFinite(Number(row.p90))) {
+      return "Likely range unavailable";
+    }
+    var text = integer(row.p10) + "–" + integer(row.p90);
+    if (row.interval_status === "reference") return "Reference range (defaults) " + text;
+    return "Likely range " + text;
+  }
+
+  function encodeOverrides(map) {
+    return Object.keys(map).sort().map(function (name) {
+      return name + ":" + map[name];
+    }).join(",");
+  }
+
+  function decodeOverrides(raw) {
+    var out = {};
+    if (!raw) return out;
+    raw.split(",").forEach(function (part) {
+      var idx = part.lastIndexOf(":");
+      if (idx <= 0) return;
+      var name = part.slice(0, idx);
+      var value = Number(part.slice(idx + 1));
+      if (name && isFinite(value)) out[name] = value;
+    });
+    return out;
   }
 
   function money(value) {
@@ -171,26 +209,39 @@
 
   function activeScenario() {
     var ids = selectedIds();
+    if (!ids.length) return "";
     if (ids.length === 1) return ids[0];
     if (ids.length === 4) return "package";
-    if (on.has(scenarioId) && BENCHMARKS.indexOf(scenarioId) >= 0) return scenarioId;
-    return ids[0] || "missing_middle";
+    return "selection";
+  }
+
+  function selectionLabel() {
+    return selectedIds().map(scenarioLabel).join(" and ");
+  }
+
+  function bandOf(row) {
+    if (!row || !isFinite(Number(row.p10)) || !isFinite(Number(row.p90))) {
+      return { lo: null, hi: null, status: (row && row.interval_status) || "unavailable" };
+    }
+    return { lo: Number(row.p10), hi: Number(row.p90), status: row.interval_status || "conditional" };
   }
 
   function packageTotal() {
     var ids = selectedIds();
     var sw = docStatewide().results;
-    if (!ids.length) return { c: 0, lo: 0, hi: 0, exact: true };
+    if (!ids.length) return { c: 0, lo: 0, hi: 0, exact: true, status: "conditional" };
     if (ids.length === 1) {
       var one = sw[ids[0]];
-      return { c: one.central, lo: one.p10, hi: one.p90, exact: true };
+      var band = bandOf(one);
+      return { c: one.central, lo: band.lo, hi: band.hi, exact: true, status: band.status };
     }
     if (ids.length === 4) {
       var pack = sw.package;
-      return { c: pack.central, lo: pack.p10, hi: pack.p90, exact: true };
+      var packed = bandOf(pack);
+      return { c: pack.central, lo: packed.lo, hi: packed.hi, exact: true, status: packed.status };
     }
     var sum = ids.reduce(function (a, k) { return a + Number(sw[k].central); }, 0);
-    return { c: sum, lo: null, hi: null, exact: false };
+    return { c: sum, lo: null, hi: null, exact: false, status: "unmodeled" };
   }
 
   function countyPackageValue(row) {
@@ -201,16 +252,20 @@
   }
 
   function mapScenarioId() {
-    if (mapId === "package") return "package";
-    if (mapId && BENCHMARKS.indexOf(mapId) >= 0) return mapId;
-    return activeScenario();
+    var ids = selectedIds();
+    if (!ids.length) return "";
+    if (ids.length === 1) return ids[0];
+    if (ids.length === 4) return "package";
+    return "selection";
   }
 
   function countyMapValue(row) {
     var sid = mapScenarioId();
+    if (!sid) return 0;
     if (sid === "package") return cell(row, "package").central;
+    if (sid === "selection") return countyPackageValue(row);
     if (BENCHMARKS.indexOf(sid) >= 0) return Number(cell(row, sid).central);
-    return countyPackageValue(row);
+    return 0;
   }
 
   function stateNameOf(code) {
@@ -265,14 +320,20 @@
       unknownState = "";
       stateCode = st;
     }
-    var raw = q.get("on");
-    if (raw) {
+    if (q.has("on")) {
+      var raw = q.get("on") || "";
       on = new Set();
-      raw.split(",").forEach(function (part) {
-        var id = ALIAS[part] || part;
-        if (BENCHMARKS.indexOf(id) >= 0) on.add(id);
-      });
-      if (!on.size) on.add("missing_middle");
+      if (raw && raw !== "none") {
+        raw.split(",").forEach(function (part) {
+          var id = ALIAS[part] || part;
+          if (BENCHMARKS.indexOf(id) >= 0) on.add(id);
+        });
+        if (!on.size) on.add("missing_middle");
+      }
+    }
+    if (q.has("ov")) {
+      overrides = decodeOverrides(q.get("ov") || "");
+      urlOverridesPending = true;
     }
     var mapped = q.get("map");
     if (mapped) {
@@ -293,7 +354,10 @@
   function writeUrl() {
     var q = new URLSearchParams();
     q.set("st", stateCode);
-    q.set("on", selectedIds().map(function (id) { return SHORT[id]; }).join(","));
+    var chosen = selectedIds();
+    q.set("on", chosen.length ? chosen.map(function (id) { return SHORT[id]; }).join(",") : "none");
+    var ov = encodeOverrides(overrides);
+    if (ov) q.set("ov", ov);
     if (mapId) q.set("map", mapId === "package" ? "package" : (SHORT[mapId] || mapId));
     if (selectedFips) q.set("county", selectedFips);
     q.set("view", view);
@@ -311,9 +375,28 @@
 
   function fillAduFeeNote() {
     var el = document.getElementById("adu-fee-note");
-    if (!el || !aduCompare) return;
-    if (el.querySelector("details") || (el.textContent || "").replace(/\s+/g, " ").trim()) return;
-    el.innerHTML = aduCompare.notes.lab_html;
+    if (!el || !aduCompare || !aduCompare.notes) return;
+    el.innerHTML = aduCompare.notes.lab_html || "";
+  }
+
+  function renderTryPa() {
+    var btn = document.getElementById("try-pa");
+    if (!btn) return;
+    var showing = stateCode === "PA";
+    btn.hidden = showing;
+    if (showing) btn.setAttribute("aria-hidden", "true");
+    else btn.removeAttribute("aria-hidden");
+  }
+
+  function showRetry(retry) {
+    if (!statusEl) return;
+    statusEl.textContent = "";
+    statusEl.appendChild(document.createTextNode("Couldn't load this view. "));
+    var button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Retry";
+    button.addEventListener("click", retry || function () { loadAll(); });
+    statusEl.appendChild(button);
   }
 
   function loadAll() {
@@ -349,16 +432,20 @@
       catalog = parts[2];
       aduCompare = parts[3];
       live = null;
-      overrides = {};
+      var keepOverrides = urlOverridesPending;
+      urlOverridesPending = false;
+      if (!keepOverrides) overrides = {};
       if (stateCode === "PA") selectedFips = selectedFips || "42003";
       else if (!countyRow(selectedFips)) selectedFips = locked.counties[0].fips;
       if (stateSelect) stateSelect.value = stateCode;
       fillAduFeeNote();
+      renderTryPa();
       renderAll();
+      if (keepOverrides && Object.keys(overrides).length) scheduleRecompute();
       if (whyOpen) loadWhy();
       setStatus("");
-    }).catch(function (err) {
-      setStatus(err.message);
+    }).catch(function () {
+      showRetry(function () { loadAll(); });
     });
   }
 
@@ -448,9 +535,14 @@
     var sw = docStatewide();
     var baseline = sw.results.baseline.central;
     if (!on.size) return "Turn on a reform below to start.";
-    if (t.exact) {
-      return "Your package: about " + integer(t.c) + " extra homes (likely " +
+    if (t.exact && t.status !== "unavailable" && isFinite(Number(t.lo)) && isFinite(Number(t.hi))) {
+      var rangeWord = t.status === "reference" ? "Reference range (defaults) " : "likely ";
+      return "Your package: about " + integer(t.c) + " extra homes (" + rangeWord +
         integer(t.lo) + "–" + integer(t.hi) + ") on top of " +
+        integer(baseline) + " expected.";
+    }
+    if (t.exact && t.status === "unavailable") {
+      return "Your package: about " + integer(t.c) + " extra homes (likely range unavailable) on top of " +
         integer(baseline) + " expected.";
     }
     return "Your package: about " + integer(t.c) +
@@ -465,10 +557,14 @@
     var row = sw.results[sid] || sw.results.adu;
     var pair = sw.top_benchmark_pair;
     var meta = "";
-    if (t.exact && on.size) {
-      meta = '<p class="hero-meta">' + jargon("Envelope") + " " + integer(t.lo) + "–" + integer(t.hi) + tag("calculated") +
+    if (t.exact && on.size && isFinite(Number(t.lo)) && isFinite(Number(t.hi))) {
+      var envelopeLabel = t.status === "reference" ? "Reference range (defaults)" : "Envelope";
+      meta = '<p class="hero-meta">' + jargon(envelopeLabel === "Envelope" ? "Envelope" : envelopeLabel, envelopeLabel) +
+        " " + integer(t.lo) + "–" + integer(t.hi) + tag("calculated") +
         " · " + jargon("Zoning") + " " + integer(row.zoning_low) + "–" + integer(row.zoning_high) + tag("calculated") +
         " · " + jargon("ACS MOE") + " ±" + integer(row.acs_moe) + tag("observed") + "</p>";
+    } else if (t.exact && on.size && t.status === "unavailable") {
+      meta = '<p class="hero-meta">Likely range unavailable</p>';
     }
     var nh = "";
     if (locked.state === "NH") {
@@ -509,7 +605,7 @@
     var mx = Math.max(sw.results.package.p90 * 1.05, 1);
     var band = document.getElementById("band");
     var tick = document.getElementById("tick");
-    if (t.exact && t.c) {
+    if (t.exact && t.c && isFinite(Number(t.lo)) && isFinite(Number(t.hi))) {
       band.style.left = (t.lo / mx * 100) + "%";
       band.style.width = ((t.hi - t.lo) / mx * 100) + "%";
     } else {
@@ -522,10 +618,14 @@
     if (!on.size) {
       range.textContent = "Turn on a reform below to start.";
       liveEl.textContent = "No reforms selected.";
-    } else if (t.exact) {
-      range.innerHTML = "Likely range <b>" + integer(t.lo) + " – " + integer(t.hi) +
+    } else if (t.exact && t.status === "unavailable") {
+      range.textContent = "Likely range unavailable";
+      liveEl.textContent = "Your package: about " + integer(t.c) + " extra homes. Likely range unavailable.";
+    } else if (t.exact && isFinite(Number(t.lo)) && isFinite(Number(t.hi))) {
+      var rangeWord = t.status === "reference" ? "Reference range (defaults)" : "Likely range";
+      range.innerHTML = rangeWord + " <b>" + integer(t.lo) + " – " + integer(t.hi) +
         "</b> extra homes · on top of " + integer(baseline) + " expected anyway " + tag("calculated");
-      liveEl.textContent = "Your package: about " + integer(t.c) + " extra homes, likely " +
+      liveEl.textContent = "Your package: about " + integer(t.c) + " extra homes, " + rangeWord.toLowerCase() + " " +
         integer(t.lo) + " to " + integer(t.hi) + ".";
     } else {
       range.innerHTML = "<b>" + escapeHtml(HONESTY.charAt(0).toUpperCase() + HONESTY.slice(1)) + "</b> " +
@@ -542,9 +642,12 @@
       mini.hidden = !on.size;
       if (!on.size) {
         mini.textContent = "";
-      } else if (t.exact) {
-        mini.textContent = "Your package: +" + integer(t.c) + " extra homes (likely " +
+      } else if (t.exact && isFinite(Number(t.lo)) && isFinite(Number(t.hi))) {
+        var miniWord = t.status === "reference" ? "Reference range (defaults) " : "likely ";
+        mini.textContent = "Your package: +" + integer(t.c) + " extra homes (" + miniWord +
           integer(t.lo) + "–" + integer(t.hi) + ")";
+      } else if (t.exact) {
+        mini.textContent = "Your package: +" + integer(t.c) + " extra homes";
       } else {
         mini.textContent = "Your package: +" + integer(t.c) + " extra homes";
       }
@@ -592,7 +695,8 @@
   }
 
   function outcomeBadgeHtml(row) {
-    if (!row || row.p10 > 0) return "";
+    if (!row || row.interval_status === "reference" || row.interval_status === "unavailable") return "";
+    if (!isFinite(Number(row.p10)) || row.p10 > 0) return "";
     return '<button type="button" class="badge badge-out" aria-expanded="false" data-badge="out">Outcome uncertain</button>';
   }
 
@@ -611,7 +715,7 @@
         '<div class="mini" aria-hidden="true"><i style="left:' + (row.p10 / mx * 100) +
         "%;width:" + ((row.p90 - row.p10) / mx * 100) + '%"></i><b style="left:' +
         (row.central / mx * 100) + '%"></b></div>' +
-        '<div class="r">Likely range ' + integer(row.p10) + "–" + integer(row.p90) + "</div>" +
+        '<div class="r">' + describeRange(row) + "</div>" +
         closeBadgeHtml(k, sw) + outcomeBadgeHtml(row) + "</article>";
     }).join("");
     extraCards.innerHTML = (locked.scenarios || []).filter(function (s) {
@@ -873,12 +977,21 @@
   function renderCountyLine(fips) {
     var row = countyRow(fips);
     if (!row) return;
-    var value = countyMapValue(row);
+    var ids = selectedIds();
+    var value = ids.length ? countyMapValue(row) : 0;
     var sid = mapScenarioId();
-    var env = sid ? cell(row, sid) : null;
-    var text = countyPhrase(row) + " " + signed(value) + " extra homes" +
-      (env ? " (likely " + integer(env.p10) + "–" + integer(env.p90) + ")" :
-        ids.length ? " (simple sum; model run pending)" : "") +
+    var env = (sid && sid !== "selection") ? cell(row, sid) : null;
+    var who = ids.length ? selectionLabel() + " " : "";
+    var range = "";
+    if (!ids.length) range = "";
+    else if (env && isFinite(Number(env.p10)) && env.interval_status !== "reference") {
+      range = " (likely " + integer(env.p10) + "–" + integer(env.p90) + ")";
+    } else if (env && env.interval_status === "reference") {
+      range = " (Reference range (defaults) " + integer(env.p10) + "–" + integer(env.p90) + ")";
+    } else if (ids.length > 1 && sid === "selection") {
+      range = " (simple sum, not modeled)";
+    }
+    var text = countyPhrase(row) + " " + who + signed(value) + " extra homes" + range +
       " on top of " + integer(cell(row, "baseline").central) + " expected.";
     countyDetail.hidden = false;
     countyDetail.textContent = text;
@@ -896,6 +1009,20 @@
     var row = selectedFips ? countyRow(selectedFips) : null;
     if (!row) { countyDetail.hidden = true; return; }
     var sid = mapScenarioId();
+    if (!sid) {
+      countyDetail.hidden = false;
+      countyDetail.textContent = countyPhrase(row) + " 0 extra homes. No reforms selected.";
+      return;
+    }
+    if (sid === "selection") {
+      countyDetail.hidden = false;
+      countyDetail.innerHTML =
+        "<p>" + escapeHtml(countyPhrase(row)) + " " + escapeHtml(selectionLabel()) + " " +
+        signed(countyMapValue(row)) + tag("calculated") +
+        " (simple sum, not modeled) on top of " + integer(cell(row, "baseline").central) +
+        " expected " + tag("calculated") + ".</p>";
+      return;
+    }
     var current = cell(row, sid);
     var env = lockedCell(row.fips, sid) || current;
     var pair = row.top_benchmark_pair;
@@ -904,7 +1031,7 @@
     countyDetail.innerHTML =
       "<p>" + escapeHtml(countyPhrase(row)) + " " +
       scenarioLabel(sid) + " " + signed(countyMapValue(row)) + tag("calculated") +
-      " (likely " + integer(env.p10) + "–" + integer(env.p90) + tag("assumed") +
+      " (" + describeRange(env) + tag("assumed") +
       ") on top of " + integer(cell(row, "baseline").central) + " expected " + tag("calculated") +
       ". Eligible " + integer(current.eligible) + tag("calculated") +
       ", feasible " + integer(current.feasible) + tag("calculated") +
@@ -920,16 +1047,17 @@
       return Math.abs(countyMapValue(b)) - Math.abs(countyMapValue(a));
     });
     countyBody.innerHTML = rows.map(function (row) {
-      var current = cell(row, sid);
-      var env = lockedCell(row.fips, sid) || current;
+      var value = sid ? countyMapValue(row) : 0;
+      var current = (sid && sid !== "selection") ? cell(row, sid) : null;
+      var env = current ? (lockedCell(row.fips, sid) || current) : null;
       return "<tr data-fips='" + row.fips + "' class='" + (row.fips === selectedFips ? "selected" : "") + "'>" +
         "<td>" + escapeHtml(row.name) + "</td>" +
-        "<td>" + signed(countyMapValue(row)) + "</td>" +
-        "<td>" + integer(current.eligible) + "</td>" +
-        "<td>" + integer(current.feasible) + "</td>" +
-        "<td>" + integer(env.p10) + "–" + integer(env.p90) + "</td>" +
-        "<td>" + integer(current.zoning_low) + "–" + integer(current.zoning_high) + "</td>" +
-        "<td>±" + integer(current.acs_moe) + "</td></tr>";
+        "<td>" + signed(value) + "</td>" +
+        "<td>" + (current ? integer(current.eligible) : "") + "</td>" +
+        "<td>" + (current ? integer(current.feasible) : "") + "</td>" +
+        "<td>" + (env ? describeRange(env) : "") + "</td>" +
+        "<td>" + (current ? integer(current.zoning_low) + "–" + integer(current.zoning_high) : "") + "</td>" +
+        "<td>" + (current ? "±" + integer(current.acs_moe) : "") + "</td></tr>";
     }).join("");
     countyBody.querySelectorAll("tr").forEach(function (tr) {
       tr.addEventListener("click", function () {
@@ -981,6 +1109,7 @@
       var onTab = name === view;
       if (tab) {
         tab.classList.toggle("active", onTab);
+        tab.removeAttribute("aria-pressed");
         tab.setAttribute("aria-selected", onTab ? "true" : "false");
         tab.tabIndex = onTab ? 0 : -1;
       }
@@ -1009,13 +1138,18 @@
   }
 
   function sliderValueText(spec, value) {
-    if (spec.unit === "share" || spec.unit === "probability" || spec.unit.indexOf("share") === 0) return pct(value);
-    if (spec.unit.charAt(0) === "$" || spec.unit === "$ per home" || spec.unit === "$ per sq ft") return money(value);
-    if (spec.unit === "per year") return pct(value) + " a year";
     var n = Number(value);
+    if (!isFinite(n)) return "—";
+    if (spec.unit === "share" || spec.unit === "probability" || spec.unit.indexOf("share") === 0) {
+      return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 3 });
+    }
+    if (spec.unit.charAt(0) === "$" || spec.unit === "$ per home" || spec.unit === "$ per sq ft") return money(value);
+    if (spec.unit === "per year") {
+      return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 3 }) + " a year";
+    }
     if (Math.abs(n) >= 1000) return integer(n);
-    if (Math.abs(n) >= 1) return String(Math.round(n * 100) / 100);
-    return String(Math.round(n * 10000) / 10000);
+    var digits = Math.abs(n) >= 10 ? 2 : 3;
+    return n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: digits });
   }
 
   function formatParam(spec, value) {
@@ -1244,10 +1378,12 @@
     var sw = docStatewide();
     var t = packageTotal();
     var rank = rankedBenchmarks();
+    var rangeHead = (sw.results.adu && sw.results.adu.interval_status === "reference")
+      ? "Reference range (defaults)" : "Likely range";
     var rows = rank.map(function (k) {
       var r = sw.results[k];
       return "<tr><td>" + escapeHtml(PLAIN[k]) + "</td><td>" + signed(r.central) +
-        "</td><td>" + integer(r.p10) + "–" + integer(r.p90) + "</td></tr>";
+        "</td><td>" + describeRange(r) + "</td></tr>";
     }).join("");
     var d = sw.package_decomposition;
     el.innerHTML =
@@ -1255,7 +1391,7 @@
       "<p>Bottom line: the selected package is " + signed(t.c) +
       (t.exact ? " (likely " + integer(t.lo) + "–" + integer(t.hi) + ")" : " — " + HONESTY) +
       " on top of " + integer(sw.results.baseline.central) + " expected.</p>" +
-      "<table><thead><tr><th>Reform</th><th>Extra homes</th><th>Likely range</th></tr></thead><tbody>" +
+      "<table><thead><tr><th>Reform</th><th>Extra homes</th><th>" + escapeHtml(rangeHead) + "</th></tr></thead><tbody>" +
       rows +
       "<tr><td>All four together (don't add the bills up)</td><td>" + signed(d.package) +
       "</td><td>" + integer(sw.results.package.p10) + "–" + integer(sw.results.package.p90) +
@@ -1357,19 +1493,22 @@
 
   function exportCsv() {
     var sid = mapScenarioId();
-    var header = ["county", "fips", "extra_homes", "eligible", "feasible", "p10", "p90", "zoning_low", "zoning_high", "acs_moe"];
+    var header = ["county", "fips", "extra_homes", "eligible", "feasible", "p10", "p90", "range_role", "zoning_low", "zoning_high", "acs_moe"];
     var lines = [header.join(",")];
     docCounties().forEach(function (row) {
       var current = cell(row, sid);
       var env = lockedCell(row.fips, sid) || current;
+      var role = (live && current.interval_status === "reference")
+        ? "reference_at_default_settings" : "conditional_on_published_assumptions";
       lines.push([
-        '"' + row.name.replace(/"/g, '""') + '"',
+        csvCell(row.name),
         row.fips,
         Math.round(countyMapValue(row)),
-        Math.round(current.eligible),
-        Math.round(current.feasible),
-        Math.round(env.p10),
-        Math.round(env.p90),
+        Math.round(current.eligible || 0),
+        Math.round(current.feasible || 0),
+        isFinite(Number(env.p10)) ? Math.round(env.p10) : "",
+        isFinite(Number(env.p90)) ? Math.round(env.p90) : "",
+        role,
         Math.round(current.zoning_low),
         Math.round(current.zoning_high),
         Math.round(current.acs_moe)
@@ -1384,7 +1523,13 @@
   }
 
   function download(fmt) {
-    var payload = { state: stateCode, format: fmt, county: selectedFips, overrides: overrides };
+    var payload = {
+      state: stateCode,
+      format: fmt,
+      county: selectedFips,
+      overrides: overrides,
+      reforms: selectedIds()
+    };
     fetch("/api/lab/export", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1395,7 +1540,7 @@
       return res.blob().then(function (blob) { return { blob: blob, name: name }; });
     }).then(function (file) {
       downloadBlob(file.blob, file.name);
-    }).catch(function (err) { setStatus(err.message); });
+    }).catch(function () { showRetry(function () { download(fmt); }); });
   }
 
   function showTour(i) {
@@ -1494,6 +1639,15 @@
     tab.addEventListener("click", function () { setView(name); });
     tab.addEventListener("keydown", onViewTabKey);
   });
+
+  if (typeof window !== "undefined") {
+    window.StateframeLab = {
+      selection: function () { return selectedIds().slice(); },
+      overrideMap: function () { return Object.assign({}, overrides); },
+      describeRange: describeRange,
+      writeUrl: writeUrl
+    };
+  }
 
   parseUrl();
   renderStateNotice();

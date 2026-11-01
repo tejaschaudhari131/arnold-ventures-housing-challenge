@@ -49,8 +49,12 @@ def test_density_bins():
 
 
 def test_allowlist_rejects_other_hosts():
-    with pytest.raises(acquire.AcquireError):
-        acquire._request("https://example.com/data.csv")
+    from src.data.safe_url import FetchDenied, assert_allowed
+
+    with pytest.raises(FetchDenied):
+        assert_allowed("https://example.com/data.csv", acquire.ALLOWED_HOSTS)
+    with pytest.raises(FetchDenied):
+        assert_allowed("http://www2.census.gov/data.csv", acquire.ALLOWED_HOSTS)
 
 
 def test_wprdc_query_is_aggregate_and_never_selects_owner_fields():

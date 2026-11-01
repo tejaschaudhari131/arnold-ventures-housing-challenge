@@ -1020,6 +1020,8 @@ def _scenario_shell(
         "lift_pct": lift,
         "cap_binding": binding,
         "capacity_completions": capacity,
+        # Baseline capacity is the five-year level. Reform capacity is an increment.
+        "capacity_completions_basis": "level" if scenario_id == "baseline" else "increment",
         "trace": trace,
         "drivers": drivers,
         "cannot": CANNOT[scenario_id],

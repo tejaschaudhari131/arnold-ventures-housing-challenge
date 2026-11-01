@@ -134,7 +134,8 @@
           <h2>What moves the result</h2>
           <button type="button" id="run-sensitivity">Run tornado and confidence band</button>
         </div>
-        <p class="help">Each bar sets one published assumption to its low value and its high value, holding the others at central. The band is a seeded Monte Carlo draw from those same ranges. An outcome-uncertain badge appears when the p10–p90 band crosses zero.</p>
+        <p class="help">Each bar sets one published assumption to its low value and its high value, holding the others at the current scenario. The band is a seeded Monte Carlo draw from those same ranges. An outcome-uncertain badge appears when the p10–p90 band crosses zero.</p>
+        <p id="sensitivity-scope" class="help"></p>
         <div id="band" class="callout"></div>
         <div id="tornado"></div>
       </section>
