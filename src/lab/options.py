@@ -70,7 +70,9 @@ def adu_economics_gate(excess: float, ref_excess: float | None, sigma: float) ->
     and no parking, the CA calibration point. Official California Legislative
     Information text of Gov. Code 66311.5(c)(1) (formerly 65852.2(f)(3))
     exempts ADUs of 750 sq ft or less of interior livable space from impact
-    fees. The Lab prototype is 600 sq ft.
+    fees:
+    https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=66311.5.
+    The Lab prototype is 600 sq ft.
     """
     if ref_excess is None or sigma <= 0:
         return 1.0
@@ -131,9 +133,11 @@ def evaluate_option(
         cost = p["adu_sqft"] * p["adu_cost_psf"] * soft + econ.fee + spaces * p["stall_cost_surface"]
         area = footprint + p["adu_sqft"] / p["adu_stories"] + p["adu_open_space_sqft"] + spaces * stall_area
         hurdle, hazard, lag = p["hurdle_owner"], p["hazard_homeowner"], p["build_lag_adu_years"]
-        # CA calibration: Gov. Code 65852.2(f)(3) (now 66311.5(c)(1)) exempts
-        # ADUs of 750 sq ft or less from impact fees, and the Handbook ADU
-        # needs no space. The Lab prototype is 600 sq ft.
+        # CA calibration: Gov. Code 66311.5(c)(1) (formerly 65852.2(f)(3))
+        # exempts ADUs of 750 sq ft or less of interior livable space from
+        # impact fees, and the Handbook ADU needs no space. Confirmed at
+        # https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=66311.5.
+        # The Lab prototype is 600 sq ft.
         ref_cost = p["adu_sqft"] * p["adu_cost_psf"] * soft
         ref_excess = (value / ref_cost - 1.0) - hurdle if ref_cost > 0 else None
     elif option == "mm2":
