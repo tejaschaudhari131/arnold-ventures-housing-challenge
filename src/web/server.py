@@ -272,8 +272,10 @@ class App:
         )
 
     def lab_recompute(self, payload: dict[str, Any]) -> dict[str, Any]:
-        from src.lab.explain import clamp_overrides, recompute
+        from src.lab.explain import _selected_reforms, clamp_overrides, recompute
 
+        if "reforms" in payload and payload.get("reforms") is not None:
+            _selected_reforms(payload.get("reforms"))
         county = payload.get("county")
         return recompute(
             str(payload.get("state", "PA")),

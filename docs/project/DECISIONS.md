@@ -19,3 +19,5 @@
 | 2026-11-01 | A repeated Lab reform id is HTTP 400 `Duplicate reform.` The four ids in any order are the package. | `['adu','adu']` was counted twice (Adams central 98.2). A full list plus a repeat was treated as a custom mix. Screening reforms are an object, so a JSON key cannot repeat. |
 | 2026-11-01 | `pandas` is installed by `scripts/test.sh` and is not a requirements pin. | The county CSV regression calls `pandas.read_csv`. NumPy's license expression includes CC0, so pandas is not shipped with the app. |
 | 2026-11-01 | A multi-reform Why pro forma applies every selected reform's fee and parking levers together. | Using the first id made `[fees, missing_middle]` and the reverse show different mm2 costs. Delivery totals stay a labeled sum. |
+| 2026-11-01 | `/api/lab/recompute` keeps computing every scenario. A posted reform list is only validated. | The page sums the selected rows. Unknown and duplicate ids are 400. Dropping scenarios would change what the sliders recompute. |
+| 2026-11-01 | A custom mix does not show a statistical-tie badge. | The mix CSV says the close call is not computed. The screen and the brief say the same. |

@@ -62,7 +62,7 @@ def test_lab_phase2_landmarks_and_tour():
     assert "not labeled validated" in LAB
     assert "Copy link to this view" in LAB
     assert "Download PNG" in LAB
-    assert "One-page PDF" in LAB
+    assert "Print / save as PDF (one page)" in LAB
     assert 'id="recon"' in LAB
     assert "reconciliation_note" in LAB_JS
 

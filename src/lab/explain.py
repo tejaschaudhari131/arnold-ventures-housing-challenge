@@ -729,8 +729,10 @@ def brief_markdown(
         f"{'primary case' if meta['role'] == 'primary' else 'portability test'}.",
         "",
     ]
+    custom_mix = False
     if reforms is not None:
         selected = _selected_reforms(reforms)
+        custom_mix = len(selected) != 1 and not _is_full_package(selected)
         if not selected:
             lines.append("Selected reforms: none. Extra homes from that selection: 0.")
             lines.append("Range for this mix: not computed. Blank cells are not the baseline range.")
@@ -780,43 +782,46 @@ def brief_markdown(
             "The range column is the locked p10–p90 at published assumptions "
             "(Reference range (defaults)). It is not conditional on the assumption change."
         )
-    top = sw["top_benchmark_pair"]
-    leader = SCENARIO_SHORT.get(top["leader"], top["leader"])
-    trailer = SCENARIO_SHORT.get(top["trailer"], top["trailer"])
-    threshold = locked.get("close_call_flip_share_label", "close-call threshold")
-    median_src = results
-    if is_draw_tie(top) and not (
-        "p50" in results.get(top["leader"], {}) and "p50" in results.get(top["trailer"], {})
-    ):
-        median_src = locked["statewide"]["results"]
-    if is_draw_tie(top):
-        pair_line = "Statistical tie. " + top_pair_tie_clause(top, median_src)
+    if custom_mix:
+        lines += ["", "Close call: not computed for mix."]
     else:
-        pair_line = f"Top pair: {leader} leads {trailer} by {homes(top['gap'])} homes."
-    lines += [
-        "",
-        f"Handbook ranking: {ranking_phrase(sw['benchmark_ranking'], top)}.",
-        pair_line,
-        f"The {threshold} is 10 percent of assumption draws.",
-    ]
-    se_bits = []
-    for sid in ["baseline"] + list(compared_scenarios()):
-        env = locked["statewide"]["results"][sid]
-        if "p50_se" in env:
-            label = SCENARIO_SHORT.get(sid) or next(s["short"] for s in locked["scenarios"] if s["id"] == sid)
-            se_bits.append(f"{label} ±{homes(env['p50_se'])}")
-    if se_bits:
-        lines.append(
-            f"Envelope sampling error (bootstrap SE of P50, {locked['draws']:,} draws, seed {locked['seed']}): "
-            + "; ".join(se_bits) + "."
-        )
-    if is_draw_tie(top):
-        lines.append(
-            f"**Statistical tie.** The central estimate favors {leader}; "
-            f"{trailer} is ahead in {float(top['flip_share']):.0%} of assumption draws."
-        )
-    elif top["close_call"]:
-        lines.append("**Ranking is close.** " + "; ".join(top["reasons"]) + ".")
+        top = sw["top_benchmark_pair"]
+        leader = SCENARIO_SHORT.get(top["leader"], top["leader"])
+        trailer = SCENARIO_SHORT.get(top["trailer"], top["trailer"])
+        threshold = locked.get("close_call_flip_share_label", "close-call threshold")
+        median_src = results
+        if is_draw_tie(top) and not (
+            "p50" in results.get(top["leader"], {}) and "p50" in results.get(top["trailer"], {})
+        ):
+            median_src = locked["statewide"]["results"]
+        if is_draw_tie(top):
+            pair_line = "Statistical tie. " + top_pair_tie_clause(top, median_src)
+        else:
+            pair_line = f"Top pair: {leader} leads {trailer} by {homes(top['gap'])} homes."
+        lines += [
+            "",
+            f"Handbook ranking: {ranking_phrase(sw['benchmark_ranking'], top)}.",
+            pair_line,
+            f"The {threshold} is 10 percent of assumption draws.",
+        ]
+        se_bits = []
+        for sid in ["baseline"] + list(compared_scenarios()):
+            env = locked["statewide"]["results"][sid]
+            if "p50_se" in env:
+                label = SCENARIO_SHORT.get(sid) or next(s["short"] for s in locked["scenarios"] if s["id"] == sid)
+                se_bits.append(f"{label} ±{homes(env['p50_se'])}")
+        if se_bits:
+            lines.append(
+                f"Envelope sampling error (bootstrap SE of P50, {locked['draws']:,} draws, seed {locked['seed']}): "
+                + "; ".join(se_bits) + "."
+            )
+        if is_draw_tie(top):
+            lines.append(
+                f"**Statistical tie.** The central estimate favors {leader}; "
+                f"{trailer} is ahead in {float(top['flip_share']):.0%} of assumption draws."
+            )
+        elif top["close_call"]:
+            lines.append("**Ranking is close.** " + "; ".join(top["reasons"]) + ".")
     decomp = sw["package_decomposition"]
     lines += [
         "",

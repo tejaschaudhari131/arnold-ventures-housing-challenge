@@ -620,6 +620,72 @@ def test_completion_ratio_slider_changes_the_headline():
         httpd.server_close()
 
 
+def test_recompute_validates_reforms_and_still_returns_every_scenario():
+    httpd = _server()
+    base = f"http://127.0.0.1:{httpd.server_address[1]}"
+    try:
+        code, bad, _ = _post(
+            base, "/api/lab/recompute", {"state": "PA", "reforms": ["not_a_reform"]}
+        )
+        assert code == 400
+        assert bad["error"] == "Unknown reform."
+        assert "not_a_reform" not in json.dumps(bad)
+        code, dup, _ = _post(
+            base, "/api/lab/recompute", {"state": "PA", "reforms": ["adu", "adu"]}
+        )
+        assert code == 400
+        assert dup["error"] == "Duplicate reform."
+        code, plain, _ = _post(base, "/api/lab/recompute", {"state": "PA"})
+        code, kept, _ = _post(
+            base,
+            "/api/lab/recompute",
+            {"state": "PA", "reforms": ["fees", "missing_middle"]},
+        )
+        assert code == 200 and plain
+        assert kept["statewide"]["results"]["missing_middle"]["central"] == (
+            plain["statewide"]["results"]["missing_middle"]["central"]
+        )
+        assert "package" in kept["statewide"]["results"]
+        status, brief, _ = _post(
+            base,
+            "/api/lab/export",
+            {"state": "PA", "format": "md", "reforms": ["adu", "missing_middle"]},
+        )
+        text = brief.decode("utf-8")
+        assert status == 200
+        assert "Close call: not computed for mix." in text
+        assert "Statistical tie" not in text
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_static_aria_describedby_targets_exist():
+    from pathlib import Path
+    import re
+
+    root = Path(__file__).resolve().parents[1] / "src" / "web" / "static"
+    for path in list(root.glob("*.html")) + list(root.glob("*.js")):
+        text = path.read_text(encoding="utf-8")
+        ids = set(re.findall(r'\bid="([^"]+)"', text))
+        for ref in re.findall(r'aria-describedby="([^"]*)"', text):
+            if "+" in ref or "\n" in ref or "'" in ref:
+                continue
+            for token in ref.split():
+                assert token in ids, (path.name, token)
+
+
+def test_client_csv_has_a_constant_column_count():
+    proc = subprocess.run(
+        ["node", "tests/js/lab_csv.mjs"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr + proc.stdout
+    assert "16 subsets" in proc.stdout
+
+
 def test_lab_url_round_trip_keeps_an_empty_selection(tmp_path):
     proc = subprocess.run(
         ["node", "tests/js/lab_roundtrip.mjs", "?st=PA&on=none&ov=hazard_homeowner_feasible:0.0062"],

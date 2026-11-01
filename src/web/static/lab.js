@@ -95,13 +95,109 @@
     return Math.round(n).toLocaleString("en-US");
   }
 
+  var MIX_CSV_COLUMNS = [
+    "fips", "county", "scenario", "central", "central_basis",
+    "envelope_p10", "envelope_p90", "range_role",
+    "zoning_low", "zoning_high", "acs_moe",
+    "eligible_sum_of_reforms", "feasible_sum_of_reforms", "basis",
+    "close_call_top_benchmark"
+  ];
+  var SCENARIO_CSV_COLUMNS = [
+    "fips", "county", "scenario", "central", "envelope_p10", "envelope_p90",
+    "range_role", "zoning_low", "zoning_high", "acs_moe", "eligible", "feasible",
+    "close_call_top_benchmark"
+  ];
+  var CENTRAL_BASIS = "simple sum of standalone results, not modelled jointly";
+  var COUNT_BASIS = "sum of per-reform counts; lots may overlap; not a joint count";
+
   function csvCell(value) {
-    var text = String(value);
+    var text = value == null ? "" : String(value);
     if (/^[=+\-@\t\r]/.test(text) && !/^[+\-]?(\d+(\.\d*)?|\.\d+)([eE][+\-]?\d+)?$/.test(text)) {
       text = "'" + text;
     }
-    if (/[",\n]/.test(text)) return '"' + text.replace(/"/g, '""') + '"';
+    if (/[",\r\n]/.test(text)) return '"' + text.replace(/"/g, '""') + '"';
     return text;
+  }
+
+  function csvLine(fields) {
+    return fields.map(csvCell).join(",");
+  }
+
+  function oneDecimal(value) {
+    var n = Number(value);
+    if (!isFinite(n)) return "";
+    return (Math.round(n * 10) / 10).toFixed(1);
+  }
+
+  function customSelection(ids) {
+    return !ids || (ids.length !== 1 && ids.length !== 4);
+  }
+
+  function buildCountyCsv(counties, ids, opts) {
+    opts = opts || {};
+    var lockedCounties = opts.lockedCounties || counties || [];
+    var custom = customSelection(ids);
+    var header = custom ? MIX_CSV_COLUMNS : SCENARIO_CSV_COLUMNS;
+    var lines = [csvLine(header)];
+    var role = opts.live ? "reference_at_default_settings" : "conditional_on_published_assumptions";
+    (counties || []).forEach(function (row) {
+      if (custom) {
+        var central = 0;
+        var eligible = 0;
+        var feasible = 0;
+        (ids || []).forEach(function (id) {
+          var part = row.results && row.results[id];
+          if (!part) return;
+          central += Number(part.central) || 0;
+          eligible += Number(part.eligible) || 0;
+          feasible += Number(part.feasible) || 0;
+        });
+        var empty = !ids || !ids.length;
+        lines.push(csvLine([
+          row.fips,
+          row.name,
+          empty ? "none" : "selection",
+          empty ? "0.0" : oneDecimal(central),
+          empty ? "no reforms selected" : CENTRAL_BASIS,
+          "",
+          "",
+          "Reference range (defaults) not computed for this mix",
+          "",
+          "",
+          "",
+          empty ? "" : oneDecimal(eligible),
+          empty ? "" : oneDecimal(feasible),
+          empty ? "" : COUNT_BASIS,
+          "not computed for mix"
+        ]));
+        return;
+      }
+      var sid = ids.length === 4 ? "package" : ids[0];
+      var current = (row.results && row.results[sid]) || {};
+      var lockedRow = lockedCounties.filter(function (item) { return item.fips === row.fips; })[0] || row;
+      var env = (lockedRow.results && lockedRow.results[sid]) || current;
+      var close = false;
+      if (lockedRow.top_benchmark_pair) close = !!lockedRow.top_benchmark_pair.close_call;
+      else if (lockedRow.pairs) {
+        close = Object.keys(lockedRow.pairs).some(function (key) { return lockedRow.pairs[key][1]; });
+      }
+      lines.push(csvLine([
+        row.fips,
+        row.name,
+        sid,
+        oneDecimal(current.central),
+        isFinite(Number(env.p10)) ? oneDecimal(env.p10) : "",
+        isFinite(Number(env.p90)) ? oneDecimal(env.p90) : "",
+        role,
+        oneDecimal(current.zoning_low),
+        oneDecimal(current.zoning_high),
+        oneDecimal(current.acs_moe),
+        oneDecimal(current.eligible || 0),
+        oneDecimal(current.feasible || 0),
+        close ? "yes" : "no"
+      ]));
+    });
+    return lines.join("\n");
   }
 
   function describeRange(row) {
@@ -531,6 +627,11 @@
       " vs " + medianShort(pair.leader) + " " + integer(lead.p50) + ")";
   }
 
+  function mixUnranked() {
+    var n = on.size;
+    return n !== 1 && n !== 4;
+  }
+
   function rankingLine(sw) {
     var rank = sw.benchmark_ranking || [];
     if (isDrawTie(sw.top_benchmark_pair) && rank.length >= 2) {
@@ -605,7 +706,9 @@
     }
     headline.innerHTML =
       '<p class="headline-answer">' + escapeHtml(answerLine()) + tag("calculated") + "</p>" +
-      '<p class="hero-rank">' + rankingBadge(pair, sw) + "</p>" +
+      '<p class="hero-rank">' + (mixUnranked()
+        ? '<span class="badge-close">not computed for mix</span>'
+        : rankingBadge(pair, sw)) + "</p>" +
       nh + meta;
     document.getElementById("state-name").textContent = locked.name;
     var years = catalog ? catalog.window_start.slice(0, 4) + "–" +
@@ -707,12 +810,13 @@
 
   function placeLabel(index, key, sw) {
     var pair = sw.top_benchmark_pair;
-    if (isDrawTie(pair) && (key === pair.leader || key === pair.trailer)) return "Statistical tie";
+    if (!mixUnranked() && isDrawTie(pair) && (key === pair.leader || key === pair.trailer)) return "Statistical tie";
     return "#" + (index + 1) + " on its own";
   }
 
   function closeBadgeHtml(k, sw) {
     var pair = sw.top_benchmark_pair;
+    if (mixUnranked()) return "";
     if (!pair || !pair.close_call) return "";
     if (k !== pair.leader && k !== pair.trailer) return "";
     var flip = Math.round(pair.flip_share * 100);
@@ -1475,8 +1579,10 @@
       "<tr><td>All four together (don't add the bills up)</td><td>" + signed(d.package) +
       "</td><td>" + integer(sw.results.package.p10) + "–" + integer(sw.results.package.p90) +
       "</td></tr></tbody></table>" +
-      "<p>" + escapeHtml(rankingLine(sw)) + ". " +
-      (sw.top_benchmark_pair.close_call ? "Ranking is close." : "Ranking holds.") + "</p>" +
+      "<p>" + (mixUnranked()
+        ? "Close call: not computed for mix."
+        : escapeHtml(rankingLine(sw)) + ". " +
+          (sw.top_benchmark_pair.close_call ? "Ranking is close." : "Ranking holds.")) + "</p>" +
       "<p>Also modeled, not a Handbook benchmark: by-right approval with a shot clock, " +
       signed(sw.results.approval.central) + ".</p>" +
       "<p>Key assumptions: homeowner uptake, conversion cost, and ADU fees stay inside the published bands.</p>" +
@@ -1571,62 +1677,11 @@
   }
 
   function exportCsv() {
-    var ids = selectedIds();
-    var sid = mapScenarioId();
-    var custom = !ids.length || (ids.length > 1 && ids.length < 4);
-    var countBasis = "sum of per-reform counts; lots may overlap; not a joint count";
-    var centralBasis = "simple sum of standalone results, not modelled jointly";
-    var header = custom
-      ? ["county", "fips", "extra_homes", "central_basis", "eligible_sum_of_reforms", "feasible_sum_of_reforms", "basis", "p10", "p90", "range_role", "zoning_low", "zoning_high", "acs_moe", "close_call_top_benchmark"]
-      : ["county", "fips", "extra_homes", "eligible", "feasible", "p10", "p90", "range_role", "zoning_low", "zoning_high", "acs_moe"];
-    var lines = [header.join(",")];
-    docCounties().forEach(function (row) {
-      if (custom) {
-        var eligible = 0;
-        var feasible = 0;
-        ids.forEach(function (id) {
-          var part = row.results[id];
-          if (!part) return;
-          eligible += Number(part.eligible) || 0;
-          feasible += Number(part.feasible) || 0;
-        });
-        lines.push([
-          csvCell(row.name),
-          row.fips,
-          ids.length ? Math.round(countyMapValue(row)) : 0,
-          ids.length ? centralBasis : "no reforms selected",
-          ids.length ? Math.round(eligible) : "",
-          ids.length ? Math.round(feasible) : "",
-          ids.length ? countBasis : "",
-          "",
-          "",
-          "Reference range (defaults) not computed for this mix",
-          "",
-          "",
-          "",
-          "not computed for mix"
-        ].join(","));
-        return;
-      }
-      var current = cell(row, sid);
-      var env = lockedCell(row.fips, sid) || current;
-      var role = (live && current.interval_status === "reference")
-        ? "reference_at_default_settings" : "conditional_on_published_assumptions";
-      lines.push([
-        csvCell(row.name),
-        row.fips,
-        Math.round(countyMapValue(row)),
-        Math.round(current.eligible || 0),
-        Math.round(current.feasible || 0),
-        isFinite(Number(env.p10)) ? Math.round(env.p10) : "",
-        isFinite(Number(env.p90)) ? Math.round(env.p90) : "",
-        role,
-        Math.round(current.zoning_low),
-        Math.round(current.zoning_high),
-        Math.round(current.acs_moe)
-      ].join(","));
+    var text = buildCountyCsv(docCounties(), selectedIds(), {
+      live: !!live,
+      lockedCounties: locked ? locked.counties : []
     });
-    downloadBlob(new Blob([lines.join("\n")], { type: "text/csv" }), "stateframe-" + stateCode + "-counties.csv");
+    downloadBlob(new Blob([text], { type: "text/csv" }), "stateframe-" + stateCode + "-counties.csv");
   }
 
   function printBrief() {
@@ -1777,7 +1832,12 @@
       selection: function () { return selectedIds().slice(); },
       overrideMap: function () { return Object.assign({}, overrides); },
       describeRange: describeRange,
-      writeUrl: writeUrl
+      writeUrl: writeUrl,
+      buildCountyCsv: buildCountyCsv,
+      sliderValueText: sliderValueText,
+      tooltipMarkup: tipControl,
+      mixColumns: MIX_CSV_COLUMNS.slice(),
+      scenarioColumns: SCENARIO_CSV_COLUMNS.slice()
     };
   }
 
