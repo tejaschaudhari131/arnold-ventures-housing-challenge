@@ -1324,9 +1324,11 @@
       }).join("");
       whyBody.innerHTML =
         "<h3>Why this selection</h3><p>" + escapeHtml(whyDoc.note || "") + "</p><ul>" + lines +
-        "</ul><p>Together, as a simple sum: " + signed(whyDoc.result.delivery) +
+        "</ul><p>Together, as a simple sum of standalone results, not modelled jointly: " +
+        signed(whyDoc.result.delivery) +
         " extra homes. Eligible " + integer(whyDoc.result.eligible) +
-        ", feasible " + integer(whyDoc.result.feasible) + ".</p>";
+        ", feasible " + integer(whyDoc.result.feasible) +
+        " (sum of per-reform counts; lots may overlap; not a joint count).</p>";
       return;
     }
     var sw = docStatewide();
@@ -1572,8 +1574,19 @@
     var ids = selectedIds();
     var sid = mapScenarioId();
     var custom = !ids.length || (ids.length > 1 && ids.length < 4);
-    var header = ["county", "fips", "extra_homes", "eligible", "feasible", "p10", "p90", "range_role", "zoning_low", "zoning_high", "acs_moe"];
-    var lines = [header.join(",")];
+    var countBasis = "sum of per-reform counts; lots may overlap; not a joint count";
+    var centralBasis = "simple sum of standalone results, not modelled jointly";
+    var header = custom
+      ? ["county", "fips", "extra_homes", "central_basis", "eligible_sum_of_reforms", "feasible_sum_of_reforms", "basis", "p10", "p90", "range_role", "zoning_low", "zoning_high", "acs_moe", "close_call_top_benchmark"]
+      : ["county", "fips", "extra_homes", "eligible", "feasible", "p10", "p90", "range_role", "zoning_low", "zoning_high", "acs_moe"];
+    var lines = custom
+      ? [
+        "# central: " + centralBasis,
+        "# eligible_sum_of_reforms, feasible_sum_of_reforms: " + countBasis,
+        "# close_call_top_benchmark: not computed for mix",
+        header.join(",")
+      ]
+      : [header.join(",")];
     docCounties().forEach(function (row) {
       if (custom) {
         var eligible = 0;
@@ -1588,14 +1601,17 @@
           csvCell(row.name),
           row.fips,
           ids.length ? Math.round(countyMapValue(row)) : 0,
+          ids.length ? centralBasis : "no reforms selected",
           ids.length ? Math.round(eligible) : "",
           ids.length ? Math.round(feasible) : "",
+          ids.length ? countBasis : "",
           "",
           "",
           "Reference range (defaults) not computed for this mix",
           "",
           "",
-          ""
+          "",
+          "not computed for mix"
         ].join(","));
         return;
       }

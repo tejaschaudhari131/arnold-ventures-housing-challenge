@@ -16,9 +16,12 @@ The app is a fixed set of routes on the standard-library server (`src/web/server
 `scenario` may be one published Lab scenario, or `selection` together with `reforms`, a list of `adu`, `missing_middle`, `parking`, and `fees`.
 
 - An empty list returns HTTP 200 and `empty: true`. Extra homes are 0. It does not explain the baseline as if a reform were selected.
-- Two or three reforms return HTTP 200. Eligible and feasible are the sum of those reforms. The likely range is not computed for that mix.
+- Two or three reforms return HTTP 200. Eligible and feasible in that JSON are the sum of those reforms, and the note says lots may overlap. The likely range is not computed for that mix.
 - One reform, or all four, uses that scenario or the package.
+- An id outside `adu`, `missing_middle`, `parking`, and `fees` returns HTTP 400 with `Unknown reform.` The id is not dropped and is not repeated in the body. The same 400 applies to the brief and the county CSV.
 
 ## `POST /api/lab/export`
 
 `format` is `md`, `html`, or `csv`. `reforms` is the same list. For zero, two, or three reforms the county CSV leaves p10, p90, and the zoning columns blank and sets `range_role` to `Reference range (defaults) not computed for this mix`. Those cells are not filled with baseline numbers.
+
+A two- or three-reform file does not use the columns `eligible` and `feasible`. It uses `eligible_sum_of_reforms` and `feasible_sum_of_reforms`, because adding those counts double-counts lots that appear in more than one reform. Each data row sets `basis` to `sum of per-reform counts; lots may overlap; not a joint count` and `central_basis` to `simple sum of standalone results, not modelled jointly`. `close_call_top_benchmark` is `not computed for mix`, not `no`. The same three sentences are comment lines above the header. An empty selection leaves the count cells blank and sets `central_basis` to `no reforms selected`.

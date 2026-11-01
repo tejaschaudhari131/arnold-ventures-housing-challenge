@@ -219,19 +219,29 @@ def _option_row(result: Any, illustrative: bool) -> dict[str, Any]:
 
 
 _SELECTABLE = ("adu", "missing_middle", "parking", "fees")
+_COUNT_BASIS = "sum of per-reform counts; lots may overlap; not a joint count"
+_CENTRAL_BASIS = "simple sum of standalone results, not modelled jointly"
+_CLOSE_MIX = "not computed for mix"
 _MIX_NOTE = (
-    "Eligible and feasible are the sum of the selected reforms, not a joint count. "
+    "Eligible and feasible are the sum of per-reform counts; lots may overlap; not a joint count. "
+    "Central is a simple sum of standalone results, not modelled jointly. "
     "A likely range is not computed for this mix. "
     "Reference range (defaults) applies only to one reform or all four together."
 )
 
 
 def _selected_reforms(raw: Any) -> list[str]:
+    """Reform ids the caller named. Unknown ids are an error, not a silent skip."""
     if raw is None:
         return []
     if not isinstance(raw, list):
         raise AssumptionError("reforms must be a list.")
-    return [str(item) for item in raw if str(item) in _SELECTABLE]
+    chosen: list[str] = []
+    for item in raw:
+        if not isinstance(item, str) or item not in _SELECTABLE:
+            raise AssumptionError("Unknown reform.")
+        chosen.append(item)
+    return chosen
 
 
 def why_county(
@@ -669,7 +679,7 @@ def brief_markdown(
         "",
     ]
     if reforms is not None:
-        selected = [sid for sid in reforms if sid in ("adu", "missing_middle", "parking", "fees")]
+        selected = _selected_reforms(reforms)
         if not selected:
             lines.append("Selected reforms: none. Extra homes from that selection: 0.")
             lines.append("Range for this mix: not computed. Blank cells are not the baseline range.")
@@ -684,8 +694,10 @@ def brief_markdown(
             lines.append(
                 "Selected reforms: "
                 + ", ".join(selected)
-                + f". Simple sum of those centrals: {homes(total, signed=True)} (not a modeled package). "
-                + f"Eligible {homes(eligible)}, feasible {homes(feasible)}, summed from the selected reforms, not a joint count."
+                + f". Central: {homes(total, signed=True)}. "
+                + "Simple sum of standalone results, not modelled jointly. "
+                + f"Eligible {homes(eligible)}, feasible {homes(feasible)}. "
+                + "Sum of per-reform counts; lots may overlap; not a joint count."
             )
             lines.append(
                 "Range for this mix: not computed. Reference range (defaults) applies only to one reform or all four. "
@@ -860,27 +872,35 @@ def county_csv(code: str, live: dict[str, Any] | None = None, reforms: list[str]
     locked_map = {row["fips"]: row for row in locked["counties"]}
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(
-        [
-            "fips", "county", "scenario", "central", "envelope_p10", "envelope_p90",
-            "range_role",
-            "zoning_low", "zoning_high", "acs_moe", "eligible", "feasible",
-            "close_call_top_benchmark",
-        ]
-    )
     range_role = "reference_at_default_settings" if live else "conditional_on_published_assumptions"
     selected = _selected_reforms(reforms) if reforms is not None else None
     custom = selected is not None and len(selected) not in (1, 4)
     sids = ["baseline"] + list(compared_scenarios())
     if custom:
+        buf.write(
+            "# central: " + _CENTRAL_BASIS + "\n"
+            "# eligible_sum_of_reforms, feasible_sum_of_reforms: " + _COUNT_BASIS + "\n"
+            "# close_call_top_benchmark: " + _CLOSE_MIX + "\n"
+        )
+        writer.writerow(
+            [
+                "fips", "county", "scenario", "central", "central_basis",
+                "envelope_p10", "envelope_p90", "range_role",
+                "zoning_low", "zoning_high", "acs_moe",
+                "eligible_sum_of_reforms", "feasible_sum_of_reforms", "basis",
+                "close_call_top_benchmark",
+            ]
+        )
         for row in counties:
             if not selected:
                 central, eligible, feasible = 0.0, None, None
+                central_basis, count_basis = "no reforms selected", ""
             else:
                 parts = [row["results"][sid] for sid in selected if sid in row["results"]]
                 central = sum(float(part.get("central", 0.0)) for part in parts)
                 eligible = sum(float(part.get("eligible", 0.0)) for part in parts)
                 feasible = sum(float(part.get("feasible", 0.0)) for part in parts)
+                central_basis, count_basis = _CENTRAL_BASIS, _COUNT_BASIS
             writer.writerow(
                 [
                     csv_cell(value)
@@ -889,6 +909,7 @@ def county_csv(code: str, live: dict[str, Any] | None = None, reforms: list[str]
                         row["name"],
                         "selection" if selected else "none",
                         f"{central:.1f}",
+                        central_basis,
                         "",
                         "",
                         "Reference range (defaults) not computed for this mix",
@@ -897,11 +918,20 @@ def county_csv(code: str, live: dict[str, Any] | None = None, reforms: list[str]
                         "",
                         "" if eligible is None else f"{eligible:.1f}",
                         "" if feasible is None else f"{feasible:.1f}",
-                        "no",
+                        count_basis,
+                        _CLOSE_MIX,
                     )
                 ]
             )
         return buf.getvalue()
+    writer.writerow(
+        [
+            "fips", "county", "scenario", "central", "envelope_p10", "envelope_p90",
+            "range_role",
+            "zoning_low", "zoning_high", "acs_moe", "eligible", "feasible",
+            "close_call_top_benchmark",
+        ]
+    )
     for row in counties:
         locked_row = locked_map[row["fips"]]
         close = False

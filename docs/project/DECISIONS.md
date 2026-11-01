@@ -15,3 +15,4 @@
 | 2026-11-01 | The SBOM is generated from the installed resolution of `requirements.txt`, split into `required` and `optional`. | The old file listed only the three direct pins. |
 | 2026-11-01 | Lab source fingerprints were rewritten after the horizon guard and the CLI state check. | `fingerprint()` hashes `src/lab/engine.py` and `src/lab/results.py`. Result numbers were not regenerated. The new stamps are PA `c80f359be200f18d` and NH `a1c2fa6fe66b03a7`. |
 | 2026-11-01 | Phase 2's one-entry redesign is not in this PR. | The owner deferred it. Only the cheap 768/390 fixes are included. |
+| 2026-11-01 | A 2- or 3-reform Lab CSV labels summed eligible and feasible counts and does not invent a joint close-call. | Adding per-reform eligible counts double-counts lots. Adams County, PA is about 173,453 summed versus about 148,523 on the joint package. The columns are renamed and `close_call_top_benchmark` is `not computed for mix`. |

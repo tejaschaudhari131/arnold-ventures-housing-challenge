@@ -38,6 +38,13 @@ def _get(base, path):
         return response.status, response.read(), response.headers
 
 
+def _csv_table(body: bytes):
+    text = body.decode("utf-8")
+    notes = [line for line in text.splitlines() if line.startswith("#")]
+    data = "\n".join(line for line in text.splitlines() if not line.startswith("#"))
+    return notes, list(csv.DictReader(io.StringIO(data)))
+
+
 def _post(base, path, payload, headers=None):
     body = json.dumps(payload).encode("utf-8")
     request = Request(base + path, data=body, headers={"Content-Type": "application/json", **(headers or {})})
@@ -227,14 +234,24 @@ def test_why_and_csv_for_a_custom_mix_are_not_the_baseline():
             base, "/api/lab/export", {"state": "PA", "format": "csv", "reforms": ["adu", "fees"]}
         )
         assert status == 200
-        rows = list(csv.DictReader(io.StringIO(csv_body.decode("utf-8"))))
+        notes, rows = _csv_table(csv_body)
+        assert any("lots may overlap" in line for line in notes)
+        assert any("not modelled jointly" in line for line in notes)
+        assert any("not computed for mix" in line for line in notes)
         allegheny = next(row for row in rows if row["fips"] == "42003")
         assert allegheny["scenario"] == "selection"
+        assert "eligible" not in allegheny
         assert allegheny["envelope_p10"] == ""
         assert allegheny["zoning_low"] == ""
         assert "Reference range (defaults)" in allegheny["range_role"]
-        assert float(allegheny["eligible"]) == pytest.approx(
+        assert allegheny["basis"] == "sum of per-reform counts; lots may overlap; not a joint count"
+        assert allegheny["central_basis"] == "simple sum of standalone results, not modelled jointly"
+        assert allegheny["close_call_top_benchmark"] == "not computed for mix"
+        assert float(allegheny["eligible_sum_of_reforms"]) == pytest.approx(
             adu["result"]["eligible"] + fees["result"]["eligible"], abs=0.2
+        )
+        assert float(allegheny["feasible_sum_of_reforms"]) == pytest.approx(
+            adu["result"]["feasible"] + fees["result"]["feasible"], abs=0.2
         )
         status, brief, _ = _post(
             base, "/api/lab/export", {"state": "PA", "format": "md", "reforms": []}
@@ -243,6 +260,81 @@ def test_why_and_csv_for_a_custom_mix_are_not_the_baseline():
         assert status == 200
         assert "Selected reforms: none" in text
         assert "not computed" in text or "Extra homes from that selection: 0" in text
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_custom_mix_csv_labels_overlap_and_rejects_unknown_reforms():
+    httpd = _server()
+    base = f"http://127.0.0.1:{httpd.server_address[1]}"
+    try:
+        _, default_body, _ = _get(base, "/api/lab/export?state=PA&format=csv")
+        _, published = _csv_table(default_body)
+        assert published[0]["eligible"]
+        assert "eligible_sum_of_reforms" not in published[0]
+
+        def published_cell(scenario, field):
+            row = next(item for item in published if item["fips"] == "42001" and item["scenario"] == scenario)
+            return float(row[field])
+
+        adu_eligible = published_cell("adu", "eligible")
+        middle_eligible = published_cell("missing_middle", "eligible")
+        package_eligible = published_cell("package", "eligible")
+        assert adu_eligible + middle_eligible > package_eligible
+        status, mix_body, _ = _post(
+            base,
+            "/api/lab/export",
+            {"state": "PA", "format": "csv", "reforms": ["adu", "missing_middle"]},
+        )
+        assert status == 200
+        notes, rows = _csv_table(mix_body)
+        adams = next(row for row in rows if row["fips"] == "42001")
+        assert float(adams["eligible_sum_of_reforms"]) == pytest.approx(adu_eligible + middle_eligible, abs=0.2)
+        assert float(adams["eligible_sum_of_reforms"]) > package_eligible
+        assert float(adams["central"]) == pytest.approx(
+            published_cell("adu", "central") + published_cell("missing_middle", "central"), abs=0.2
+        )
+        assert adams["basis"] == "sum of per-reform counts; lots may overlap; not a joint count"
+        assert adams["central_basis"] == "simple sum of standalone results, not modelled jointly"
+        assert adams["close_call_top_benchmark"] == "not computed for mix"
+        assert any(adams["basis"] in line for line in notes)
+        assert any(adams["central_basis"] in line for line in notes)
+        status, empty_body, _ = _post(
+            base, "/api/lab/export", {"state": "PA", "format": "csv", "reforms": []}
+        )
+        assert status == 200
+        _, empty_rows = _csv_table(empty_body)
+        empty_adams = next(row for row in empty_rows if row["fips"] == "42001")
+        assert empty_adams["scenario"] == "none"
+        assert empty_adams["eligible_sum_of_reforms"] == ""
+        assert empty_adams["feasible_sum_of_reforms"] == ""
+        assert empty_adams["central_basis"] == "no reforms selected"
+        assert empty_adams["close_call_top_benchmark"] == "not computed for mix"
+        assert empty_adams["central"] == "0.0"
+        status, brief, _ = _post(
+            base,
+            "/api/lab/export",
+            {"state": "PA", "format": "md", "reforms": ["adu", "missing_middle"]},
+        )
+        text = brief.decode("utf-8")
+        assert status == 200
+        assert "lots may overlap" in text
+        assert "not modelled jointly" in text
+        for path, payload in (
+            ("/api/lab/why", {"state": "PA", "county": "Adams", "scenario": "selection", "reforms": ["adu", "not_a_reform"]}),
+            ("/api/lab/why", {"state": "PA", "county": "Adams", "scenario": "selection", "reforms": ["not_a_reform"]}),
+            ("/api/lab/export", {"state": "PA", "format": "csv", "reforms": ["not_a_reform"]}),
+            ("/api/lab/export", {"state": "PA", "format": "md", "reforms": ["adu", "missing_middle", "nope"]}),
+            ("/api/lab/export", {"state": "PA", "format": "html", "reforms": ["ADU"]}),
+        ):
+            code, body, _ = _post(base, path, payload)
+            assert code == 400, (path, payload, body)
+            assert body["error"] == "Unknown reform."
+            dumped = json.dumps(body)
+            assert "not_a_reform" not in dumped
+            assert "nope" not in dumped
+            assert "ADU" not in dumped
     finally:
         httpd.shutdown()
         httpd.server_close()
