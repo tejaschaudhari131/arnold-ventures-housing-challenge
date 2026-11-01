@@ -231,17 +231,30 @@ _MIX_NOTE = (
 
 
 def _selected_reforms(raw: Any) -> list[str]:
-    """Reform ids the caller named. Unknown ids are an error, not a silent skip."""
+    """Reform ids the caller named.
+
+    Unknown ids and repeats are errors. A repeated id is not dropped and is
+    not counted twice. Order does not matter for the full package.
+    """
     if raw is None:
         return []
     if not isinstance(raw, list):
         raise AssumptionError("reforms must be a list.")
     chosen: list[str] = []
+    seen: set[str] = set()
     for item in raw:
         if not isinstance(item, str) or item not in _SELECTABLE:
             raise AssumptionError("Unknown reform.")
+        if item in seen:
+            raise AssumptionError("Duplicate reform.")
+        seen.add(item)
         chosen.append(item)
     return chosen
+
+
+def _is_full_package(chosen: list[str]) -> bool:
+    """True when the list is every Lab reform, in any order."""
+    return set(chosen) == set(_SELECTABLE)
 
 
 def why_county(
@@ -291,7 +304,7 @@ def why_county(
             )
         if len(chosen) == 1:
             scenario = chosen[0]
-        elif len(chosen) == 4:
+        elif _is_full_package(chosen):
             scenario = "package"
     if scenario not in scenarios and scenario != "selection":
         raise AssumptionError("Unknown scenario.")
@@ -685,7 +698,7 @@ def brief_markdown(
             lines.append("Range for this mix: not computed. Blank cells are not the baseline range.")
         elif len(selected) == 1:
             lines.append(f"Selected reform: {selected[0]}.")
-        elif len(selected) == 4:
+        elif _is_full_package(selected):
             lines.append("Selected reforms: all four Handbook reforms.")
         else:
             total = sum(float(results[sid]["central"]) for sid in selected)
@@ -874,14 +887,9 @@ def county_csv(code: str, live: dict[str, Any] | None = None, reforms: list[str]
     writer = csv.writer(buf)
     range_role = "reference_at_default_settings" if live else "conditional_on_published_assumptions"
     selected = _selected_reforms(reforms) if reforms is not None else None
-    custom = selected is not None and len(selected) not in (1, 4)
+    custom = selected is not None and len(selected) != 1 and not _is_full_package(selected)
     sids = ["baseline"] + list(compared_scenarios())
     if custom:
-        buf.write(
-            "# central: " + _CENTRAL_BASIS + "\n"
-            "# eligible_sum_of_reforms, feasible_sum_of_reforms: " + _COUNT_BASIS + "\n"
-            "# close_call_top_benchmark: " + _CLOSE_MIX + "\n"
-        )
         writer.writerow(
             [
                 "fips", "county", "scenario", "central", "central_basis",

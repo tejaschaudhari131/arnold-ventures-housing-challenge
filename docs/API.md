@@ -19,9 +19,11 @@ The app is a fixed set of routes on the standard-library server (`src/web/server
 - Two or three reforms return HTTP 200. Eligible and feasible in that JSON are the sum of those reforms, and the note says lots may overlap. The likely range is not computed for that mix.
 - One reform, or all four, uses that scenario or the package.
 - An id outside `adu`, `missing_middle`, `parking`, and `fees` returns HTTP 400 with `Unknown reform.` The id is not dropped and is not repeated in the body. The same 400 applies to the brief and the county CSV.
+- A repeated id returns HTTP 400 with `Duplicate reform.` It is not counted twice, and it is not dropped. The same 400 applies to the brief and the county CSV.
+- The four ids in any order are the package. A shorter unique list is a custom mix.
 
 ## `POST /api/lab/export`
 
 `format` is `md`, `html`, or `csv`. `reforms` is the same list. For zero, two, or three reforms the county CSV leaves p10, p90, and the zoning columns blank and sets `range_role` to `Reference range (defaults) not computed for this mix`. Those cells are not filled with baseline numbers.
 
-A two- or three-reform file does not use the columns `eligible` and `feasible`. It uses `eligible_sum_of_reforms` and `feasible_sum_of_reforms`, because adding those counts double-counts lots that appear in more than one reform. Each data row sets `basis` to `sum of per-reform counts; lots may overlap; not a joint count` and `central_basis` to `simple sum of standalone results, not modelled jointly`. `close_call_top_benchmark` is `not computed for mix`, not `no`. The same three sentences are comment lines above the header. An empty selection leaves the count cells blank and sets `central_basis` to `no reforms selected`.
+A two- or three-reform file does not use the columns `eligible` and `feasible`. It uses `eligible_sum_of_reforms` and `feasible_sum_of_reforms`, because adding those counts double-counts lots that appear in more than one reform. Each data row sets `basis` to `sum of per-reform counts; lots may overlap; not a joint count` and `central_basis` to `simple sum of standalone results, not modelled jointly`. `close_call_top_benchmark` is `not computed for mix`, not `no`. The file starts with that header row. There is no comment line above it. An empty selection leaves the count cells blank and sets `central_basis` to `no reforms selected`.

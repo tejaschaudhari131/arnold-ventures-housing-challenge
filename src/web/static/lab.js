@@ -1579,14 +1579,7 @@
     var header = custom
       ? ["county", "fips", "extra_homes", "central_basis", "eligible_sum_of_reforms", "feasible_sum_of_reforms", "basis", "p10", "p90", "range_role", "zoning_low", "zoning_high", "acs_moe", "close_call_top_benchmark"]
       : ["county", "fips", "extra_homes", "eligible", "feasible", "p10", "p90", "range_role", "zoning_low", "zoning_high", "acs_moe"];
-    var lines = custom
-      ? [
-        "# central: " + centralBasis,
-        "# eligible_sum_of_reforms, feasible_sum_of_reforms: " + countBasis,
-        "# close_call_top_benchmark: not computed for mix",
-        header.join(",")
-      ]
-      : [header.join(",")];
+    var lines = [header.join(",")];
     docCounties().forEach(function (row) {
       if (custom) {
         var eligible = 0;

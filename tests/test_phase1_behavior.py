@@ -40,9 +40,9 @@ def _get(base, path):
 
 def _csv_table(body: bytes):
     text = body.decode("utf-8")
-    notes = [line for line in text.splitlines() if line.startswith("#")]
-    data = "\n".join(line for line in text.splitlines() if not line.startswith("#"))
-    return notes, list(csv.DictReader(io.StringIO(data)))
+    assert text.startswith("fips,"), text.splitlines()[0]
+    assert not any(line.startswith("#") for line in text.splitlines())
+    return list(csv.DictReader(io.StringIO(text)))
 
 
 def _post(base, path, payload, headers=None):
@@ -234,10 +234,7 @@ def test_why_and_csv_for_a_custom_mix_are_not_the_baseline():
             base, "/api/lab/export", {"state": "PA", "format": "csv", "reforms": ["adu", "fees"]}
         )
         assert status == 200
-        notes, rows = _csv_table(csv_body)
-        assert any("lots may overlap" in line for line in notes)
-        assert any("not modelled jointly" in line for line in notes)
-        assert any("not computed for mix" in line for line in notes)
+        rows = _csv_table(csv_body)
         allegheny = next(row for row in rows if row["fips"] == "42003")
         assert allegheny["scenario"] == "selection"
         assert "eligible" not in allegheny
@@ -270,7 +267,7 @@ def test_custom_mix_csv_labels_overlap_and_rejects_unknown_reforms():
     base = f"http://127.0.0.1:{httpd.server_address[1]}"
     try:
         _, default_body, _ = _get(base, "/api/lab/export?state=PA&format=csv")
-        _, published = _csv_table(default_body)
+        published = _csv_table(default_body)
         assert published[0]["eligible"]
         assert "eligible_sum_of_reforms" not in published[0]
 
@@ -288,7 +285,7 @@ def test_custom_mix_csv_labels_overlap_and_rejects_unknown_reforms():
             {"state": "PA", "format": "csv", "reforms": ["adu", "missing_middle"]},
         )
         assert status == 200
-        notes, rows = _csv_table(mix_body)
+        rows = _csv_table(mix_body)
         adams = next(row for row in rows if row["fips"] == "42001")
         assert float(adams["eligible_sum_of_reforms"]) == pytest.approx(adu_eligible + middle_eligible, abs=0.2)
         assert float(adams["eligible_sum_of_reforms"]) > package_eligible
@@ -298,13 +295,11 @@ def test_custom_mix_csv_labels_overlap_and_rejects_unknown_reforms():
         assert adams["basis"] == "sum of per-reform counts; lots may overlap; not a joint count"
         assert adams["central_basis"] == "simple sum of standalone results, not modelled jointly"
         assert adams["close_call_top_benchmark"] == "not computed for mix"
-        assert any(adams["basis"] in line for line in notes)
-        assert any(adams["central_basis"] in line for line in notes)
         status, empty_body, _ = _post(
             base, "/api/lab/export", {"state": "PA", "format": "csv", "reforms": []}
         )
         assert status == 200
-        _, empty_rows = _csv_table(empty_body)
+        empty_rows = _csv_table(empty_body)
         empty_adams = next(row for row in empty_rows if row["fips"] == "42001")
         assert empty_adams["scenario"] == "none"
         assert empty_adams["eligible_sum_of_reforms"] == ""
@@ -335,6 +330,103 @@ def test_custom_mix_csv_labels_overlap_and_rejects_unknown_reforms():
             assert "not_a_reform" not in dumped
             assert "nope" not in dumped
             assert "ADU" not in dumped
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+_DEFAULT_CSV_COLUMNS = [
+    "fips", "county", "scenario", "central", "envelope_p10", "envelope_p90",
+    "range_role", "zoning_low", "zoning_high", "acs_moe", "eligible", "feasible",
+    "close_call_top_benchmark",
+]
+_MIX_CSV_COLUMNS = [
+    "fips", "county", "scenario", "central", "central_basis",
+    "envelope_p10", "envelope_p90", "range_role",
+    "zoning_low", "zoning_high", "acs_moe",
+    "eligible_sum_of_reforms", "feasible_sum_of_reforms", "basis",
+    "close_call_top_benchmark",
+]
+
+
+def test_pandas_reads_lab_csv_and_duplicate_reforms_are_rejected():
+    import pandas as pd
+
+    httpd = _server()
+    base = f"http://127.0.0.1:{httpd.server_address[1]}"
+    try:
+        _, default_body, _ = _get(base, "/api/lab/export?state=PA&format=csv")
+        default = pd.read_csv(io.BytesIO(default_body))
+        assert list(default.columns) == _DEFAULT_CSV_COLUMNS
+        assert len(default) > 1
+        adams_adu = default[(default["county"] == "Adams County") & (default["scenario"] == "adu")].iloc[0]
+        adams_middle = default[
+            (default["county"] == "Adams County") & (default["scenario"] == "missing_middle")
+        ].iloc[0]
+        status, mix_body, _ = _post(
+            base,
+            "/api/lab/export",
+            {"state": "PA", "format": "csv", "reforms": ["missing_middle", "adu"]},
+        )
+        assert status == 200
+        mix = pd.read_csv(io.BytesIO(mix_body))
+        assert list(mix.columns) == _MIX_CSV_COLUMNS
+        assert str(mix_body.splitlines()[0], "utf-8").startswith("fips,")
+        adams = mix.loc[mix["county"] == "Adams County"].iloc[0]
+        assert adams["eligible_sum_of_reforms"] == pytest.approx(
+            adams_adu["eligible"] + adams_middle["eligible"], abs=0.2
+        )
+        assert adams["central"] == pytest.approx(adams_adu["central"] + adams_middle["central"], abs=0.2)
+        assert adams["central"] != pytest.approx(adams_adu["central"] * 2, abs=0.05)
+        shuffled = ["fees", "parking", "missing_middle", "adu"]
+        status, ordered_body, _ = _post(
+            base, "/api/lab/export", {"state": "PA", "format": "csv", "reforms": shuffled}
+        )
+        assert status == 200
+        assert ordered_body == default_body
+        ordered = pd.read_csv(io.BytesIO(ordered_body))
+        assert list(ordered.columns) == _DEFAULT_CSV_COLUMNS
+        code, package, _ = _post(
+            base, "/api/lab/why", {"state": "PA", "county": "Adams", "scenario": "package"}
+        )
+        code, same, _ = _post(
+            base,
+            "/api/lab/why",
+            {"state": "PA", "county": "Adams", "scenario": "selection", "reforms": shuffled},
+        )
+        assert code == 200
+        assert same["scenario"] == "package"
+        assert same["result"]["eligible"] == package["result"]["eligible"]
+        assert same["result"]["delivery"] == package["result"]["delivery"]
+        status, brief, _ = _post(
+            base, "/api/lab/export", {"state": "PA", "format": "md", "reforms": shuffled}
+        )
+        assert status == 200
+        assert "all four Handbook reforms" in brief.decode("utf-8")
+        for path, payload in (
+            ("/api/lab/why", {"state": "PA", "county": "Adams", "scenario": "selection", "reforms": ["adu", "adu"]}),
+            ("/api/lab/export", {"state": "PA", "format": "csv", "reforms": ["adu", "adu"]}),
+            ("/api/lab/export", {"state": "PA", "format": "md", "reforms": ["adu", "adu"]}),
+            (
+                "/api/lab/export",
+                {"state": "PA", "format": "csv", "reforms": ["adu", "missing_middle", "parking", "fees", "adu"]},
+            ),
+            (
+                "/api/lab/why",
+                {
+                    "state": "PA",
+                    "county": "Adams",
+                    "scenario": "selection",
+                    "reforms": ["fees", "adu", "missing_middle", "parking", "fees"],
+                },
+            ),
+        ):
+            code, body, _ = _post(base, path, payload)
+            assert code == 400, (path, payload, body)
+            assert body["error"] == "Duplicate reform."
+            dumped = json.dumps(body)
+            assert "adu, adu" not in dumped
+            assert "98.2" not in dumped
     finally:
         httpd.shutdown()
         httpd.server_close()
