@@ -15,7 +15,10 @@ import io
 import json
 from typing import Any
 
+import yaml
+
 from src.lab.config import (
+    CONFIG_DIR,
     LAB_STATES,
     SAMPLE_DIR,
     central_params,
@@ -39,6 +42,16 @@ from src.lab.uncertainty import compared_scenarios, run_moe, zoning_bounds, zoni
 from src.model.assumptions import AssumptionError
 
 BENCHMARKS = ("adu", "missing_middle", "parking", "fees")
+
+
+def load_ui() -> dict[str, Any]:
+    """Copy that is not a model input and is not part of the results fingerprint."""
+    path = CONFIG_DIR / "ui.yaml"
+    if not path.exists():
+        return {"reconciliation_note": ""}
+    doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return {"reconciliation_note": str(doc.get("reconciliation_note") or "")}
+
 FORMULAS = [
     {
         "id": "value",
@@ -145,6 +158,7 @@ def assumption_catalog() -> dict[str, Any]:
         "horizon_years": doc["horizon_years"],
         "draws": doc["monte_carlo_draws"],
         "seed": doc["monte_carlo_seed"],
+        "reconciliation_note": load_ui()["reconciliation_note"],
         "parameters": params,
         "scenarios": [
             {

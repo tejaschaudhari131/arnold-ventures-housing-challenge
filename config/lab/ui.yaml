@@ -1,0 +1,4 @@
+# Lab UI copy that is not a model input and is not part of the results
+# fingerprint. An empty reconciliation_note hides the hero / brief / Methods
+# slot. Never put stale result integers here.
+reconciliation_note: ""

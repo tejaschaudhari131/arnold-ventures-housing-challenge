@@ -4,43 +4,54 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Small Homes Policy Lab — Stateframe</title>
+  <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/lab.css">
 </head>
 <body class="lab-body">
   <a class="skip" href="#main">Skip to results</a>
-  <header class="top">
-    <div class="brand">
-      <p class="eyebrow">Arnold Ventures / The Turnout Housing Challenge</p>
-      <h1>Small Homes Policy Lab</h1>
-      <p class="lede">Statewide comparison of small-home reforms across every Pennsylvania county, with New Hampshire as the portability test. Pennsylvania loads with scenarios already computed. Pick a reform, open a county — Allegheny is the walkthrough — then open Why this result?</p>
-    </div>
-    <div class="team">
-      <p>Tejas Chaudhari</p>
-      <p>Yoon Yik Ng</p>
-      <p>Christopher Severns</p>
-      <p class="org">Carnegie Mellon University</p>
-      <p class="help"><a href="/">Back to Stateframe</a></p>
-    </div>
+  <header class="sf-top">
+    <a class="sf-brand" href="/lab">Stateframe</a>
+    <nav aria-label="Main">
+      <a href="#package" aria-current="page">Build a package</a>
+      <a href="#where">Where</a>
+      <a href="#methods">Methods</a>
+    </nav>
+    <span class="sp"></span>
+    <label class="sr" for="state-select">State</label>
+    <select id="state-select">
+      <option value="PA">Pennsylvania</option>
+      <option value="NH">New Hampshire</option>
+    </select>
+    <button type="button" class="btn pri" id="try-pa">Try Pennsylvania 2027–31</button>
+    <button type="button" class="btn ghost" id="tour-btn">Take the 1-minute tour</button>
   </header>
 
+  <p class="start-here" id="start-here">Start here: compare the reforms below, ranked by homes added. Then see where they land by county, open Why on any number, and print a one-page brief.</p>
+
+  <section class="hero" aria-labelledby="hero-title">
+    <div>
+      <p class="kicker" id="kicker">Your package · 2027–2031</p>
+      <h1 id="hero-title">Turn reforms on and watch how many extra homes <span id="state-name">Pennsylvania</span> could get.</h1>
+      <section class="headline" id="headline" aria-label="Statewide answer"></section>
+      <div class="count" id="count" aria-hidden="true">0</div>
+      <p class="sr" id="count-live" aria-live="polite"></p>
+      <div class="bandwrap" aria-hidden="true"><div class="band" id="band"></div><div class="tick" id="tick"></div></div>
+      <p class="rangeline" id="rangeline"></p>
+      <p class="sub" id="relate"></p>
+      <div class="recon" id="recon" role="note" hidden></div>
+    </div>
+    <div class="mapcard">
+      <div id="map-stage"></div>
+      <div class="legend"><span>fewer</span><i></i><span>more extra homes</span> · <a class="skip-map" href="#county-table">Skip map — use the table</a></div>
+      <label class="county-pick" for="county-select">Jump to a county
+        <select id="county-select"></select>
+      </label>
+      <p id="county-detail" class="countyline" hidden></p>
+    </div>
+  </section>
+
   <div class="layout lab-layout">
-    <aside class="states" aria-label="State and walkthrough">
-      <p class="aside-label">State</p>
-      <div id="state-list"></div>
-      <p class="aside-note">Pennsylvania is the primary case (67 counties). New Hampshire is the lower-data portability test (10 counties). Unknown zoning is never treated as zero.</p>
-
-      <div class="walk" id="walk">
-        <p class="aside-label">Allegheny walkthrough</p>
-        <p class="help" id="walk-progress">Step 1 of 6</p>
-        <p id="walk-text"></p>
-        <div class="exports">
-          <button type="button" id="walk-back">Back</button>
-          <button type="button" id="walk-next">Next</button>
-        </div>
-      </div>
-    </aside>
-
     <main id="main">
       <section class="status" id="status" aria-live="polite"></section>
 
@@ -51,87 +62,154 @@
         <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr>
       </p>
 
-      <p class="start-here" id="start-here">Start here: the answer is above the map. Then pick a reform, open a county — Allegheny is the walkthrough — and open Why this result?</p>
-      <section class="headline" id="headline" aria-label="Statewide answer"></section>
-
-      <section class="no-print" aria-label="Scenario cards">
+      <section id="package" class="no-print" aria-labelledby="package-title">
         <div class="panel-head">
-          <h2>Scenarios</h2>
-          <p class="help">Handbook benchmarks: ADUs, missing middle, parking, and a 50% fee cut. The package and approval reform are extra state-specific scenarios. Transit-oriented density is not modeled here.</p>
+          <h2 id="package-title">1 · Pick reforms</h2>
+          <p class="help">Extra homes over 5 years · bar = likely range</p>
         </div>
-        <div class="cards" id="cards"></div>
+        <div class="cards" id="cards" role="list"></div>
         <section id="extra-scenarios" aria-label="Also modeled, not a Handbook benchmark">
           <h3>Also modeled, not a Handbook benchmark</h3>
-          <div class="cards" id="extra-cards"></div>
+          <div class="cards extra" id="extra-cards"></div>
         </section>
         <p id="adu-fee-note" class="adu-fee-note callout"><!-- ADU_FEE_NOTE --></p>
       </section>
 
-      <section class="map-wrap no-print" aria-label="County map">
-        <div class="panel-head">
-          <h2 id="map-title">Counties</h2>
-          <p class="help" id="map-help">Census cartographic boundaries, simplified. Color is the selected scenario's increment versus Baseline.</p>
+      <section class="panel overlap-panel" id="overlap-panel" aria-labelledby="overlap-title">
+        <h2 id="overlap-title">2 · Why the total isn't a simple sum</h2>
+        <p id="package-not-sum" class="sr">Package is not a sum</p>
+        <div class="stack" id="stack" aria-hidden="true"></div>
+        <p id="sumline"></p>
+        <div class="overlap" id="overlap"></div>
+        <div class="exports">
+          <button type="button" class="btn pri" id="print-brief">Print / save one-page brief</button>
+          <button type="button" id="copy-view">Copy link to this view</button>
         </div>
-        <a class="skip-map" href="#county-table">Skip map</a>
-        <label class="county-pick" for="county-select">Choose a county
-          <select id="county-select"></select>
-        </label>
-        <div id="map-stage"></div>
-        <div id="county-detail" class="callout" hidden></div>
+        <p class="help">Every number is <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr> from <abbr class="tag observed" title="Measured in a public dataset.">observed</abbr> Census data and <abbr class="tag assumed" title="A published assumption.">assumed</abbr> published values. Likely range = 10th–90th percentile of the locked assumption draws.</p>
       </section>
 
-      <section class="panel-head">
-        <h2>Why this result?</h2>
-        <button type="button" id="why-toggle" aria-expanded="false" aria-controls="why">Open the Why drawer</button>
-      </section>
-      <aside class="why-drawer" id="why" hidden tabindex="-1">
-        <p class="help">Each input is labeled observed, assumed, or calculated. The ADU <abbr title="A simple cost-and-value worksheet for one building type.">pro forma</abbr> is illustrative — not a construction bid.</p>
-        <div id="why-body"></div>
-      </aside>
-
-      <section class="panel">
-        <div class="panel-head">
-          <h2>County table</h2>
+      <section class="where" id="where" aria-labelledby="where-title">
+        <div class="where-map">
+          <div class="panel-head">
+            <h2 id="where-title">Where homes would land</h2>
+            <p class="help" id="map-help">Census cartographic boundaries, simplified. Color is extra homes under the selected reform or package.</p>
+          </div>
+          <h2 id="map-title" class="sr">Counties</h2>
+          <div class="view-tabs" role="tablist" aria-label="County views">
+            <button type="button" class="tab active" role="tab" id="tab-map" data-view="map" aria-selected="true" aria-controls="view-map">Map</button>
+            <button type="button" class="tab" role="tab" id="tab-table" data-view="table" aria-selected="false" aria-controls="view-table">Table</button>
+            <button type="button" class="tab" role="tab" id="tab-chart" data-view="chart" aria-selected="false" aria-controls="view-chart">Chart</button>
+          </div>
+          <div class="chips" id="chips" role="group" aria-label="Reform chips"></div>
+          <div id="view-map" role="tabpanel" aria-labelledby="tab-map"></div>
+          <div id="view-table" role="tabpanel" aria-labelledby="tab-table" hidden>
+            <div class="table-wrap tall" id="county-table" role="region" tabindex="0" aria-label="County results table (scrollable)">
+              <table>
+                <caption class="visually-hidden">County delivery, eligibility, feasibility, and uncertainty for the selected scenario</caption>
+                <thead>
+                  <tr>
+                    <th>County</th>
+                    <th>Delivery <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
+                    <th>Eligible <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
+                    <th>Feasible <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
+                    <th><abbr title="The likely range from 2,000 test runs of the published assumptions.">Envelope</abbr> <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
+                    <th><abbr title="How the answer moves if unknown local rules are more or less strict.">Zoning</abbr> <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
+                    <th><abbr title="Census survey error on the counts and prices that feed the model.">ACS MOE</abbr> <abbr class="tag observed" title="Measured in a public dataset and stored for this place.">observed</abbr></th>
+                  </tr>
+                </thead>
+                <tbody id="county-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="view-chart" role="tabpanel" aria-labelledby="tab-chart" hidden>
+            <div id="chart-stage"></div>
+          </div>
           <div class="exports">
+            <button type="button" id="export-png">Download PNG</button>
+            <button type="button" id="export-csv">Download CSV</button>
+            <button type="button" id="export-pdf">One-page PDF</button>
             <button type="button" id="export-md">Brief (Markdown)</button>
             <button type="button" id="export-html">Brief (HTML)</button>
-            <button type="button" id="export-csv">County CSV</button>
+            <button type="button" id="copy-view-where">Copy link to this view</button>
           </div>
         </div>
-        <div class="table-wrap tall" id="county-table" role="region" tabindex="0" aria-label="County results table">
-          <table>
-            <caption class="visually-hidden">County delivery, eligibility, feasibility, and uncertainty for the selected scenario</caption>
-            <thead>
-              <tr>
-                <th>County</th>
-                <th>Delivery <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
-                <th>Eligible <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
-                <th>Feasible <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
-                <th><abbr title="The likely range from 200 test runs of the published assumptions.">Envelope</abbr> <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
-                <th><abbr title="How the answer moves if unknown local rules are more or less strict.">Zoning</abbr> <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
-                <th><abbr title="Census survey error on the counts and prices that feed the model.">ACS MOE</abbr> <abbr class="tag observed" title="Measured in a public dataset and stored for this place.">observed</abbr></th>
-              </tr>
-            </thead>
-            <tbody id="county-body"></tbody>
-          </table>
+
+        <div class="where-why">
+          <section class="panel-head">
+            <h2>Why this result?</h2>
+            <button type="button" id="why-toggle" aria-expanded="false" aria-controls="why">Open the Why drawer</button>
+          </section>
+          <aside class="why-drawer" id="why" hidden tabindex="-1">
+            <p class="help">Each input is labeled observed, assumed, or calculated. The ADU <abbr title="A simple cost-and-value worksheet for one building type.">pro forma</abbr> is illustrative — not a construction bid.</p>
+            <div id="why-body"></div>
+            <div class="exports">
+              <button type="button" id="why-close">Close (Esc)</button>
+              <button type="button" id="why-adjust">Adjust these assumptions</button>
+            </div>
+          </aside>
+
+          <section class="keypoints" id="keypoints" aria-labelledby="keypoints-title">
+            <h3 id="keypoints-title">Key points for a legislator</h3>
+            <ul id="keypoints-list"></ul>
+          </section>
+
+          <section class="sources-card" id="sources" aria-labelledby="sources-title">
+            <h3 id="sources-title">Sources</h3>
+            <div id="sources-body"></div>
+          </section>
+
+          <section class="checked-card" id="checked" aria-labelledby="checked-title">
+            <h3 id="checked-title">Checked against other data</h3>
+            <p id="checked-body">The incomplete-data estimator is compared with the parcel-informed estimate on Connecticut, Wisconsin, Utah, and Hawaii. That is a cross-check of two model runs, not a backtest against homes actually built, so this card is not labeled validated.</p>
+            <p id="checked-live"></p>
+          </section>
         </div>
+      </section>
+
+      <section class="panel" id="methods" aria-labelledby="methods-title">
+        <h2 id="methods-title">Methods, tags, and downloads</h2>
+        <p class="help">The Lab sits beside the eleven-state screening view. Equations live in <code>src/lab/engine.py</code>. Locked defaults live in <code>config/lab/assumptions.yaml</code>. Full write-up: <a href="/docs/SMALL_HOMES_LAB.md">docs/SMALL_HOMES_LAB.md</a>.</p>
+        <div id="methods-recon" hidden></div>
+        <p>County shapes are U.S. Census Bureau cartographic boundary file <code>cb_2024_us_county_5m</code>, public domain, Douglas–Peucker simplified. See <code>docs/DATA_PROVENANCE.md</code>.</p>
       </section>
     </main>
 
-    <aside class="assumptions" aria-label="Assumptions">
+    <aside class="assumptions" id="adjust" aria-label="Assumptions">
       <div class="aside-head">
         <h2>Change one assumption</h2>
         <button type="button" id="reset">Reset</button>
       </div>
       <p class="help" id="envelope-note">Move one slider. Central values, zoning bounds, and the ACS band recompute. The p10–p90 envelope stays on the locked 2,000-draw run.</p>
       <div id="sliders"></div>
+      <div class="walk" id="walk" hidden>
+        <p class="aside-label">Allegheny walkthrough</p>
+        <p class="help" id="walk-progress">Step 1 of 6</p>
+        <p id="walk-text"></p>
+        <div class="exports">
+          <button type="button" id="walk-back">Back</button>
+          <button type="button" id="walk-next">Next</button>
+        </div>
+      </div>
     </aside>
   </div>
+
+  <article class="brief-print" id="brief-print" hidden></article>
+
+  <aside class="tour" id="tour" role="dialog" aria-modal="false" aria-labelledby="tour-title" hidden>
+    <div class="dots" id="tour-dots"></div>
+    <h3 id="tour-title" tabindex="-1"></h3>
+    <p id="tour-text"></p>
+    <div class="exports">
+      <button type="button" id="tour-skip">Skip tour</button>
+      <button type="button" class="btn pri" id="tour-next">Next</button>
+    </div>
+  </aside>
 
   <footer>
     <p>The Lab sits beside Stateframe. Equations live in <code>src/lab/engine.py</code>. Locked defaults live in <code>config/lab/assumptions.yaml</code>. Method: <code>docs/SMALL_HOMES_LAB.md</code>. Apache License 2.0.</p>
     <p>Tejas Chaudhari (tchaudha@andrew.cmu.edu), Yoon Yik Ng (yoonyikn@andrew.cmu.edu), Christopher Severns (cseverns@andrew.cmu.edu), Carnegie Mellon University.</p>
   </footer>
+  <div id="state-list" class="sr" aria-hidden="true"></div>
   <script src="/lab.js"></script>
 </body>
 </html>

@@ -1,0 +1,35 @@
+/* Shared visual tokens. Lab uses the v2 engagement palette; the
+   screening homepage inherits the same ink, type, and focus rules. */
+:root {
+  --paper: #fbf6ec;
+  --paper-2: #fffdf8;
+  --card: #fffdf8;
+  --ink: #1c2430;
+  --muted: #4f5862;
+  --line: #d9d0c2;
+  --green: #0f6b4e;
+  --green-soft: #e5f3ec;
+  --copper: #9a4e24;
+  --navy: #1d3557;
+  --navy-ink: #1e3a5f;
+  --teal: #0e6e5c;
+  --teal-2: #16a085;
+  --sun: #f2b632;
+  --coral: #c8553d;
+  --amber: #8a5a12;
+  --sky: #e8f1f8;
+  --tier2: #8a5a12;
+  --shadow: 0 1px 0 rgba(28, 36, 48, 0.04);
+  --serif: Georgia, "Iowan Old Style", Palatino, "Palatino Linotype", "Times New Roman", serif;
+  --sans: system-ui, "Segoe UI", -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --control: 44px;
+  --tag-observed-bg: #e3ecf7;
+  --tag-observed-fg: #1e3a5f;
+  --tag-assumed-bg: #fbe9d2;
+  --tag-assumed-fg: #7a4510;
+  --tag-calculated-bg: #e5f3ec;
+  --tag-calculated-fg: #0b5a41;
+}
