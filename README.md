@@ -20,7 +20,7 @@ Stateframe compares a calibrated baseline with five benchmark reforms, plus a co
 - Read a tornado chart and a seeded Monte Carlo band.
 - Check that county rows sum to the state.
 - Walk Pennsylvania from Allegheny County up to the state total, with observed inputs separated from imputations (`docs/CASE_STUDY_PA_ALLEGHENY.md`, and the case-study tab in the app).
-- Open the [Small Homes Policy Lab](/lab) at `/lab` for a 67-county Pennsylvania comparison (New Hampshire is the portability test), with a Why drawer, close-call badges, and a downloadable brief.
+- Open the [Small Homes Policy Lab](https://stateframe-housing.vercel.app/lab) at https://stateframe-housing.vercel.app/lab for a 67-county Pennsylvania comparison (New Hampshire is the portability test), with a Why drawer, close-call badges, and a downloadable brief.
 - Run the tier-1 states through the incomplete-data estimator and see the error.
 - Export CSV, JSON, and Markdown. Every numeric field in the CSV and JSON carries an observed, assumed, or calculated tag.
 

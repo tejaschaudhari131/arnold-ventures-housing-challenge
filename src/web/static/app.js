@@ -96,6 +96,15 @@
     return " " + String(unit).replace(/_/g, " ");
   }
 
+  function formatBand(low, high) {
+    var a = Number(low);
+    var b = Number(high);
+    if (Math.abs(a) < 1e-9) a = 0;
+    if (Math.abs(b) < 1e-9) b = 0;
+    if (a === 0 && b === 0) return "0";
+    return oneDecimal(a) + " to " + oneDecimal(b);
+  }
+
   function formatSetting(spec, value) {
     var n = Number(value);
     var step = Number(stepFor(spec));
@@ -176,7 +185,8 @@
       button.innerHTML =
         "<strong>" + escapeHtml(state.name) + "</strong>" +
         '<span class="pill ' + (state.tier === 1 ? "t1" : "t2") + '">Tier ' + state.tier + "</span>" +
-        "<span>" + integer(state.housing_units) + " homes · completeness " + score + "%</span>" +
+        "<span>" + integer(state.housing_units) + " homes " + badge("observed") +
+        " · completeness " + score + "% " + badge("calculated") + "</span>" +
         '<span class="meter" aria-hidden="true"><i style="width:' + score + '%"></i></span>';
       button.addEventListener("click", function () {
         mapScope = "state";
@@ -267,6 +277,8 @@
         var item = document.createElement("div");
         item.className = "slider";
         var label = document.createElement("label");
+        var sliderId = "core-slider-" + spec.name;
+        label.setAttribute("for", sliderId);
         var title = document.createElement("span");
         title.textContent = spec.label;
         var value = document.createElement("span");
@@ -276,14 +288,17 @@
         label.appendChild(value);
         var input = document.createElement("input");
         input.type = "range";
+        input.id = sliderId;
         input.min = spec.low;
         input.max = spec.high;
         input.step = stepFor(spec);
         input.value = String(current);
         input.setAttribute("aria-label", spec.label);
+        input.setAttribute("aria-valuetext", formatSetting(spec, current));
         function onSlide() {
           var next = Number(input.value);
           value.innerHTML = escapeHtml(formatSetting(spec, next)) + badge("assumed");
+          input.setAttribute("aria-valuetext", formatSetting(spec, next));
           if (Math.abs(next - Number(spec.central)) < Number(input.step) / 2) {
             delete overrides[spec.name];
           } else {
@@ -325,16 +340,20 @@
   function renderHeadline() {
     var lift = result.scenarios.combined.lift_pct;
     var lotTag = tagOf(result, "lot_feasible_share", "assumed");
+    var pack = result.scenarios.combined.incremental_completions;
+    var answer = "In " + result.name + " over five years, the package adds " +
+      integer(pack) + " homes on top of " + integer(result.baseline_completions_5yr) + " expected.";
     headline.innerHTML =
+      '<p class="headline-answer">' + escapeHtml(answer) + badge("calculated") + "</p>" +
       card(
         "Baseline completions",
         tagged(result.baseline_completions_5yr, tagOf(result, "baseline_completions_5yr"), integer),
-        "Five-year homes completed if today's permit pace continues. This is calculated from observed permits and assumed completion ratios."
+        "Five-year homes completed if today's permit pace continues. This is the core baseline, calculated from observed permits and assumed completion ratios."
       ) +
       card(
         "Package, net new",
-        tagged(result.scenarios.combined.incremental_completions, "calculated", integer),
-        signedPercent(lift) + " versus baseline. Overlap among the reforms that are switched on is removed."
+        tagged(pack, "calculated", integer),
+        signedPercent(lift) + " versus baseline. The package is not the sum of the five reforms. Overlap among the reforms that are switched on is removed."
       ) +
       card(
         "Walkshed",
@@ -379,7 +398,10 @@
       var top = document.createElement("div");
       top.className = "card-top";
       var title = document.createElement("h3");
-      title.textContent = row.label;
+      var titleBtn = document.createElement("button");
+      titleBtn.type = "button";
+      titleBtn.textContent = row.label;
+      title.appendChild(titleBtn);
       top.appendChild(title);
       if (REFORMS.indexOf(id) !== -1) {
         var label = document.createElement("label");
@@ -401,7 +423,8 @@
       article.appendChild(top);
       if (close) {
         var flag = document.createElement("p");
-        flag.innerHTML = '<span class="badge-close">Close call</span> ' + escapeHtml(close);
+        flag.innerHTML = '<span class="badge-uncertain" title="The published assumption range includes both a gain and a loss.">Outcome uncertain: under some assumptions this reform adds no homes.</span> ' +
+          escapeHtml(close);
         article.appendChild(flag);
       }
       var plain = document.createElement("p");
@@ -415,21 +438,12 @@
         "<div><div class='k'>After</div><div class='v'>" + tagged(after, "calculated", integer) + "</div></div>" +
         "<div><div class='k'>Net new</div><div class='v'>" + tagged(net, "calculated", integer) + "</div></div>";
       article.appendChild(grid);
-      title.tabIndex = 0;
-      title.setAttribute("role", "button");
-      title.setAttribute("aria-pressed", id === scenarioId ? "true" : "false");
+      titleBtn.setAttribute("aria-pressed", id === scenarioId ? "true" : "false");
       function choose() { selectScenario(id); }
-      title.addEventListener("click", function (event) {
+      titleBtn.addEventListener("click", function (event) {
         event.stopPropagation();
         choose();
       });
-      title.addEventListener("keydown", function (event) {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          choose();
-        }
-      });
-      title.style.cursor = "pointer";
       cards.appendChild(article);
     });
   }
@@ -447,7 +461,7 @@
       var lift = id === "baseline" ? "—" : signedPercent(row.lift_pct);
       var flag = "";
       if (row.close_call || (lastBand && lastBand.scenario === id && lastBand.crosses_zero)) {
-        flag = ' <span class="badge-close">Close call</span>';
+        flag = ' <span class="badge-uncertain" title="The published assumption range includes both a gain and a loss.">Outcome uncertain</span>';
       }
       tr.innerHTML =
         "<td>" + escapeHtml(row.label) + (row.cap_binding ? " · capped" : "") + flag + "</td>" +
@@ -485,7 +499,7 @@
         " completions. The five-year figure is the portion the absorption or adoption ceiling lets through.</p>";
     }
     if (chosen.close_call_reason) {
-      extra += "<p><span class='badge-close'>Close call</span> " + escapeHtml(chosen.close_call_reason) + "</p>";
+      extra += "<p><span class='badge-uncertain' title='The published assumption range includes both a gain and a loss.'>Outcome uncertain: under some assumptions this reform adds no homes.</span> " + escapeHtml(chosen.close_call_reason) + "</p>";
     }
     drivers.className = "callout" + (chosen.cap_binding || chosen.close_call ? " warn" : "");
     drivers.innerHTML = "<strong>" + escapeHtml(chosen.label) + "</strong><ul>" + parts + "</ul>" + extra;
@@ -524,7 +538,7 @@
       Object.keys(totals).forEach(function (key) { totals[key] += county[key]; });
       var tr = document.createElement("tr");
       var valueTag = county.value_imputed ? "assumed" : "observed";
-      var flag = county.close_call ? ' <span class="badge-close">Close call</span>' : "";
+      var flag = county.close_call ? ' <span class="badge-uncertain" title="The published assumption range includes both a gain and a loss.">Outcome uncertain</span>' : "";
       tr.innerHTML =
         "<td>" + escapeHtml(county.name) + (county.value_imputed ? " *" : "") + flag + "</td>" +
         "<td>" + escapeHtml(county.context) + "</td>" +
@@ -583,7 +597,7 @@
       var current = sliderValue(spec);
       return "<tr><td>" + escapeHtml(spec.label) + "</td><td>" +
         escapeHtml(formatSetting(spec, current)) + badge("assumed") + "</td><td>" +
-        escapeHtml(oneDecimal(spec.low) + " – " + oneDecimal(spec.high)) + "</td></tr>";
+        escapeHtml(formatBand(spec.low, spec.high)) + "</td></tr>";
     }).join("");
     var close = closeCallFor(scenarioId);
     briefEl.innerHTML =
@@ -596,7 +610,7 @@
       "<div><div class='k'>After</div><div class='v'>" + tagged(after, "calculated", integer) + "</div><p>Baseline plus this scenario.</p></div>" +
       "<div><div class='k'>Net new</div><div class='v'>" + tagged(net, "calculated", integer) + "</div><p>Calculated addition over five years.</p></div>" +
       "</div>" +
-      (close ? "<p><span class='badge-close'>Close call</span> " + escapeHtml(close) + "</p>" : "") +
+      (close ? "<p><span class='badge-uncertain' title='The published assumption range includes both a gain and a loss.'>Outcome uncertain: under some assumptions this reform adds no homes.</span> " + escapeHtml(close) + "</p>" : "") +
       "<h3>Assumptions in this run</h3>" +
       "<table><thead><tr><th>Assumption</th><th>Value</th><th>Published band</th></tr></thead><tbody>" +
       assumptionRows +
@@ -693,7 +707,7 @@
     countyDetail.hidden = false;
     countyDetail.innerHTML =
       "<strong>" + escapeHtml(county.name) + "</strong> " +
-      (county.close_call ? '<span class="badge-close">Close call</span> ' : "") +
+      (county.close_call ? '<span class="badge-uncertain" title="The published assumption range includes both a gain and a loss.">Outcome uncertain</span> ' : "") +
       "<p class='plain'>" + escapeHtml(county.name) + " rolls into " + escapeHtml(result.name) +
       " through the same county pro forma as every other county. The state total is the sum, not a separate model. " +
       (county.close_call_reason || "This county is not sitting on the feasibility hurdle.") + "</p>" +
@@ -735,19 +749,23 @@
       var value = metricOf(county);
       var radius = 5 + 9 * Math.sqrt((county ? county.housing_units : 1) / result.housing_units);
       var selected = point.fips === selectedFips;
-      var label = (county ? county.name : point.name) + ", " + integer(value);
-      return '<circle role="button" tabindex="0" data-fips="' + point.fips + '" cx="' + xy[0].toFixed(1) +
+      var label = (county ? county.name : point.name) + ", " + integer(value) + " calculated";
+      return '<circle data-fips="' + point.fips + '" cx="' + xy[0].toFixed(1) +
         '" cy="' + xy[1].toFixed(1) + '" r="' + radius.toFixed(1) + '" fill="' + colorFor(value, maxMetric) +
         '" stroke="' + (selected ? "#9a4e24" : "#1c2430") + '" stroke-width="' + (selected ? 2.5 : 0.6) +
-        '"><title>' + escapeHtml(label) + "</title></circle>";
+        '"><title>' + escapeHtml(label) + "</title></circle>" +
+        '<circle class="map-hit" data-fips="' + point.fips + '" cx="' + xy[0].toFixed(1) +
+        '" cy="' + xy[1].toFixed(1) + '" r="12"><title>' + escapeHtml(label) + "</title></circle>";
     }).join("");
     mapStage.innerHTML =
-      '<svg viewBox="0 0 ' + width + " " + height + '" role="img" aria-label="Map of ' + escapeHtml(result.name) + ' counties, colored by the selected scenario">' +
+      '<svg viewBox="0 0 ' + width + " " + height + '" role="group" aria-label="Map of ' + escapeHtml(result.name) + ' counties, colored by the selected scenario">' +
       '<rect width="100%" height="100%" fill="#f7f3ea"></rect>' +
       '<path d="' + hullPath + '" fill="#e7f0e4" stroke="#0f6b4e" stroke-width="1.5"></path>' +
       circles +
       "</svg>";
     bindMapKeys();
+    bindRoving(mapStage, "[data-fips]");
+    renderCountySelect();
     renderCountyDetail(selectedFips ? countyByFips(selectedFips) : null);
   }
 
@@ -798,7 +816,7 @@
       shapes += stateShape(cell.code, pts, boundsOf(pts), cell.x, cell.y, cell.w, cell.h);
     });
     mapStage.innerHTML =
-      '<svg viewBox="0 0 800 460" role="img" aria-label="Map of the eleven challenge states. Hawaii and southern New England are inset so the small states stay clickable.">' +
+      '<svg viewBox="0 0 800 460" role="group" aria-label="Map of the eleven challenge states. Hawaii and southern New England are inset so the small states stay clickable.">' +
       '<rect width="100%" height="100%" fill="#f7f3ea"></rect>' +
       '<rect x="16" y="300" width="160" height="144" fill="#fffdf8" stroke="#d9d0c2"></rect>' +
       '<text x="24" y="316" font-size="12" font-family="sans-serif" fill="#5c6570">Hawaii</text>' +
@@ -807,7 +825,42 @@
       shapes +
       "</svg>";
     bindMapKeys();
+    bindRoving(mapStage, "[data-state]");
     countyDetail.hidden = true;
+  }
+
+  function bindRoving(container, selector) {
+    var nodes = Array.prototype.slice.call(container.querySelectorAll(selector));
+    var unique = [];
+    var seen = {};
+    nodes.forEach(function (node) {
+      var key = node.getAttribute("data-fips") || node.getAttribute("data-state");
+      if (seen[key]) return;
+      seen[key] = true;
+      unique.push(node);
+    });
+    unique.forEach(function (node, index) {
+      node.tabIndex = index === 0 ? 0 : -1;
+      node.addEventListener("keydown", function (event) {
+        var next = index;
+        if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % unique.length;
+        else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + unique.length) % unique.length;
+        else return;
+        event.preventDefault();
+        unique[index].tabIndex = -1;
+        unique[next].tabIndex = 0;
+        unique[next].focus();
+      });
+    });
+  }
+
+  function renderCountySelect() {
+    var select = document.getElementById("county-select");
+    if (!select || !result) return;
+    select.innerHTML = result.counties.map(function (county) {
+      return '<option value="' + county.fips + '"' + (county.fips === selectedFips ? " selected" : "") +
+        ">" + escapeHtml(county.name) + "</option>";
+    }).join("");
   }
 
   function bindMapKeys() {
@@ -937,7 +990,7 @@
   function renderBand(mc) {
     lastBand = mc;
     var central = scenarioId === "baseline" ? result.baseline_completions_5yr : result.scenarios[scenarioId].incremental_completions;
-    var flag = mc.crosses_zero ? ' <span class="badge-close">Close call</span> The p10–p90 band crosses zero.' : "";
+    var flag = mc.crosses_zero ? ' <span class="badge-uncertain" title="The published assumption range includes both a gain and a loss.">Outcome uncertain: under some assumptions this reform adds no homes.</span>' : "";
     band.className = "callout" + (mc.crosses_zero ? " warn" : "");
     band.innerHTML = "<strong>Seeded band, " + tagged(mc.draws, tagOf(mc, "draws", "assumed"), integer) +
       " draws, seed " + tagged(mc.seed, tagOf(mc, "seed", "assumed"), integer) + ".</strong> " +
@@ -995,8 +1048,8 @@
   }
 
   function errorText(block) {
-    if (block.percent_error == null) return integer(block.gap) + " (small base)";
-    return signedPercent(block.percent_error) + " calculated";
+    if (block.percent_error == null) return '<span class="badge-error">' + integer(block.gap) + " (small base)</span>";
+    return '<span class="badge-error">' + signedPercent(block.percent_error) + "</span> " + badge("calculated");
   }
 
   function selectScenario(id) {
@@ -1059,22 +1112,59 @@
     setStatus(error && error.message ? error.message : "Something went wrong.");
   }
 
-  document.querySelectorAll(".tab").forEach(function (tab) {
-    tab.addEventListener("click", function () {
-      document.querySelectorAll(".tab").forEach(function (other) {
-        other.classList.toggle("active", other === tab);
-      });
-      document.querySelectorAll(".panel").forEach(function (panel) {
-        var on = panel.id === "panel-" + tab.getAttribute("data-tab");
-        panel.hidden = !on;
-        panel.classList.toggle("active", on);
-      });
-      if (tab.getAttribute("data-tab") === "case" && !caseStudy) {
-        loadCaseStudy();
-      }
-      if (tab.getAttribute("data-tab") === "brief" && result) renderBrief();
+  function activateTab(tab) {
+    document.querySelectorAll(".tab").forEach(function (other) {
+      var on = other === tab;
+      other.classList.toggle("active", on);
+      other.setAttribute("aria-selected", on ? "true" : "false");
+      other.tabIndex = on ? 0 : -1;
+    });
+    document.querySelectorAll(".panel").forEach(function (panel) {
+      var on = panel.id === "panel-" + tab.getAttribute("data-tab");
+      panel.hidden = !on;
+      panel.classList.toggle("active", on);
+    });
+    if (tab.getAttribute("data-tab") === "case" && !caseStudy) {
+      loadCaseStudy();
+    }
+    if (tab.getAttribute("data-tab") === "brief" && result) renderBrief();
+  }
+
+  var tabButtons = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  tabButtons.forEach(function (tab, index) {
+    tab.tabIndex = tab.classList.contains("active") ? 0 : -1;
+    tab.addEventListener("click", function () { activateTab(tab); });
+    tab.addEventListener("keydown", function (event) {
+      var next = index;
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % tabButtons.length;
+      else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + tabButtons.length) % tabButtons.length;
+      else if (event.key === "Home") next = 0;
+      else if (event.key === "End") next = tabButtons.length - 1;
+      else return;
+      event.preventDefault();
+      activateTab(tabButtons[next]);
+      tabButtons[next].focus();
     });
   });
+
+  var moreBtn = document.getElementById("more-tabs");
+  var moreList = document.getElementById("more-tab-list");
+  if (moreBtn && moreList) {
+    moreBtn.addEventListener("click", function () {
+      var open = moreList.hidden;
+      moreList.hidden = !open;
+      moreBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  }
+
+  var countyPick = document.getElementById("county-select");
+  if (countyPick) {
+    countyPick.addEventListener("change", function () {
+      selectedFips = countyPick.value;
+      mapScope = "state";
+      renderMap();
+    });
+  }
 
   document.getElementById("reset").addEventListener("click", function () {
     overrides = {};

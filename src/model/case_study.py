@@ -370,7 +370,7 @@ def render_markdown(study: dict[str, Any]) -> str:
         "",
         "| Pathway | Allegheny County | Pennsylvania |",
         "| ------- | ---------------: | -----------: |",
-        f"| Baseline completions, 5 years | {_fmt(calculated['allegheny_baseline_completions'])} | {_fmt(calculated['state_baseline_completions'])} |",
+        f"| Core baseline completions, 5 years | {_fmt(calculated['allegheny_baseline_completions'])} | {_fmt(calculated['state_baseline_completions'])} |",
         f"| ADUs, net | {_fmt(calculated['allegheny_adu'])} | {_fmt(calculated['state_adu'])} |",
         f"| Missing middle, net | {_fmt(calculated['allegheny_missing_middle'])} | {_fmt(calculated['state_missing_middle'])} |",
         f"| Transit-oriented density, net | {_fmt(calculated['allegheny_tod'])} | {_fmt(calculated['state_tod'])} |",

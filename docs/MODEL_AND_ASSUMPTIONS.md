@@ -38,6 +38,8 @@ H(g, T) = \begin{cases} T & \text{if } g = 0 \\ \dfrac{(1+g)^T - 1}{g} & \text{o
 
 Central \(g\) is 0, so five-year permits equal \(5 \times\) the annual run-rate exactly. That identity is tested. Completions in a segment equal permits times a completion ratio (central 0.93 single-family, 0.90 small buildings, 0.84 multifamily, 0.92 ADUs). The ratios are a steady-pipeline identity: homes permitted just before the window finish during it, and homes permitted at the end of the window finish after it. What the ratio removes is cancellation and the longer multifamily schedule, not a construction-duration model of each project.
 
+The Lab baseline (111,016) and the core baseline (108,950) use the same completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 permit average and the core uses 2022-2024. That moves Pennsylvania by +1,988, mostly from 5+ unit permits (+2,170). The Lab also adds a +78 host adjustment for already-legal homes.
+
 County permit cells are reconciled to the state Building Permits Survey total. Counties present in the county file keep their counts. Any residual is spread to non-reporting counties by housing-unit weight. If the reporting counties already exceed the state, they are scaled down. After reconciliation, county permits sum to the state total.
 
 ## 4. Shared building blocks
@@ -54,7 +56,7 @@ All of these are functions in `src/model/equations.py`.
 
 **Integer counties.** Hamilton's largest-remainder method turns county weights into integers that sum exactly to the rounded state total. The county table in the app is that allocation. Adding the column recovers the state.
 
-**Context.** A county is urban above 1,500 homes per square mile or a transit-commute share of 6 percent, suburban above 200 homes per square mile, and rural otherwise. Parking minimums, market ratios, and the surface-versus-structured mix depend on that label.
+**Context.** A county is urban above 1,500 homes per square mile or a transit-commute share of 6 percent, suburban above 200 homes per square mile, and rural otherwise (core engine; the Lab uses 2,000 per config/lab/assumptions.yaml:27). Parking minimums, market ratios, and the surface-versus-structured mix depend on that label.
 
 ## 5. Scenario 1 — accessory dwelling units
 
@@ -151,7 +153,7 @@ Illustrative anchors: Pennsylvania median value $240,500, rent $1,162, transit c
 
 ## 12. Uncertainty
 
-Sliders are the `ui: true` parameters plus the three legal shares. Each has a published low, central, and high. Overrides outside the band are clamped. The tornado sets one slider to low, then high, and records the swing in the selected outcome. The Monte Carlo draws every slider from a triangle (mode = central, support = the band) with seed 20261014. The web app uses 80 draws; the cross-check uses 40. Repeating the seed repeats the percentiles. The band is a sensitivity statement about the published ranges. It is not a forecast interval from historical forecast errors.
+Sliders are the `ui: true` parameters plus the three legal shares. Each has a published low, central, and high. Overrides outside the band are clamped. The tornado sets one slider to low, then high, and records the swing in the selected outcome. The Monte Carlo draws every slider from a triangle (mode = central, support = the band) with seed 20261014. Config sets 250 draws for the CLI (`config/assumptions.yaml`). The web app uses 80. The UI cross-check uses 40. `src/model/crossval.py` defaults to 60. Repeating the seed repeats the percentiles. The band is a sensitivity statement about the published ranges. It is not a forecast interval from historical forecast errors.
 
 Parameters that move the package most, in the central case, are the ADU adoption hazard, the price shock, the construction-cost shock, and the missing-middle conversion cost. In Virginia and Hawaii the conversion-cost and price swings are the same order of magnitude as the central result. That is the model telling you the five-year total is a tail of feasible projects, not a count of zoned capacity.
 

@@ -994,6 +994,8 @@ def _scenario_shell(
         "incremental_permits": incremental_permits,
         "incremental_completions": incremental_completions,
         "annualized_completions": annualized_completions,
+        "annualized_level": level_c / 5.0,
+        "annualized_increment": 0.0 if scenario_id == "baseline" else incremental_completions / 5.0,
         "annualized_permits": annualized_permits,
         "lift_pct": lift,
         "cap_binding": binding,

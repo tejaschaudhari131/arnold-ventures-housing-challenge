@@ -154,7 +154,10 @@ def assumption_catalog() -> dict[str, Any]:
 
 def locked_results(code: str) -> dict[str, Any]:
     """Committed results only. Vercel and the GET route never compute."""
-    return load_results(check_state(code), allow_compute=False)
+    doc = dict(load_results(check_state(code), allow_compute=False))
+    # Display label only. The JSON key close_call_flip_share stays 0.10.
+    doc["close_call_flip_share_label"] = "close-call threshold"
+    return doc
 
 
 def geo(code: str) -> dict[str, Any]:
@@ -243,7 +246,7 @@ def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dic
             "value": bps["u1"],
             "moe": 0.0,
             "tag": "observed",
-            "source": "Census BPS annual county",
+            "source": "Census Building Permits Survey 2023-2025 county files",
             "note": "",
         }
     )
@@ -285,7 +288,16 @@ def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dic
             }
         )
     row = evaluated["scenarios"][scenario]
-    return {
+    from src.plain import snap_tree
+
+    decomp = package_decomposition(evaluated["scenarios"], key="scenarios")
+    coverage = dict(evaluated["coverage"])
+    coverage["tag"] = "calculated"
+    coverage["source"] = "src/lab/engine.py evaluate_county coverage"
+    decomp = dict(decomp)
+    decomp["tag"] = "calculated"
+    decomp["source"] = "src/lab/engine.py package_decomposition"
+    payload = {
         "state": code,
         "county": {"fips": county.fips, "name": county.name},
         "scenario": scenario,
@@ -308,12 +320,13 @@ def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dic
             "by_option": row.get("by_option", {}),
             "tag": "calculated",
         },
-        "coverage": evaluated["coverage"],
+        "coverage": coverage,
         "evidence": evidence,
         "lots_note": lots_note,
         "imputed": county.imputed,
-        "package_decomposition": package_decomposition(evaluated["scenarios"], key="scenarios"),
+        "package_decomposition": decomp,
     }
+    return snap_tree(payload)
 
 
 def _layer_row(sid: str, central: dict[str, Any], bounds: dict[str, float], moe: float) -> dict[str, Any]:
@@ -459,11 +472,25 @@ def recompute(code: str, overrides: dict[str, float] | None = None, county_key: 
 
 
 def _fmt(value: float) -> str:
-    return f"{value:+,.0f}" if value else "0"
+    from src.plain import homes
+
+    return homes(value, signed=True) if value else "0"
+
+
+def _band(low: float, high: float) -> str:
+    from src.plain import homes
+
+    left = homes(low)
+    right = homes(high)
+    if left == "0" and right == "0":
+        return "0"
+    return f"{left}–{right}"
 
 
 def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any] | None = None) -> str:
     """One-page policy brief from locked or live results."""
+    from src.plain import CORE_URL, LAB_URL, SCENARIO_SHORT, format_assumption, homes, ranking_phrase
+
     code = check_state(code)
     locked = locked_results(code)
     sw = (live or locked)["statewide"]
@@ -478,45 +505,53 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
         f"Evidence coverage (stock-weighted): ADU {locked['coverage']['adu']:.1%}, "
         f"2–6 homes {locked['coverage']['mm']:.1%}. Unknown zoning is never treated as zero.",
         "",
-        "| Scenario | Central | Envelope p10–p90 | Zoning bound | ACS MOE |",
+        "| Scenario | Central | Likely range | Zoning bound | Census survey error |",
         "| --- | ---: | ---: | ---: | ---: |",
     ]
     for sid in ["baseline"] + list(compared_scenarios()):
         row = results[sid]
-        label = next(s["short"] for s in locked["scenarios"] if s["id"] == sid)
+        label = SCENARIO_SHORT.get(sid) or next(s["short"] for s in locked["scenarios"] if s["id"] == sid)
         env = locked["statewide"]["results"][sid]
-        central = row["central"]
-        prefix = "" if sid == "baseline" else "+"
+        central = homes(row["central"]) if sid == "baseline" else homes(row["central"], signed=True)
         lines.append(
-            f"| {label} | {prefix}{central:,.0f} | {env['p10']:,.0f}–{env['p90']:,.0f} | "
-            f"{row['zoning_low']:,.0f}–{row['zoning_high']:,.0f} | ±{row['acs_moe']:,.0f} |"
+            f"| {label} | {central} | {_band(env['p10'], env['p90'])} | "
+            f"{_band(row['zoning_low'], row['zoning_high'])} | ±{homes(row['acs_moe'])} |"
         )
     top = sw["top_benchmark_pair"]
+    leader = SCENARIO_SHORT.get(top["leader"], top["leader"])
+    trailer = SCENARIO_SHORT.get(top["trailer"], top["trailer"])
+    threshold = locked.get("close_call_flip_share_label", "close-call threshold")
     lines += [
         "",
-        f"Handbook ranking: {' > '.join(sw['benchmark_ranking'])}.",
-        f"Top pair: {top['leader']} leads {top['trailer']} by {top['gap']:,.0f} homes.",
+        f"Handbook ranking: {ranking_phrase(sw['benchmark_ranking'])}.",
+        f"Top pair: {leader} leads {trailer} by {homes(top['gap'])} homes.",
+        f"The {threshold} is 10 percent of assumption draws.",
     ]
     if top["close_call"]:
-        lines.append("**Close call.** " + "; ".join(top["reasons"]) + ".")
+        lines.append("**Ranking is close.** " + "; ".join(top["reasons"]) + ".")
     decomp = sw["package_decomposition"]
     lines += [
         "",
         "## Package is not a sum",
         "",
-        f"Legalization resolved (one option per lot): {decomp['legalization_resolved']:,.0f}. "
-        f"If ADU and missing middle were added: {decomp['legalization_if_summed']:,.0f} "
-        f"(competition loss {decomp['competition_loss']:,.0f}). "
-        f"Package {decomp['package']:,.0f} vs sum of separate {decomp['sum_of_separate']:,.0f}.",
+        f"Legalization resolved (one option per lot): {homes(decomp['legalization_resolved'])}. "
+        f"If ADU and missing middle were added: {homes(decomp['legalization_if_summed'])} "
+        f"(competition loss {homes(decomp['competition_loss'], signed=True)}). "
+        f"Package {homes(decomp['package'])} vs sum of separate {homes(decomp['sum_of_separate'])}.",
         "",
     ]
     wwc = locked["statewide"].get("what_would_change")
     if wwc:
+        left = SCENARIO_SHORT.get(wwc["pair"][0], wwc["pair"][0])
+        right = SCENARIO_SHORT.get(wwc["pair"][1], wwc["pair"][1])
         lines.append("## What would change the statewide conclusion")
         lines.append("")
-        lines.append(f"Central ranking of {wwc['pair'][0]} over {wwc['pair'][1]} flips if:")
+        lines.append(f"Central ranking of {left} over {right} flips if:")
         for row in wwc["switches"]:
-            lines.append(f"- {row['label']} moves to {row['switch_at']:.4g} {row['unit']} (central {row['central']:.4g})")
+            lines.append(
+                f"- {row['label']} moves to {format_assumption(row['unit'], row['switch_at'])} "
+                f"(central {format_assumption(row['unit'], row['central'])})"
+            )
         lines.append("")
     if county_key:
         county = load_state(code).county(county_key)
@@ -533,7 +568,7 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
             "",
         ]
         for sid in BENCHMARKS:
-            lines.append(f"- {sid}: {_fmt(source['results'][sid]['central'])}")
+            lines.append(f"- {SCENARIO_SHORT.get(sid, sid)}: {_fmt(source['results'][sid]['central'])}")
         lines.append("")
     if live and live.get("envelope_note"):
         lines += ["## Note", "", live["envelope_note"], ""]
@@ -547,6 +582,7 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
         "Every number is tagged observed, assumed, or calculated in the Why drawer. "
         "The ADU pro forma shown there is illustrative.",
         "",
+        f"Lab: {LAB_URL}. Core engine: {CORE_URL}.",
         "Method: docs/SMALL_HOMES_LAB.md. Apache-2.0.",
     ]
     return "\n".join(lines) + "\n"

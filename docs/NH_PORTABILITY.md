@@ -1,6 +1,6 @@
 # New Hampshire portability
 
-The Lab's second state is New Hampshire: ten counties, no local lot-area extract, and more observed zoning than Pennsylvania. The same engine, assumption file, and uncertainty layers run both states. Switching the `/lab` selector from PA to NH is the demonstration.
+The Lab's second state is New Hampshire: ten counties, no local lot-area extract, and more observed zoning than Pennsylvania. The same engine, assumption file, and uncertainty layers run both states. Switching the https://stateframe-housing.vercel.app/lab selector from PA to NH is the demonstration.
 
 ## What travels
 
@@ -21,17 +21,19 @@ ADU evidence coverage is 92 percent of hosts. Missing-middle coverage is 0 perce
 
 ## Result
 
-| Scenario | NH increment | Why it looks like that |
-| -------- | -----------: | ---------------------- |
-| Baseline | 22,136 | BPS 2023–2025 run-rate plus the SB 284 parking-cap adjustment |
-| ADUs | +81 | Almost all detached hosts already have a legal ADU path; the increment is attached-host priors and the no-parking lever |
-| Missing middle | +2,344 | 2–6 homes are unknown everywhere, so the prior does the work. Nearly all `mm2` |
-| Parking | +30 | Incremental to SB 284's already-in-Baseline cap |
-| Fees | +1,095 | Same $50,000 → $25,000 Handbook lever as Pennsylvania |
-| Package | +3,761 | Resolved, not summed |
-| Approval | +1,364 | Discretionary-share pipeline only; timing pull-forward reported separately |
+| Scenario | NH increment | Likely range | Zoning | Census survey error |
+| -------- | -----------: | -----------: | -----: | ------------------: |
+| Baseline (level) | 22,136 | 21,260–23,321 | 22,136–22,136 | ±0 |
+| ADUs | +81 | 12–120 | 59–97 | ±7 |
+| Missing middle | +2,344 | 814–4,072 | 2,045–2,556 | ±156 |
+| Parking | +30 | 12–37 | 30–30 | ±0 |
+| Fees | +1,095 | 584–1,398 | 1,095–1,095 | ±0 |
+| Package | +3,761 | 1,771–5,957 | 3,449–3,982 | ±190 |
+| Approval | +1,364 | 939–2,326 | 1,364–1,364 | ±0 |
 
-Missing middle still leads the four Handbook benchmarks. The MM-versus-fees pair is a close call (16 percent of draws). Seven of ten counties have a close top-benchmark pair.
+Baseline is the BPS 2023–2025 run-rate plus the SB 284 parking-cap adjustment. The ADU increment is attached-host priors and the no-parking lever — almost all detached hosts already have a legal ADU path. Missing middle is unknown everywhere, so the prior does the work (nearly all `mm2`). Parking is incremental to SB 284's already-in-Baseline cap. Fees use the same $50,000 → $25,000 Handbook lever as Pennsylvania. The package is resolved, not summed. Approval is the discretionary-share pipeline only.
+
+Missing middle still leads the four Handbook benchmarks. The MM-versus-fees pair is a close call (16 percent of draws). In New Hampshire, ADU vs parking flips in 20 percent of draws. Seven of ten counties have a close top-benchmark pair.
 
 ## What this test is for
 

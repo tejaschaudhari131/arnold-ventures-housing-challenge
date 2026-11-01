@@ -63,6 +63,8 @@ The terms in the table are defined as follows:
 
 **Pipeline baseline.** The 2023–2025 Building Permits Survey county average, by structure size, × 5 years × completion share. Completion shares are 0.93 for 1-unit, 0.90 for 2–4, and 0.84 for 5+.
 
+The Lab baseline (111,016) and the core baseline (108,950) use the same completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 permit average and the core uses 2022-2024. That moves Pennsylvania by +1,988, mostly from 5+ unit permits (+2,170). The Lab also adds a +78 host adjustment for already-legal homes.
+
 **Baseline adjustments.** Homes the permit window cannot contain yet are added to Baseline:
 
 - **Pittsburgh ADUs**, from the host model.
@@ -114,7 +116,7 @@ The Lab reports three uncertainty layers separately and never adds them together
 
 A comparison between two scenarios is flagged as a **close call** if any of the following holds:
 
-- the order of the two scenarios flips in at least 10% of the assumption draws;
+- the order of the two scenarios flips in at least 10% of the assumption draws. This 10% is the flag threshold (`close_call_flip_share` in results files), not a measured flip rate;
 - the order flips at an end of the zoning-evidence bound; or
 - the central gap is smaller than the ACS margin on the gap. The margin on the gap is computed from the difference in sensitivities, not from the two separate margins.
 
@@ -122,7 +124,7 @@ A comparison between two scenarios is flagged as a **close call** if any of the 
 
 **Switching values.** For the leading benchmark pair, bisection finds the value of each parameter at which the pair ties, if that value lies inside the parameter's band. This is the "what would change our conclusion" view.
 
-In Pennsylvania, missing middle leads fees statewide by 6,126 homes, but the order flips in 19% of draws. It would flip at any of these values:
+In Pennsylvania, missing middle adds 6,126 more homes than a 50% fee cut over five years, but fees come out ahead in 19% of the 200 assumption draws (38 of 200). It would flip at any of these values:
 
 - homeowner uptake hazard 0.31% a year (central 0.6%);
 - conversion cost $195,000 per home (central $160,000); or
@@ -139,7 +141,7 @@ The decomposition also reports the separate scenarios summed, to show what doubl
 | PA step | Homes |
 | ------- | ----- |
 | Legalization if summed (ADU + missing middle) | 18,964 |
-| Legalization resolved, one option per lot | 12,971 |
+| Legalization resolved, one option per lot | 12,970 |
 | + fee cut | +11,878 |
 | + parking minimums removed | +2,538 |
 | **Package** | **27,387** |
@@ -149,7 +151,7 @@ Resolution removes 5,993 double-counted homes. The fee cut adds more inside the 
 
 ## 9. Why the Lab's ADU total differs from the core engine's
 
-The Lab's Pennsylvania ADU increment (+6,048) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +46,261. That fee gap is why the two numbers differ. Walking the Lab toward the core, one step at a time: use the $6,000 fee (+12,505); then value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+31,489); then drop adoption and build lags (+48,192), within about 4 percent of the core. See the Lab at /lab and the core engine at /.
+ADU results depend heavily on local ADU fees. At the Handbook's $50,000 fee: +6,048. At a $6,000 fee: +12,505. Our headline uses the Handbook fee. The Lab's Pennsylvania ADU increment (+6,048) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +46,261. That fee gap is why the two numbers differ. Walking the Lab toward the core: value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+31,489); then drop adoption and build lags (+48,192), within about 4 percent of the core. See the Lab at https://stateframe-housing.vercel.app/lab and the core engine at https://stateframe-housing.vercel.app/. The Lab baseline (111,016) and the core baseline (108,950) use the same completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 permit average and the core uses 2022-2024. That moves Pennsylvania by +1,988, mostly from 5+ unit permits (+2,170). The Lab also adds a +78 host adjustment for already-legal homes.
 
 The two engines also answer different questions. The table below moves the Lab's assumptions toward the core engine's one at a time, cumulatively.
 

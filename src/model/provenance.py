@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any
 
-TAGS = ("observed", "assumed", "calculated")
+TAGS = ("observed", "assumed", "calculated", "classification")
 
 LEGEND = {
     "observed": (
@@ -23,6 +23,10 @@ LEGEND = {
     "assumed": "A published assumption or an imputation. It is not a measurement for this place.",
     "calculated": (
         "Arithmetic in src/model/equations.py, using observed inputs and published assumptions."
+    ),
+    "classification": (
+        "A documented grouping (for example parcel-data versus estimated-parcel states), "
+        "not a measurement and not an equation output."
     ),
 }
 
@@ -49,7 +53,6 @@ OBSERVED_KEYS = frozenset(
         "bps_two",
         "bps_three_four",
         "bps_five_plus",
-        "tier",
         "county_count",
         "fhfa_hpi_2020",
         "fhfa_hpi_latest",
@@ -60,7 +63,6 @@ OBSERVED_KEYS = frozenset(
 # Settings, imputations, and hurdle parameters. Not measurements.
 ASSUMED_KEYS = frozenset(
     {
-        "completeness",
         "geography_eligible_share",
         "threshold",
         "sigma",
@@ -103,6 +105,8 @@ def tag_for(key: str, node: dict[str, Any]) -> str:
     if key == "lot_imputed":
         declared = node.get("lot_imputed_tag")
         return declared if declared in TAGS else "assumed"
+    if key == "tier":
+        return "classification"
     if key in OBSERVED_KEYS:
         return "observed"
     if key in ASSUMED_KEYS:

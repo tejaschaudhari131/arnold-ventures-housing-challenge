@@ -23,8 +23,8 @@ def test_every_simulation_field_is_tagged(bundle):
         missing = untagged_numbers(result)
         assert missing == [], missing
         assert result["provenance"]["baseline_completions_5yr"] == "calculated"
-        assert result["provenance"]["tier"] == "observed"
-        assert result["provenance"]["completeness"] == "assumed"
+        assert result["provenance"]["tier"] == "classification"
+        assert result["provenance"]["completeness"] == "calculated"
         for scenario in result["scenarios"].values():
             assert scenario["provenance"]["incremental_completions"] == "calculated"
             for step in scenario["trace"]:
@@ -61,6 +61,10 @@ def test_csv_and_json_exports_tag_every_number(bundle):
             if key.endswith("_provenance") or isinstance(value, bool) or not isinstance(value, (int, float)):
                 continue
             assert row[f"{key}_provenance"] in TAGS
+    assert any(row.get("completeness_source") == "docs/DATA_PROVENANCE.md" for row in rows)
+    assert any(row.get("tier_provenance") == "classification" for row in rows)
+    assert any(row.get("completeness_provenance") == "calculated" for row in rows)
+    assert any("annualized_level" in row and "annualized_increment" in row for row in rows)
     for exported in table:
         for key, value in exported.items():
             if key.endswith("_provenance") or value in {"True", "False"}:
