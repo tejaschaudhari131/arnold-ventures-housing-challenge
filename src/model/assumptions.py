@@ -85,6 +85,24 @@ class Assumptions:
             )
         return rows
 
+    def completion_ratios(self) -> dict[str, dict[str, Any]]:
+        """Every completion_ratio_* in config, whether or not it is a slider."""
+        return {
+            name: {
+                "label": spec.get("label", name),
+                "group": spec.get("group", "Other"),
+                "unit": spec.get("unit", "share"),
+                "low": spec["low"],
+                "central": spec["central"],
+                "high": spec["high"],
+                "slider": bool(spec.get("ui")),
+                "tag": "assumed",
+                "help": spec.get("help", ""),
+            }
+            for name, spec in self.parameters.items()
+            if name.startswith("completion_ratio_")
+        }
+
     def resolve(self, state: str, overrides: dict[str, Any] | None = None) -> dict[str, float]:
         if state not in self.states:
             raise AssumptionError(f"Unknown state '{state}'")
@@ -109,8 +127,11 @@ class Assumptions:
         return values
 
     def sensitive_names(self, state: str) -> list[str]:
-        """The tornado and Monte Carlo move every slider, not every internal constant."""
+        """Sliders, plus parameters marked for the Monte Carlo set (the lags)."""
         names = [row["name"] for row in self.ui_parameters(state)]
+        for name, spec in self.parameters.items():
+            if spec.get("monte_carlo") and name not in names:
+                names.append(name)
         return names
 
 

@@ -8,19 +8,18 @@ For each county c and scenario s the Lab reports three numbers:
   feasible capacity   of those, homes whose pro forma clears the hurdle
   delivery            expected completions inside the five-year window
 
-Host delivery is N = sum_j H_j * F_j * p_j(T) * d_j over host groups j,
-except ADU: N_ADU = sum_j H_j * gate_j * p_j(T) * d_j. The ADU hazard is
-an all-lots rate from CA permits / SF stock. The gate is
-min(1, Phi(x_ADU / sigma) / Phi(x_ref / sigma)), with x_ref the same ADU
-at fee 0 and no parking (CA Gov. Code 65852.2(f)(3), now 66311.5(c)(1);
-the Lab prototype is 600 sq ft). mm2 uses a feasible-lot hazard and still
-multiplies by F.
+Host delivery is N = sum_j H_j * F_j * p_j(T) * d_j * c_j over host groups j.
+F is Phi(x_best / sigma) for every option, including ADUs. The ADU hazard
+is the CA all-lots rate divided by F_CA (judgmental, central 0.5). c_j is
+the screening completion ratio for that option (D12): ADU 0.92, mm2 and
+mm4 0.90, mm6 the multifamily ratio. mm2 uses hazard_homeowner / F_CA and
+still multiplies by F.
 
   H  observed single-family lots in the group (ACS B25024 by tract context)
   F  Phi(x_best / sigma): share of lots whose own margin clears the hurdle,
      where x_best is the largest excess margin among options that are legal
      AND fit the lot. Each lot takes at most one option. ADU delivery uses
-     the gate, not F.
+     this same F.
   p  1 - exp(-lambda * max(0, T - legal lag - build lag)): chance a lot
      finishes inside the window (feasible lots for mm2/rebuilds; all lots
      times the gate for ADU)
@@ -53,7 +52,7 @@ from typing import Any
 
 from src.lab.config import CONTEXTS, OPTIONS, central_params, load_assumptions, load_scenarios
 from src.lab.data import County, HostCell, LegalSegment, StateData, post_window
-from src.lab.options import Econ, OptionResult, adu_economics_gate, evaluate_option, rebuild_space_cost
+from src.lab.options import Econ, OptionResult, evaluate_option, lot_completion, rebuild_space_cost
 from src.model.equations import normal_cdf
 
 STD_NORMAL = NormalDist()
@@ -110,8 +109,19 @@ def scenario_ids() -> list[str]:
 
 
 def timing_share(hazard: float, horizon: float, legal_lag: float, build_lag: float) -> float:
-    """p(T) = 1 - exp(-lambda * max(0, T - legal lag - build lag))."""
-    return 1.0 - math.exp(-hazard * max(0.0, horizon - legal_lag - build_lag))
+    """p(T) = 1 - exp(-lambda * max(0, T - legal lag - build lag)). Zero when T is inside the lags."""
+    window = horizon - legal_lag - build_lag
+    if window <= 0.0 or hazard <= 0.0:
+        return 0.0
+    return 1.0 - math.exp(-hazard * window)
+
+
+def start_share(hazard: float, start: float, end: float) -> float:
+    """Chance a lot starts in [start, end]. Same hazard, no build lag. Zero when the window is empty."""
+    window = end - start
+    if window <= 0.0 or hazard <= 0.0:
+        return 0.0
+    return 1.0 - math.exp(-hazard * window)
 
 
 def years_between(start: str, end: str) -> float:
@@ -124,6 +134,11 @@ class HostOutcome:
     eligible: float = 0.0
     feasible: float = 0.0
     delivered: float = 0.0
+    homes_pre: float = 0.0
+    lots_fit: float = 0.0
+    lots_pay: float = 0.0
+    lots_go: float = 0.0
+    lots_start: float = 0.0
     by_option: dict[str, float] = field(default_factory=dict)
     lots_by_option: dict[str, float] = field(default_factory=dict)
 
@@ -131,6 +146,11 @@ class HostOutcome:
         self.eligible += weight * other.eligible
         self.feasible += weight * other.feasible
         self.delivered += weight * other.delivered
+        self.homes_pre += weight * other.homes_pre
+        self.lots_fit += weight * other.lots_fit
+        self.lots_pay += weight * other.lots_pay
+        self.lots_go += weight * other.lots_go
+        self.lots_start += weight * other.lots_start
         for key, value in other.by_option.items():
             self.by_option[key] = self.by_option.get(key, 0.0) + weight * value
         for key, value in other.lots_by_option.items():
@@ -141,6 +161,11 @@ class HostOutcome:
             "eligible": self.eligible,
             "feasible": self.feasible,
             "delivered": self.delivered,
+            "homes_pre": self.homes_pre,
+            "lots_fit": self.lots_fit,
+            "lots_pay": self.lots_pay,
+            "lots_go": self.lots_go,
+            "lots_start": self.lots_start,
             "by_option": dict(self.by_option),
             "lots_by_option": dict(self.lots_by_option),
         }
@@ -153,30 +178,37 @@ def resolve_hosts(
     hosts: float,
     sigma: float,
     horizon: float,
+    completion: dict[str, float] | None = None,
 ) -> HostOutcome:
     """One best option per lot.
 
     Lots are split at each option's required area. In each slice the lot
     takes the fitting option with the largest excess margin (ties go to the
-    option that adds more homes). Each lot's own margin is the group margin
-    plus a common lot shock with spread sigma, so the same option is best
-    for every lot in the slice and F = Phi(x_best / sigma).
+    option that adds more homes). F = Phi(x_best / sigma) for every option,
+    including ADUs. Delivery then multiplies by that option's completion
+    ratio (D12), inside the solve, so baseline and reform worlds both scale
+    before the increment is taken.
 
     Transition: if the best option only becomes legal later than another
-    fitting option (an incumbent, e.g. an ADU already allowed when a reform
-    adds 2–6 homes), lots keep building the incumbent until the new option's
-    lag ends, and the lots not yet built then switch. Legalizing a better
-    option therefore never strands lots that were already building.
-
-    The ADU hazard is an all-lots rate (CA permits / SF stock). ADU delivery
-    multiplies by a fee/parking gate normalized to CA conditions (fee 0 and
-    no parking) instead of by F. When a non-ADU option is also legal, lots
-    are split by a common shock: the overlap stays with the ADU and the
-    other option takes only lots that work for it but not for an ADU.
+    fitting option, lots keep building the incumbent until the new option's
+    lag ends. The completion ratio does not change which option is chosen.
     """
     out = HostOutcome()
+    ratios = completion or {}
     if not results or hosts <= 0:
         return out
+
+    def feas(excess: float) -> float:
+        if sigma <= 0:
+            return 1.0
+        return normal_cdf(excess / sigma)
+
+    def book(option: str, homes: float) -> None:
+        out.homes_pre += homes
+        scaled = homes * float(ratios.get(option, 1.0))
+        out.delivered += scaled
+        out.by_option[option] = out.by_option.get(option, 0.0) + scaled
+
     thresholds = sorted({r.area for r in results})
     survivals = [lots.survival(a) for a in thresholds] + [0.0]
     for k, area in enumerate(thresholds):
@@ -185,72 +217,80 @@ def resolve_hosts(
             continue
         fitting = [r for r in results if r.area <= area]
         best = max(fitting, key=lambda r: (r.excess, r.net))
-        share_feasible = normal_cdf(best.excess / sigma)
+        share_feasible = feas(best.excess)
         best_lag = lags[best.option]
         lots_here = hosts * mass
         out.eligible += lots_here * max(r.net for r in fitting)
         out.feasible += lots_here * share_feasible * best.net
+        out.lots_fit += lots_here
+        out.lots_pay += lots_here * share_feasible
         adu = next((r for r in fitting if r.option == "adu"), None)
-        gate = adu_economics_gate(adu.excess, adu.ref_excess, sigma) if adu is not None else 1.0
+        adu_f = feas(adu.excess) if adu is not None else 1.0
         earlier = [r for r in fitting if lags[r.option] < best_lag - 1e-12]
         if best.option == "adu":
             timing = timing_share(best.hazard, horizon, best_lag, best.build_lag)
             if earlier:
                 incumbent = max(earlier, key=lambda r: (r.excess, r.net))
-                share_inc = 1.0 if incumbent.option == "adu" else normal_cdf(incumbent.excess / sigma)
+                share_inc = 1.0 if incumbent.option == "adu" else feas(incumbent.excess)
                 start = lags[incumbent.option]
                 stop = min(best_lag, horizon - incumbent.build_lag)
                 built = 1.0 - math.exp(-incumbent.hazard * max(0.0, stop - start))
-                inc_scale = gate if incumbent.option == "adu" else 1.0
+                inc_scale = adu_f if incumbent.option == "adu" else 1.0
                 phase_one = lots_here * share_inc * built * incumbent.net * inc_scale
                 remaining = max(0.0, 1.0 - share_inc * built)
-                out.by_option[incumbent.option] = out.by_option.get(incumbent.option, 0.0) + phase_one
-                delivered = lots_here * remaining * timing * best.net * gate
-                out.delivered += phase_one + delivered
-                out.by_option["adu"] = out.by_option.get("adu", 0.0) + delivered
+                book(incumbent.option, phase_one)
+                delivered = lots_here * remaining * timing * best.net * adu_f
+                book("adu", delivered)
+                out.lots_go += (phase_one / incumbent.net if incumbent.net else 0.0) + (delivered / best.net if best.net else 0.0)
+                out.lots_start += lots_here * share_inc * start_share(incumbent.hazard, start, min(best_lag, horizon)) * inc_scale
+                out.lots_start += lots_here * remaining * start_share(best.hazard, best_lag, horizon) * adu_f
             else:
-                delivered = lots_here * gate * timing * best.net
-                out.delivered += delivered
-                out.by_option["adu"] = out.by_option.get("adu", 0.0) + delivered
+                delivered = lots_here * adu_f * timing * best.net
+                book("adu", delivered)
+                out.lots_go += delivered / best.net if best.net else 0.0
+                out.lots_start += lots_here * adu_f * start_share(best.hazard, best_lag, horizon)
             out.lots_by_option["adu"] = out.lots_by_option.get("adu", 0.0) + lots_here
         elif adu is not None:
-            # All-lots ADU (times the gate) until the other option's lag ends;
-            # then lots that work for that option but not for an ADU switch,
-            # and the overlap stays on the ADU path.
             start = lags[adu.option]
             stop = min(best_lag, horizon - adu.build_lag)
             built = 1.0 - math.exp(-adu.hazard * max(0.0, stop - start))
-            phase_one = lots_here * built * adu.net * gate
+            phase_one = lots_here * built * adu.net * adu_f
             unbuilt = max(0.0, 1.0 - built)
             timing_best = timing_share(best.hazard, horizon, best_lag, best.build_lag)
             timing_adu_rest = timing_share(adu.hazard, horizon, stop, adu.build_lag)
-            share_adu = normal_cdf(adu.excess / sigma)
+            share_adu = adu_f
             take = max(0.0, share_feasible - share_adu)
             delivered_best = lots_here * unbuilt * take * timing_best * best.net
-            delivered_adu = lots_here * unbuilt * (1.0 - take) * timing_adu_rest * adu.net * gate
-            out.by_option["adu"] = out.by_option.get("adu", 0.0) + phase_one + delivered_adu
-            out.by_option[best.option] = out.by_option.get(best.option, 0.0) + delivered_best
-            out.delivered += phase_one + delivered_best + delivered_adu
+            delivered_adu = lots_here * unbuilt * (1.0 - take) * timing_adu_rest * adu.net * adu_f
+            book("adu", phase_one + delivered_adu)
+            book(best.option, delivered_best)
+            out.lots_go += ((phase_one + delivered_adu) / adu.net if adu.net else 0.0) + (delivered_best / best.net if best.net else 0.0)
+            out.lots_start += lots_here * start_share(adu.hazard, start, min(best_lag, horizon)) * adu_f
+            out.lots_start += lots_here * unbuilt * take * start_share(best.hazard, best_lag, horizon)
+            out.lots_start += lots_here * unbuilt * (1.0 - take) * start_share(adu.hazard, stop, horizon) * adu_f
             out.lots_by_option[best.option] = out.lots_by_option.get(best.option, 0.0) + lots_here * take
             out.lots_by_option["adu"] = out.lots_by_option.get("adu", 0.0) + lots_here * (1.0 - take)
         else:
             timing = timing_share(best.hazard, horizon, best_lag, best.build_lag)
             if earlier:
                 incumbent = max(earlier, key=lambda r: (r.excess, r.net))
-                share_inc = normal_cdf(incumbent.excess / sigma)
+                share_inc = feas(incumbent.excess)
                 start = lags[incumbent.option]
                 stop = min(best_lag, horizon - incumbent.build_lag)
                 built = 1.0 - math.exp(-incumbent.hazard * max(0.0, stop - start))
                 phase_one = lots_here * share_inc * built * incumbent.net
                 remaining = max(0.0, share_feasible - share_inc * built)
-                out.by_option[incumbent.option] = out.by_option.get(incumbent.option, 0.0) + phase_one
+                book(incumbent.option, phase_one)
                 delivered = lots_here * remaining * timing * best.net
-                out.delivered += phase_one + delivered
-                out.by_option[best.option] = out.by_option.get(best.option, 0.0) + delivered
+                book(best.option, delivered)
+                out.lots_go += (phase_one / incumbent.net if incumbent.net else 0.0) + (delivered / best.net if best.net else 0.0)
+                out.lots_start += lots_here * share_inc * start_share(incumbent.hazard, start, min(best_lag, horizon))
+                out.lots_start += lots_here * remaining * start_share(best.hazard, best_lag, horizon)
             else:
                 delivered = lots_here * share_feasible * timing * best.net
-                out.delivered += delivered
-                out.by_option[best.option] = out.by_option.get(best.option, 0.0) + delivered
+                book(best.option, delivered)
+                out.lots_go += delivered / best.net if best.net else 0.0
+                out.lots_start += lots_here * share_feasible * start_share(best.hazard, best_lag, horizon)
             out.lots_by_option[best.option] = out.lots_by_option.get(best.option, 0.0) + lots_here
     return out
 
@@ -549,7 +589,8 @@ def evaluate_county(
             lags = dict(full_lags)
             lags.update(part.lags)
             results = [option(opt, cell, econ, part.adu_spaces) for opt in OPTIONS if opt in legal]
-            hit = resolve_hosts(results, lags, lot_dist(cell, p), hosts, sigma, horizon)
+            ratios = {opt: lot_completion(opt, p) for opt in ("adu", "mm2", "mm4", "mm6")}
+            hit = resolve_hosts(results, lags, lot_dist(cell, p), hosts, sigma, horizon, ratios)
             resolve_cache[key] = hit
         return hit
 
@@ -567,6 +608,8 @@ def evaluate_county(
 
     host_base = HostOutcome()
     host_delta: dict[str, HostOutcome] = {}
+    host_gross: dict[str, HostOutcome] = {}
+    base_gross = HostOutcome()
     coverage = {"adu": 0.0, "mm": 0.0, "hosts": 0.0}
     background_adu = {"homes": 0.0, "lots": 0.0}
     for index, cell in enumerate(county.cells):
@@ -591,11 +634,15 @@ def evaluate_county(
                 adj.add(now, 1.0)
                 adj.add(pre0, -1.0)
                 host_base.add(adj, part.weight)
+                base_gross.add(now, part.weight)
                 for sid, (e1, legalize, unchanged) in host_econ.items():
                     host_delta.setdefault(sid, HostOutcome())
+                    host_gross.setdefault(sid, HostOutcome())
                     if unchanged:
+                        host_gross[sid].add(now, part.weight)
                         continue
                     new = outcome(index, cell, seg_hosts, part.legal_now | legalize, e1, part)
+                    host_gross[sid].add(new, part.weight)
                     pre1 = outcome(index, cell, seg_hosts, part.legal_pre, e1, part)
                     inc = HostOutcome()
                     inc.add(new, 1.0)
@@ -632,6 +679,7 @@ def evaluate_county(
             "by_option": dict(hd.by_option),
             "lots_by_option": dict(hd.lots_by_option),
             "pipeline": pipe,
+            "funnel": funnel_block(sid, hd, pipe, host_gross.get(sid, HostOutcome()), base_gross),
         }
     hosts_total = coverage["hosts"] or 1.0
     return {
@@ -646,6 +694,77 @@ def evaluate_county(
 
 
 SUM_FIELDS = ("delivery", "delta", "eligible", "feasible", "host_delta", "pipeline_delta", "timing_delta")
+LOT_REFORMS = ("adu", "missing_middle")
+
+
+def _ratio(numer: float, denom: float) -> float | None:
+    if abs(denom) < 1.0:
+        return None
+    return numer / denom
+
+
+def _stages(h: HostOutcome) -> dict[str, Any]:
+    """Funnel stages. completion is the effective never-complete share so the identity holds."""
+    return {
+        "legal_fits": h.lots_fit,
+        "pays": h.lots_pay,
+        "go_ahead": h.lots_start,
+        "finishing": h.lots_go,
+        "completion": _ratio(h.delivered, h.homes_pre),
+        "timing": _ratio(h.lots_go, h.lots_start),
+        "homes_per_lot": _ratio(h.homes_pre, h.lots_go),
+        "delivered": h.delivered,
+        "go_ahead_share": _ratio(h.lots_start, h.lots_pay),
+        "homes_before_completion": h.homes_pre,
+    }
+
+
+def funnel_block(
+    sid: str,
+    hd: HostOutcome,
+    pipe: dict[str, Any],
+    gross: HostOutcome,
+    base: HostOutcome,
+) -> dict[str, Any] | None:
+    """Lot funnel for ADU, missing middle, and the package as one combined lot funnel.
+
+    Parking and fees are null. Top-level stages are incremental, like delta.
+    gross and baseline_gross are world totals.
+    """
+    if sid not in LOT_REFORMS and sid != "package" and not str(sid).startswith("package_"):
+        return None
+    out = _stages(hd)
+    out["other_channels"] = pipe["delta"]
+    out["scope"] = "standalone" if sid in LOT_REFORMS else "package_combined_lots"
+    out["gross"] = _stages(gross)
+    out["baseline_gross"] = _stages(base)
+    return out
+
+
+def state_funnel(sid: str, counties: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Sum additive county stages, then recompute the ratios."""
+    funnels = [county["scenarios"][sid].get("funnel") for county in counties]
+    if not funnels or funnels[0] is None:
+        return None
+
+    def aggregate(key: str | None) -> dict[str, Any]:
+        total = HostOutcome()
+        for funnel in funnels:
+            stage = funnel if key is None else funnel[key]
+            total.lots_fit += stage["legal_fits"]
+            total.lots_pay += stage["pays"]
+            total.lots_start += stage["go_ahead"]
+            total.lots_go += stage["finishing"]
+            total.delivered += stage["delivered"]
+            total.homes_pre += stage.get("homes_before_completion", stage["delivered"])
+        return _stages(total)
+
+    out = aggregate(None)
+    out["other_channels"] = sum(funnel["other_channels"] for funnel in funnels)
+    out["scope"] = funnels[0]["scope"]
+    out["gross"] = aggregate("gross")
+    out["baseline_gross"] = aggregate("baseline_gross")
+    return out
 
 
 def evaluate_state(
@@ -656,8 +775,13 @@ def evaluate_state(
     variants: dict[str, tuple[Econ, frozenset[str]]] | None = None,
 ) -> dict[str, Any]:
     p = dict(central_params())
+    explicit_hhf = bool(params) and "hazard_homeowner_feasible" in params
     if params:
         p.update(params)
+    if explicit_hhf:
+        p["_use_hhf_override"] = 1.0
+    elif p.get("adu_feasible_share_ca"):
+        p["hazard_homeowner_feasible"] = p["hazard_homeowner"] / p["adu_feasible_share_ca"]
     scenarios = scenarios or scenario_ids()
     values = state_unit_values(state)
     counties = [
@@ -679,8 +803,11 @@ def evaluate_state(
             row["pipeline_adjustment"] = sum(c["scenarios"]["baseline"]["pipeline_adjustment"] for c in counties)
             row["host_adjustment"] = sum(c["scenarios"]["baseline"]["host_adjustment"]["delivered"] for c in counties)
         row["by_option"] = by_option
+        if sid != "baseline":
+            row["funnel"] = state_funnel(sid, counties)
         totals[sid] = row
     hosts = sum(c["hosts"] for c in counties) or 1.0
+    p.pop("_use_hhf_override", None)
     background_adu = {
         "homes": sum(c.get("background_adu_flow", {}).get("homes", 0.0) for c in counties),
         "lots": sum(c.get("background_adu_flow", {}).get("lots", 0.0) for c in counties),

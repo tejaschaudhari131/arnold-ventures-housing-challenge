@@ -138,6 +138,8 @@ HTML_PATHS = {"/", "/index.html", "/lab", "/lab.html"}
 
 
 def _state_catalog(fixtures: dict[str, Any]) -> list[dict[str, Any]]:
+    from src.model.permits import ensure_permit_vintage
+
     catalog = []
     for code in CHALLENGE_STATES:
         state = fixtures["states"][code]
@@ -149,6 +151,7 @@ def _state_catalog(fixtures: dict[str, Any]) -> list[dict[str, Any]]:
                 "completeness": state.get("completeness", 0),
                 "housing_units": state["housing_units"],
                 "median_value": state["median_value"],
+                "permit_vintage": ensure_permit_vintage(fixtures, code),
             }
         )
     return catalog
@@ -164,10 +167,48 @@ class App:
     def assumption_catalog(self, state: str) -> dict[str, Any]:
         self._check_state(state)
         meta = self.assumptions.states[state]
+        ratios = self.assumptions.completion_ratios()
         return {
             "state": state,
             "legal_note": meta.get("legal_note", ""),
             "parameters": self.assumptions.ui_parameters(state),
+            "completion_ratios": ratios,
+            "lab_completion_lot": {
+                "status": "decided",
+                "tag": "assumed",
+                "unit": "share",
+                "mapping": {
+                    "adu": {
+                        "param": "completion_ratio_adu",
+                        "central": ratios["completion_ratio_adu"]["central"],
+                        "low": ratios["completion_ratio_adu"]["low"],
+                        "high": ratios["completion_ratio_adu"]["high"],
+                    },
+                    "mm2": {
+                        "param": "completion_ratio_small",
+                        "central": ratios["completion_ratio_small"]["central"],
+                        "low": ratios["completion_ratio_small"]["low"],
+                        "high": ratios["completion_ratio_small"]["high"],
+                    },
+                    "mm4": {
+                        "param": "completion_ratio_small",
+                        "central": ratios["completion_ratio_small"]["central"],
+                        "low": ratios["completion_ratio_small"]["low"],
+                        "high": ratios["completion_ratio_small"]["high"],
+                    },
+                    "mm6": {
+                        "param": "completion_ratio_mf",
+                        "central": ratios["completion_ratio_mf"]["central"],
+                        "low": ratios["completion_ratio_mf"]["low"],
+                        "high": ratios["completion_ratio_mf"]["high"],
+                    },
+                },
+                "note": (
+                    "D12, decided: the Lab lot path uses the screening completion ratios. "
+                    "ADU lots use completion_ratio_adu; mm2 and mm4 use completion_ratio_small; "
+                    "mm6 uses completion_ratio_mf. Bands are those parameters and are drawn in the Lab Monte Carlo."
+                ),
+            },
         }
 
     def simulate(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -189,6 +230,7 @@ class App:
             parcel_mode=parcel_mode,
             resolution=resolution,
             reform_weights=self._reforms(payload.get("reforms")),
+            with_decomposition=True,
         )
 
     def case_study(self, payload: dict[str, Any] | None = None) -> dict[str, Any]:

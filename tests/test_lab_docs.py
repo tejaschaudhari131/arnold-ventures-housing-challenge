@@ -53,7 +53,10 @@ def test_policy_comparison_stays_within_four_pages():
     assert nh_table() in text
     assert sampling_error_sentence("PA") in text
     assert pa_ranking_sentence() in text
-    assert "Statistical tie" in text
+    from src.plain import is_draw_tie
+
+    if is_draw_tie(pa["statewide"]["top_benchmark_pair"]):
+        assert "Statistical tie" in text
     method = (ROOT / "docs" / "SMALL_HOMES_LAB.md").read_text(encoding="utf-8")
     clause = top_pair_tie_clause(pa["statewide"]["top_benchmark_pair"], pa["statewide"]["results"])
     assert clause in text
@@ -61,7 +64,7 @@ def test_policy_comparison_stays_within_four_pages():
     nh_port = (ROOT / "docs" / "NH_PORTABILITY.md").read_text(encoding="utf-8")
     assert nh_background_adu_sentence() in nh_port
     assert "Saiz 2010" in text
-    assert "core baseline (108,950)" in text
+    assert "core baseline (113,269)" in text
     draws = pa["draws"]
     n_flip = int(round(pa["statewide"]["top_benchmark_pair"]["flip_share"] * draws))
     assert f"{n_flip} of {draws:,}" in method or f"{n_flip} of {draws}" in method

@@ -26,10 +26,10 @@ states:
   CT:
     name: Connecticut
     tier: 1
-    adu_already_legal_share: {low: 0.55, central: 0.75, high: 0.90}
+    adu_already_legal_share: {low: 0.32, central: 0.67, high: 0.75}
     mm_already_legal_share: {low: 0.10, central: 0.25, high: 0.45}
     geography_eligible_share: {low: 0.90, central: 1.00, high: 1.00}
-    legal_note: "Public Act 21-29 substantially legalized ADUs. The incremental ADU effect is the residual share of parcels still outside that entitlement. Middle housing is only partly pre-empted."
+    legal_note: "Public Act 21-29 substantially legalized ADUs. The central 0.67 is news-sourced (CT Mirror 2023-09-20, citing Desegregate CT): 54 of 169 towns stayed under the state as-of-right default and 115 opted out. The band runs from 0.32 (state default only) to 0.75. There is no primary statewide inventory. Middle housing is only partly pre-empted."
   WI:
     name: Wisconsin
     tier: 1
@@ -105,6 +105,72 @@ parameters:
     unit: rate
     help: "Applied to the latest three-year Building Permits Survey average. Central is zero so the 5-year baseline is exactly five times the recent annual run-rate."
 
+  adoption_lag_years:
+    low: 0.5
+    central: 1.0
+    high: 2.0
+    ui: false
+    monte_carlo: true
+    group: Timing
+    label: Adoption and rulemaking lag
+    unit: years
+    help: "Time between a reform taking effect and the first permits under it. Copied from the Lab band. A reform cohort starts at zero, so this lag is not already inside the completion ratio."
+
+  build_lag_adu_years:
+    low: 0.5
+    central: 0.75
+    high: 1.25
+    ui: false
+    monte_carlo: true
+    group: Timing
+    label: ADU permit-to-completion
+    unit: years
+    help: "Build time for an ADU after the permit. The completion ratio is the never-complete share; this lag is the schedule."
+
+  build_lag_conversion_years:
+    low: 0.75
+    central: 1.0
+    high: 1.5
+    ui: false
+    monte_carlo: true
+    group: Timing
+    label: Conversion permit-to-completion
+    unit: years
+    help: "Build time for a conversion or addition. Separate from the teardown lag."
+
+  build_lag_newbuild_years:
+    low: 1.0
+    central: 1.5
+    high: 2.25
+    ui: false
+    monte_carlo: true
+    group: Timing
+    label: New multifamily permit-to-completion
+    unit: years
+    help: "Build time for a teardown or a small multifamily building. TOD uses this pace."
+
+  build_lag_sf_years:
+    low: 0.6
+    central: 0.75
+    high: 1.0
+    ui: false
+    monte_carlo: true
+    group: Timing
+    label: Single-family permit-to-completion
+    unit: years
+    help: "Build time for a baseline single-family permit. Used only on the pipeline response."
+
+  pipeline_response_lag_years:
+    low: 0.5
+    central: 0.75
+    high: 1.25
+    ui: false
+    monte_carlo: true
+    group: Timing
+    label: Pipeline response lag
+    unit: years
+    help: "Time for a fee or parking saving to change which already-legal projects reach permit."
+
   completion_ratio_sf:
     low: 0.85
     central: 0.93
@@ -113,7 +179,7 @@ parameters:
     group: Baseline
     label: Single-family completion ratio
     unit: share
-    help: "Share of permitted 1-unit homes completed inside a steady 5-year window, after cancellations. The pipeline of homes permitted just before the window offsets homes permitted at the end of it."
+    help: "Assumed never-complete share for 1-unit homes. For a steady baseline pipeline the pre-window permits offset the end of the window, so this ratio is cancellation, not schedule. Reform cohorts use the explicit build lag for timing."
 
   completion_ratio_small:
     low: 0.80
@@ -123,17 +189,17 @@ parameters:
     group: Baseline
     label: 2–4 unit completion ratio
     unit: share
-    help: "Completion ratio for 2-unit and 3–4 unit buildings."
+    help: "Assumed never-complete share for 2-unit and 3–4 unit buildings. Schedule is the build lag."
 
   completion_ratio_mf:
     low: 0.70
-    central: 0.84
+    central: 0.90
     high: 0.93
     ui: true
     group: Baseline
     label: Multifamily completion ratio
     unit: share
-    help: "5+ unit buildings take longer. Some permits issued in year 5 deliver after the horizon."
+    help: "Assumed never-complete share for 5+ unit buildings. The multifamily schedule is the build lag, not this ratio. The old 0.84 central mixed the two."
 
   completion_ratio_adu:
     low: 0.80
@@ -143,7 +209,7 @@ parameters:
     group: ADU
     label: ADU completion ratio
     unit: share
-    help: "ADUs are small and usually owner-commissioned, so cancellation inside the window is limited."
+    help: "Assumed never-complete share for ADUs. ADUs are small and usually owner-commissioned, so cancellation inside the window is limited. Schedule is the ADU build lag."
 
   supply_elasticity:
     low: 0.35

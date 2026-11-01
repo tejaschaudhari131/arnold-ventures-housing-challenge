@@ -53,7 +53,35 @@ def _r(value: float) -> float:
     return round(float(value), 1)
 
 
-def _results_block(layer: dict[str, Any], central_rows: dict[str, Any]) -> dict[str, Any]:
+RATIO_FIELDS = ("completion", "timing", "homes_per_lot", "go_ahead_share")
+_FUNNEL_DROP = {"homes_before_completion"}
+
+
+def _funnel(f: dict[str, Any] | None, *, keep_baseline: bool = True) -> dict[str, Any] | None:
+    """Publish a lot funnel. Counts to 0.1, ratios to 6 dp, null stays null.
+
+    County copies omit ``baseline_gross``. It is the same object for every
+    reform in a county, and the statewide funnel keeps it. That holds the
+    locked results under the size cap.
+    """
+    if f is None:
+        return None
+    out: dict[str, Any] = {}
+    for key, value in f.items():
+        if key in _FUNNEL_DROP or (not keep_baseline and key == "baseline_gross"):
+            continue
+        if isinstance(value, dict):
+            out[key] = _funnel(value, keep_baseline=keep_baseline)
+        elif value is None or isinstance(value, str):
+            out[key] = value
+        elif key in RATIO_FIELDS:
+            out[key] = round(float(value), 6)
+        else:
+            out[key] = _r(value)
+    return out
+
+
+def _results_block(layer: dict[str, Any], central_rows: dict[str, Any], *, keep_baseline: bool = True) -> dict[str, Any]:
     out = {}
     for sid, row in layer["scenarios"].items():
         entry = {
@@ -80,6 +108,7 @@ def _results_block(layer: dict[str, Any], central_rows: dict[str, Any]) -> dict[
             for f in RESULT_FIELDS:
                 entry[f] = _r(source.get(f, 0.0))
             entry["by_option"] = {k: _r(v) for k, v in source.get("by_option", {}).items() if abs(v) >= 0.05}
+            entry["funnel"] = _funnel(source.get("funnel"), keep_baseline=keep_baseline)
         out[sid] = entry
     return out
 
@@ -169,7 +198,7 @@ def compact(analysis: dict[str, Any], code: str) -> dict[str, Any]:
                 "name": row["name"],
                 "hosts": _r(crow["hosts"]),
                 "coverage": {k: round(v, 4) for k, v in row["coverage"].items()},
-                "results": _results_block(row, crow["scenarios"]),
+                "results": _results_block(row, crow["scenarios"], keep_baseline=False),
                 "ranking": row["ranking"],
                 "benchmark_ranking": row["benchmark_ranking"],
                 "top_pair": _pair(row["top_pair"]),

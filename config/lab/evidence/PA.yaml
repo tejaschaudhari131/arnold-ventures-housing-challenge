@@ -80,3 +80,20 @@ rules:
       - https://www.pittsburghpa.gov/files/assets/city/v/1/dcp/documents/planning-commission/pc-may-19-2026/council-bill-2025-1545-pc-briefing-presentation-2026-05-19.pdf
       - https://pittsburgh.legistar.com/View.ashx?GUID=26D186E7-EC0D-43BA-B627-F39BF8202189&ID=13781030&M=F
       - https://engage.pittsburghpa.gov/implementing-housing-needs-assessment
+
+  - id: pittsburgh_parking_minimums_2026
+    label: Pittsburgh Council Bill 2025-1545, parking minimums
+    option: parking
+    geography: {county: "42003", place: "4261000", place_name: Pittsburgh city}
+    host_types: [detached, attached]
+    status: allowed
+    effective: null
+    confidence: medium
+    summary: >-
+      The same bill eliminates minimum parking requirements for new
+      development. Enacted October 2026. The effective date is unverified, so
+      the rule is not in the baseline: only effective-dated changes enter the
+      baseline. District parking maximums are retained.
+    sources:
+      - https://engage.pittsburghpa.gov/implementing-housing-needs-assessment
+      - https://pittsburgh.legistar.com/LegislationDetail.aspx?ID=7136545&GUID=26D186E7-EC0D-43BA-B627-F39BF8202189

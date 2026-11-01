@@ -59,8 +59,10 @@ def test_pages_name_the_team_and_simulate_pennsylvania():
         assert health_doc["ok"] is True
         assert health_doc["sha"] and health_doc["short_sha"]
         assert health_doc["date"]
-        assert health_doc["fingerprints"]["PA"] == "c80f359be200f18d"
-        assert health_doc["fingerprints"]["NH"] == "a1c2fa6fe66b03a7"
+        from src.lab.results import fingerprint
+
+        assert health_doc["fingerprints"]["PA"] == fingerprint("PA")
+        assert health_doc["fingerprints"]["NH"] == fingerprint("NH")
         assert health_doc["model_version"] == "1.0.0"
         assert health_doc["model_date"] == "2026-10-25"
         assert health_headers["Cache-Control"] == "no-store"

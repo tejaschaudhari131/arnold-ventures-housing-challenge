@@ -56,7 +56,15 @@ def compared_scenarios() -> list[str]:
 
 
 def envelope_params() -> list[str]:
-    return [name for name in ui_params() if not param_spec(name).get("zoning_bound")]
+    names = [
+        name
+        for name in ui_params()
+        if not param_spec(name).get("zoning_bound") and not param_spec(name).get("derived")
+    ]
+    for name, spec in load_assumptions()["params"].items():
+        if spec.get("monte_carlo") and name not in names and not spec.get("derived"):
+            names.append(name)
+    return names
 
 
 def sample_params(draws: int, seed: int, base: dict[str, float] | None = None) -> list[dict[str, float]]:
@@ -78,6 +86,8 @@ def sample_params(draws: int, seed: int, base: dict[str, float] | None = None) -
                 p[name] = ELASTICITY_TO_SIGMA / max(eps, 1e-9)
             else:
                 p[name] = rng.triangular(float(spec["low"]), float(spec["high"]), float(spec["central"]))
+        share = p.get("adu_feasible_share_ca") or 0.5
+        p["hazard_homeowner_feasible"] = p["hazard_homeowner"] / share
         samples.append(p)
     return samples
 

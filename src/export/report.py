@@ -85,6 +85,7 @@ def comparison_rows(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     else ""
                 ),
                 "completeness_source": COMPLETENESS_SOURCE,
+                "permit_vintage": (result.get("meta") or {}).get("permit_vintage", ""),
             }
             for key, value in list(row.items()):
                 if _is_number(value):

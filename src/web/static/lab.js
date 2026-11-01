@@ -1415,6 +1415,45 @@
     });
   }
 
+  function funnelCell(stage, name) {
+    if (!stage) return "—";
+    var value = stage[name];
+    if (value === null || value === undefined) return "—";
+    if (name === "completion" || name === "timing" || name === "homes_per_lot" || name === "go_ahead_share") {
+      return (100 * Number(value)).toFixed(1) + "%";
+    }
+    return integer(value);
+  }
+
+  function renderLotFunnel(whyDoc) {
+    var funnel = whyDoc.result && whyDoc.result.funnel;
+    if (!funnel) {
+      if (whyDoc.scenario === "parking" || whyDoc.scenario === "fees") {
+        return "<h3>Lot funnel</h3><p>Not modelled for this reform.</p>";
+      }
+      return "";
+    }
+    var names = ["legal_fits", "pays", "go_ahead", "finishing", "completion", "delivered"];
+    var labels = {
+      legal_fits: "Lots where a legal option fits",
+      pays: "Lots that clear the hurdle",
+      go_ahead: "Lots that start in time",
+      finishing: "Lots that finish by year 5",
+      completion: "Completion ratio",
+      delivered: "Homes delivered"
+    };
+    var body = names.map(function (name) {
+      return "<tr><th scope='row'>" + labels[name] + "</th><td>" + funnelCell(funnel.gross, name) +
+        "</td><td>" + funnelCell(funnel.baseline_gross, name) + "</td><td>" + funnelCell(funnel, name) + "</td></tr>";
+    }).join("");
+    return "<h3>Lot funnel</h3><p class='help'>The chart is the reform world against the baseline world. " +
+      "The incremental column is the difference, same as the result. Completion is the never-complete share for the lots that were chosen. " +
+      "Best use is one option per lot.</p>" +
+      "<table><caption class='visually-hidden'>Lot funnel, reform world against baseline</caption>" +
+      "<thead><tr><th scope='col'>Stage</th><th scope='col'>Reform world</th><th scope='col'>Baseline world</th><th scope='col'>Incremental</th></tr></thead><tbody>" +
+      body + "</tbody></table>";
+  }
+
   function renderWhy() {
     if (!whyDoc) return;
     if (whyDoc.empty) {
@@ -1471,6 +1510,7 @@
       "<p>Most of the increment is existing homes that become legal and then pencil out, not teardowns. " +
       signed(whyDoc.result.delivery) + tag("calculated") +
       ". Host term " + signed(whyDoc.result.host_delta) + ", pipeline " + signed(whyDoc.result.pipeline_delta) + ".</p>" +
+      renderLotFunnel(whyDoc) +
       (whyDoc.lots_note ? "<p class='help'>" + escapeHtml(whyDoc.lots_note) + "</p>" : "") +
       (whyDoc.imputed.length ? "<p class='help'>Imputed ACS fields, never zero: " + escapeHtml(whyDoc.imputed.join(", ")) + ".</p>" : "") +
       "<h3>Inputs</h3><div class='receipt'>" + inputs + "</div>" +

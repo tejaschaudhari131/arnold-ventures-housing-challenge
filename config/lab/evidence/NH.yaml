@@ -44,13 +44,31 @@ rules:
     host_types: [detached]
     status: allowed_with_parking
     parking_spaces: 1
-    effective: "2017-06-01"
+    effective: "2025-07-01"
+    confidence: medium
+    summary: >-
+      One ADU is legal on every detached single-family lot. The current RSA
+      674:72 text says attached or detached as a matter of right. The pre-2025
+      text was not retrieved, so the date detached ADUs became by-right is
+      UNVERIFIED and is recorded as the 2025-07-01 effective date of chapter
+      197:2 rather than 2017-06-01. Towns may require one added parking space;
+      the Handbook benchmark requires none. The share of towns that impose the
+      space is an assumption (prior_adu_parking_required).
+    sources:
+      - https://gc.nh.gov/rsa/html/LXIV/674/674-72.htm
+
+  - id: nh_adu_electrical_panel_2026
+    label: RSA 674:72 XII as amended by 2026 chapter 210:2
+    option: record
+    geography: {state: true}
+    host_types: [detached, attached]
+    status: allowed
+    effective: "2026-08-31"
     confidence: high
     summary: >-
-      One ADU is legal on every detached single-family lot (attached form since
-      2017, detached form by right since HB 577). Towns may require one added
-      parking space; the Handbook benchmark requires none. The share of towns
-      that impose the space is an assumption (prior_adu_parking_required).
+      A town may not deny a separate electrical panel or service for an ADU.
+      This does not change whether an ADU is legal. Recorded so the amendment
+      is not dropped. Not applied as a status change.
     sources:
       - https://gc.nh.gov/rsa/html/LXIV/674/674-72.htm
 

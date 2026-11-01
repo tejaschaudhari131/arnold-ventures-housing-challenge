@@ -85,17 +85,17 @@ FORMULAS = [
     },
     {
         "id": "adu_gate",
-        "label": "ADU economics gate",
-        "formula": "gate = min(1, Φ(x_ADU / σ) / Φ(x_ADU,ref / σ))",
-        "tags": ["calculated", "assumed"],
-        "note": "x_ref is the same ADU with fee = 0 and no parking. CA Gov. Code 65852.2(f)(3) (now 66311.5(c)(1)) exempts ADUs of 750 sq ft or less from impact fees. The Lab prototype is 600 sq ft.",
+        "label": "ADU hazard re-base",
+        "formula": "λ_ADU = λ_all / F_CA; F = Φ(x / σ)",
+        "tags": ["assumed", "calculated"],
+        "note": "F_CA is judgmental (central 0.5, shown range 0.3 to 0.7). Delivery uses F, the same share as the other options. The old gate F/F_ref is not used.",
     },
     {
         "id": "delivery",
         "label": "Host delivery",
-        "formula": "N = Σ H × F × p(T) × d  (ADU: N = Σ H × gate × p(T) × d)",
+        "formula": "N = Σ H × F × p(T) × d × completion",
         "tags": ["calculated"],
-        "note": "Each lot takes at most one option. d is net homes that option adds. ADUs use the CA all-lots rate times a fee/parking gate normalized to CA conditions (fee 0 and no parking). mm2 uses a feasible-lot hazard and F.",
+        "note": "Each lot takes at most one option. completion is the screening ratio: ADU lots use completion_ratio_adu, mm2 and mm4 use completion_ratio_small, and mm6 uses completion_ratio_mf.",
     },
     {
         "id": "increment",
@@ -152,7 +152,7 @@ def assumption_catalog() -> dict[str, Any]:
                 "high": spec["high"],
                 "rationale": spec["rationale"],
                 "zoning_bound": bool(spec.get("zoning_bound")),
-                "tag": "assumed",
+                "tag": "judgmental" if spec.get("klass") == "judgmental" else "assumed",
             }
         )
     return {
@@ -350,7 +350,12 @@ def why_county(
         raise AssumptionError("Unknown scenario.")
     multi = scenario == "selection"
     p = central_params()
+    explicit = set(overrides or {})
     p.update(overrides or {})
+    if "hazard_homeowner_feasible" in explicit:
+        p["_use_hhf_override"] = 1.0
+    elif p.get("adu_feasible_share_ca"):
+        p["hazard_homeowner_feasible"] = p["hazard_homeowner"] / p["adu_feasible_share_ca"]
     values = state_unit_values(state)
     evaluated = evaluate_county(
         county, state, p, state_values=values, variants=package_variants(p)
@@ -433,7 +438,7 @@ def why_county(
                 "id": name,
                 "label": spec["label"],
                 "value": p[name],
-                "tag": "assumed",
+                "tag": "judgmental" if spec.get("klass") == "judgmental" else "assumed",
                 "unit": spec["unit"],
                 "rationale": spec["rationale"],
                 "locked": bool(spec.get("locked")),
@@ -493,6 +498,7 @@ def why_county(
             "host_delta": row.get("host_delta", 0.0) if scenario != "baseline" else row.get("host_adjustment", {}).get("delivered", 0.0),
             "pipeline_delta": row.get("pipeline_delta", 0.0) if scenario != "baseline" else row.get("pipeline_adjustment", 0.0),
             "by_option": row.get("by_option", {}),
+            "funnel": None if multi or scenario == "baseline" else row.get("funnel"),
             "tag": "calculated",
         },
         "coverage": coverage,

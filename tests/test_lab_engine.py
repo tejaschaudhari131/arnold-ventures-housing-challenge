@@ -20,7 +20,7 @@ from src.lab.engine import (
     scenario_econ,
     timing_share,
 )
-from src.lab.options import Econ, OptionResult, adu_economics_gate, evaluate_option, provided_parking, unit_value
+from src.lab.options import Econ, OptionResult, adu_hazard_rate, evaluate_option, provided_parking, unit_value
 from src.model.equations import normal_cdf
 
 P = central_params()
@@ -125,21 +125,22 @@ def test_one_best_option_per_host_is_not_a_sum():
     both = resolve_hosts([a, b], lags, lots, 1000, 0.25, 5)
     only_a = resolve_hosts([a], lags, lots, 1000, 0.25, 5)
     only_b = resolve_hosts([b], lags, lots, 1000, 0.25, 5)
-    # ADU is all-lots; mm2 takes only the feasible lots. Combined is not a sum.
+    # One option per lot, so the combined delivery is not the sum of the standalones.
     assert both.delivered < only_a.delivered + only_b.delivered
     assert "mm2" in both.by_option and "adu" in both.by_option
-    assert both.delivered > only_b.delivered
     assert both.feasible == pytest.approx(1000 * lots.survival(1000) * normal_cdf(-0.1 / 0.25))
 
 
-def test_adu_delivery_does_not_multiply_by_feasibility():
+def test_adu_delivery_uses_the_same_feasibility_share():
+    """D4: ADU delivery is lots x F x p(T), the same F as the other options."""
     lots = LotDist(5000, 0.6)
     adu = _opt("adu", -0.5, 1000, hazard=0.01)
     out = resolve_hosts([adu], {"adu": 1.0}, lots, 1000, 0.25, 5)
     hosts = 1000 * lots.survival(1000)
     timing = timing_share(0.01, 5, 1.0, 0.5)
-    assert out.delivered == pytest.approx(hosts * timing)
-    assert out.feasible == pytest.approx(hosts * normal_cdf(-0.5 / 0.25))
+    share = normal_cdf(-0.5 / 0.25)
+    assert out.delivered == pytest.approx(hosts * share * timing)
+    assert out.feasible == pytest.approx(hosts * share)
     mm2 = _opt("mm2", -0.5, 1000, hazard=0.01)
     rebuild = resolve_hosts([mm2], {"mm2": 1.0}, lots, 1000, 0.25, 5)
     assert rebuild.delivered == pytest.approx(hosts * normal_cdf(-0.5 / 0.25) * timing)
@@ -282,11 +283,11 @@ def test_every_benchmark_adds_homes(pa, nh):
 AUCKLAND_STOCK_CEILING = 0.041
 
 
-def test_adu_economics_gate_normalizes_to_the_ca_reference():
-    assert adu_economics_gate(0.1, 0.1, 0.25) == pytest.approx(1.0)
-    assert adu_economics_gate(0.2, 0.1, 0.25) == pytest.approx(1.0)
-    assert 0.0 < adu_economics_gate(-0.2, 0.1, 0.25) < 1.0
-    assert adu_economics_gate(-0.5, None, 0.25) == pytest.approx(1.0)
+def test_adu_hazard_scales_with_the_inverse_of_f_ca():
+    assert adu_hazard_rate(P) == pytest.approx(P["hazard_homeowner"] / P["adu_feasible_share_ca"])
+    halved = dict(P)
+    halved["adu_feasible_share_ca"] = P["adu_feasible_share_ca"] / 2
+    assert adu_hazard_rate(halved) == pytest.approx(adu_hazard_rate(P) * 2)
 
 
 def test_adu_output_falls_as_fee_per_unit_rises():

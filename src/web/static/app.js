@@ -190,7 +190,9 @@
         "<strong>" + escapeHtml(state.name) + "</strong>" +
         '<span class="pill ' + (state.tier === 1 ? "t1" : "t2") + '">Tier ' + state.tier + "</span>" +
         "<span>" + integer(state.housing_units) + " homes " + badge("observed") +
-        " · completeness " + score + "% " + badge("calculated") + "</span>" +
+        " · completeness " + score + "% " + badge("calculated") +
+        (state.permit_vintage ? " · Permit data " + escapeHtml(state.permit_vintage) + " " + badge("observed") : "") +
+        "</span>" +
         '<span class="meter" aria-hidden="true"><i style="width:' + score + '%"></i></span>';
       button.addEventListener("click", function () {
         mapScope = "state";
@@ -476,7 +478,8 @@
         "<td>" + tagged(row.completions_5yr, "calculated", integer) + "</td>" +
         "<td>" + (id === "baseline" ? "—" : tagged(row.incremental_completions, "calculated", integer)) + "</td>" +
         "<td>" + tagged(row.annualized_completions, "calculated", integer) + "</td>" +
-        "<td>" + (id === "baseline" ? "—" : tagged(row.lift_pct, "calculated", signedPercent)) + "</td>";
+        "<td>" + (id === "baseline" ? "—" : tagged(row.lift_pct, "calculated", signedPercent)) + "</td>" +
+        "<td>" + escapeHtml((result.meta && result.meta.permit_vintage) || "") + "</td>";
       void net;
       void lift;
       function choose() { selectScenario(id); }

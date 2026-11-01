@@ -38,4 +38,4 @@ Handbook ranking: Missing middle > Fees > ADUs > Parking. The top pair is Missin
 
 ## What this test is for
 
-A second state with less local data should not require new code. It did not. The ADU result shrinking to +15 is the intended check: a reform that is already law is in Baseline. The host model still counts a background ADU flow of 938 homes over five years on 413,375 lots where ADUs are already legal. NH OPD permit data may undercount ADUs. A team that treated unknown as zero would report a zero missing-middle increment in both states. A team that treated unknown as allowed would erase Baseline. The Lab does neither.
+A second state with less local data should not require new code. It did not. The ADU result staying small, at +72, is the intended check: a reform that is already law is in Baseline. The host model still counts a background ADU flow of 43 homes over five years on 20,209 lots where ADUs are already legal. NH OPD permit data may undercount ADUs. A team that treated unknown as zero would report a zero missing-middle increment in both states. A team that treated unknown as allowed would erase Baseline. The Lab does neither.

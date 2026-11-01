@@ -59,11 +59,15 @@ params:
   hazard_homeowner:
     {low: 0.0006, central: 0.0015, high: 0.0031, unit: per year, group: uptake, ui: true,
      label: Homeowner uptake hazard (all lots),
-     rationale: "All-lots annual ADU start rate, sourced from CA HCD APR permits / DOF E-5 single-detached stock. Low 0.0006 is 2017 (first year after reform); central 0.0015 is the 2017–21 mean; high 0.0031 is the 2022 steady state. Permits, not completions — completion_share_1 already discounts. ASSUMPTION on treating this as an all-lots rate. ADU delivery multiplies by a fee/parking gate normalized to CA conditions instead of by F. Primary tables: HCD APR / data.ca.gov; denominator CA DOF E-5. Used for ADUs only."}
+     rationale: "All-lots annual ADU start rate, sourced from CA HCD APR permits / DOF E-5 single-detached stock. Low 0.0006 is 2017 (first year after reform); central 0.0015 is the 2017–21 mean; high 0.0031 is the 2022 steady state. Permits, not completions. The Lab divides this rate by adu_feasible_share_ca and then multiplies delivery by F = Phi(x/sigma). Primary tables: HCD APR / data.ca.gov; denominator CA DOF E-5."}
+  adu_feasible_share_ca:
+    {low: 0.3, central: 0.5, high: 0.7, unit: share, group: uptake, ui: true, klass: judgmental,
+     label: California feasible-lot share,
+     rationale: "JUDGMENTAL. Share of California single-family lots on which an ADU was feasible when the all-lots hazard was measured. The ADU hazard is hazard_homeowner / this share. The published range is 0.3 to 0.7. It is not a measurement for Pennsylvania or New Hampshire."}
   hazard_homeowner_feasible:
-    {low: 0.0012, central: 0.003, high: 0.0062, unit: per year, group: uptake, ui: true,
+    {low: 0.0012, central: 0.003, high: 0.0062, unit: per year, group: uptake, ui: true, derived: true,
      label: Homeowner uptake hazard (feasible lots),
-     rationale: "ASSUMPTION (F_CA = 0.5), until F_CA is computed. All-lots ADU band (0.0006/0.0015/0.0031) divided by an assumed California feasible share of 0.5. Used only by mm2 (keep the house, add one), which still multiplies by F. Keeps mm2 from taking both the all-lots cut and F. MM moves roughly one-for-one with this rate (0.0015 gives 3,149 Pennsylvania homes; 0.006 gives 12,869). Minneapolis Fed 2026 (https://www.minneapolisfed.org/article/2026/minneapolis-2040-plan-indicators-point-to-stable-rents-stalled-development) is a low-side anchor: after Minneapolis 2040 upzoning, duplex/triplex/fourplex permits stayed small while multifamily construction stalled."}
+     rationale: "Derived, not stored as its own estimate: hazard_homeowner / adu_feasible_share_ca. At the central F_CA of 0.5 this is 0.003. Used by mm2, which still multiplies by F. An explicit override replaces the derived value. The Monte Carlo does not draw it on its own."}
   hazard_developer:
     {low: 0.0006, central: 0.0015, high: 0.0031, unit: per year, group: uptake, ui: true,
      label: Developer rebuild hazard (feasible lots),
@@ -171,9 +175,9 @@ params:
      label: Current minimum, rural,
      rationale: "Typical rural code: 2 per home."}
   parking_market_urban:
-    {low: 0.5, central: 0.9, high: 1.1, unit: spaces per home, group: parking, ui: true,
+    {low: 0.5, central: 0.9, high: 1.35, unit: spaces per home, group: parking, ui: true,
      label: Developer-provided parking without mandates, urban,
-     rationale: "ASSUMPTION, widened range, informed by Hess & Rehler 2021 (JAPA 87(3):396–408; https://doi.org/10.1080/01944363.2020.1864225). After Buffalo abolished minimums, single-use residential projects in aggregate still built more than the old 1 space/unit minimum. Central 0.9 is just under that 1/unit habit."}
+     rationale: "ASSUMPTION, widened range, informed by Hess & Rehler 2021 (JAPA 87(3):396–408; https://doi.org/10.1080/01944363.2020.1864225). After Buffalo abolished minimums, single-use residential projects built 760 spaces for 566 units (about 1.34 per unit, Table 1). Central 0.9 stays between that single-use figure and the mixed-use 0.70. High 1.35 matches the single-use observation."}
   parking_market_suburban:
     {low: 1.0, central: 1.25, high: 1.6, unit: spaces per home, group: parking, ui: true,
      label: Developer-provided parking without mandates, suburban,
@@ -285,15 +289,15 @@ params:
   completion_share_1:
     {low: 0.90, central: 0.93, high: 0.96, unit: share, group: pipeline, ui: false,
      label: Single-family permits completed,
-     rationale: "Census New Residential Construction: about 93 percent of permitted single-family homes are completed."}
+     rationale: "Assumed. Census does not publish an abandonment rate: the Building Permits Survey FAQ says cancelled and abandoned permits are not collected, and New Residential Construction methodology says abandonment rates fluctuate. The 0.93 figure is an assumption, not a Census measurement."}
   completion_share_2to4:
     {low: 0.85, central: 0.90, high: 0.94, unit: share, group: pipeline, ui: false,
      label: 2–4 home permits completed,
-     rationale: "Census New Residential Construction."}
+     rationale: "Assumed never-complete share for 2–4 unit pipeline permits. Census does not publish this abandonment rate."}
   completion_share_5plus:
     {low: 0.78, central: 0.84, high: 0.90, unit: share, group: pipeline, ui: false,
      label: 5+ home permits completed,
-     rationale: "Census New Residential Construction."}
+     rationale: "Assumed. Used only on the permit pipeline. The lot path uses the screening completion ratios (D12), not this pipeline share."}
 
   # ---------------------------------------------- approval (extra scenario)
   approval_time_saved_years:
