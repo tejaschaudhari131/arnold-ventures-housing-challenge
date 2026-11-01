@@ -72,6 +72,8 @@ def test_both_pages_render_adu_fee_note():
         assert note_html("lab") in lab_text
         assert 'href="/lab"' in home_text
         assert 'href="/"' in lab_text
+        assert 'display:inline-block;min-height:24px' in note_html("lab")
+        assert 'display:inline-block;min-height:24px' in lab_text
 
         app_status, app_js, _ = _get(base, "/app.js")
         lab_js_status, lab_js, _ = _get(base, "/lab.js")
