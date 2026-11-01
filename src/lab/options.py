@@ -67,9 +67,10 @@ def adu_economics_gate(excess: float, ref_excess: float | None, sigma: float) ->
     """Share of the CA all-lots rate that still applies under this lot's ADU economics.
 
     gate = min(1, Φ(x / σ) / Φ(x_ref / σ)). x_ref is the same ADU with fee = 0
-    and no parking, the CA calibration point: Gov. Code 65852.2(f)(3) (now
-    66311.5(c)(1)) exempts ADUs of 750 sq ft or less from impact fees, and
-    the Handbook ADU needs no space. The Lab prototype is 600 sq ft.
+    and no parking, the CA calibration point. Official California Legislative
+    Information text of Gov. Code 66311.5(c)(1) (formerly 65852.2(f)(3))
+    exempts ADUs of 750 sq ft or less of interior livable space from impact
+    fees. The Lab prototype is 600 sq ft.
     """
     if ref_excess is None or sigma <= 0:
         return 1.0

@@ -157,6 +157,21 @@ def test_acs_band_scales_with_margins_and_not_with_assumption_bands():
     assert all(value == 0.0 for value in zero.values())
 
 
+def test_pa_top_pair_tie_clause_reads_draw_medians():
+    from src.lab.results import load_results
+    from src.plain import homes, is_draw_tie, ranking_phrase, top_pair_tie_clause
+
+    pa = load_results("PA", allow_compute=False)
+    sw = pa["statewide"]
+    pair = sw["top_benchmark_pair"]
+    assert is_draw_tie(pair)
+    clause = top_pair_tie_clause(pair, sw["results"])
+    assert homes(sw["results"]["adu"]["p50"]) in clause
+    assert homes(sw["results"]["missing_middle"]["p50"]) in clause
+    assert "≈" in clause
+    assert ranking_phrase(sw["benchmark_ranking"], pair).startswith("Missing middle ≈ ADUs")
+
+
 def test_envelope_params_exclude_zoning_priors_and_locked_constants():
     names = set(envelope_params())
     assert "prior_adu_prohibited" not in names and "prior_mm_prohibited" not in names

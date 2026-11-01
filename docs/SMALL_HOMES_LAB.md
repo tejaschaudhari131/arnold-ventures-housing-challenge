@@ -111,7 +111,7 @@ The Lab reports three uncertainty layers separately and never adds them together
 
 | Layer | Question | Method | PA ADU increment |
 | ----- | -------- | ------ | ---------------- |
-| Assumption envelope | What if our economic and behavioral assumptions are off? | 2,000 seeded triangular draws (seed 20261107) over every adjustable parameter except the zoning priors and the locked Handbook levers. All scenarios share the same draws. Reported as p10–p90, with a bootstrap SE on each percentile. | 3,343–11,084 |
+| Assumption envelope | What if our economic and behavioral assumptions are off? | 2,000 assumption draws (seed 20261107) over every adjustable parameter except the zoning priors and the locked Handbook levers. All scenarios share the same draws. Reported as p10–p90, with a bootstrap SE on each percentile. | 3,343–11,084 |
 | Zoning-evidence bound | What if unknown zoning is more or less permissive than our prior? | The priors are set to their low and high ends, giving the reported bound. The logical bound sets every unknown lot to allowed and then to prohibited. | 4,416–6,486 (logical -45–6,918) |
 | ACS sampling error | What if the survey inputs are off by their margin of error? | Each county's host counts, 1-BR and 2-BR rents, and median value are moved by −MOE and +MOE, one at a time. Half the change is the sensitivity, and the sensitivities combine in quadrature across inputs and counties. | ±26 |
 
@@ -127,7 +127,7 @@ A comparison between two scenarios is flagged as a **close call** if any of the 
 
 **Auckland ceiling.** Greenaway-McGrevy & Phillips 2023 (JUE 136:103555; https://doi.org/10.1016/j.jue.2023.103555) report 21,808 extra dwellings permitted over five years, about 4.11% of Auckland's regional dwelling stock. Five-year Missing Middle, ADU + Missing Middle, and package net completions divided by ACS B25001 housing stock must stay at or under 4.1% for every state and county output (`tests/test_lab_engine.py`). Any result above that needs explicit justification.
 
-In Pennsylvania, missing middle adds 786 more homes than ADUs over five years, but ADUs come out ahead in 63% of the 2,000 assumption draws (1258 of 2,000). It would flip at any of these values:
+In Pennsylvania, Missing middle ≈ ADUs; ADUs ahead in 63% of draws (draw medians ADU 6,390 vs MM 5,063) (1258 of 2,000). It would flip at any of these values:
 
 - homeowner uptake hazard (feasible lots) 0.27% a year (central 0.30% a year)
 - conversion / addition hard cost per added home $167,311 (central $160,000)

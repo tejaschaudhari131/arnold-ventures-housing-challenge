@@ -497,7 +497,16 @@ def _band(low: float, high: float) -> str:
 
 def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any] | None = None) -> str:
     """One-page policy brief from locked or live results."""
-    from src.plain import CORE_URL, LAB_URL, SCENARIO_SHORT, format_assumption, homes, ranking_phrase
+    from src.plain import (
+        CORE_URL,
+        LAB_URL,
+        SCENARIO_SHORT,
+        format_assumption,
+        homes,
+        is_draw_tie,
+        ranking_phrase,
+        top_pair_tie_clause,
+    )
 
     code = check_state(code)
     locked = locked_results(code)
@@ -529,10 +538,19 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
     leader = SCENARIO_SHORT.get(top["leader"], top["leader"])
     trailer = SCENARIO_SHORT.get(top["trailer"], top["trailer"])
     threshold = locked.get("close_call_flip_share_label", "close-call threshold")
+    median_src = results
+    if is_draw_tie(top) and not (
+        "p50" in results.get(top["leader"], {}) and "p50" in results.get(top["trailer"], {})
+    ):
+        median_src = locked["statewide"]["results"]
+    if is_draw_tie(top):
+        pair_line = top_pair_tie_clause(top, median_src)
+    else:
+        pair_line = f"Top pair: {leader} leads {trailer} by {homes(top['gap'])} homes."
     lines += [
         "",
-        f"Handbook ranking: {ranking_phrase(sw['benchmark_ranking'])}.",
-        f"Top pair: {leader} leads {trailer} by {homes(top['gap'])} homes.",
+        f"Handbook ranking: {ranking_phrase(sw['benchmark_ranking'], top)}.",
+        pair_line,
         f"The {threshold} is 10 percent of assumption draws.",
     ]
     se_bits = []

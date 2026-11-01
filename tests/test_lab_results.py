@@ -51,6 +51,21 @@ def test_result_layers_are_reported_separately(code):
     assert len(doc["counties"]) == (67 if code == "PA" else 10)
 
 
+def test_background_adu_flow_is_exported():
+    for code in sorted(LAB_STATES):
+        doc = json.loads(sample_path(code).read_text())
+        fresh = evaluate_state(load_state(code))
+        assert "background_adu_flow" in doc
+        assert doc["background_adu_flow"]["homes"] == pytest.approx(
+            fresh["background_adu_flow"]["homes"], abs=0.1
+        )
+        assert doc["background_adu_flow"]["lots"] == pytest.approx(
+            fresh["background_adu_flow"]["lots"], abs=0.1
+        )
+        assert doc["background_adu_flow"]["homes"] > 0
+        assert doc["background_adu_flow"]["lots"] > 0
+
+
 def test_results_files_stay_small():
     total = sum(sample_path(code).stat().st_size for code in LAB_STATES)
     assert total < 400 * 1024

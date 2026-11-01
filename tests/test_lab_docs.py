@@ -32,9 +32,16 @@ def test_policy_comparison_stays_within_four_pages():
     assert "unknown" in text.lower()
     assert "close call" in text.lower()
     from src.adu_fee_note import note_text
-    from src.lab.policy_tables import allegheny_table, nh_table, pa_statewide_table, sampling_error_sentence
+    from src.lab.policy_tables import (
+        allegheny_table,
+        nh_background_adu_sentence,
+        nh_table,
+        pa_ranking_sentence,
+        pa_statewide_table,
+        sampling_error_sentence,
+    )
     from src.lab.results import load_results
-    from src.plain import homes
+    from src.plain import homes, top_pair_tie_clause
 
     pa = load_results("PA", allow_compute=False)
     assert homes(pa["statewide"]["results"]["baseline"]["central"]) in text
@@ -45,9 +52,16 @@ def test_policy_comparison_stays_within_four_pages():
     assert allegheny_table() in text
     assert nh_table() in text
     assert sampling_error_sentence("PA") in text
+    assert pa_ranking_sentence() in text
+    assert "≈" in text
+    method = (ROOT / "docs" / "SMALL_HOMES_LAB.md").read_text(encoding="utf-8")
+    clause = top_pair_tie_clause(pa["statewide"]["top_benchmark_pair"], pa["statewide"]["results"])
+    assert clause in text
+    assert clause in method
+    nh_port = (ROOT / "docs" / "NH_PORTABILITY.md").read_text(encoding="utf-8")
+    assert nh_background_adu_sentence() in nh_port
     assert "Saiz 2010" in text
     assert "core baseline (108,950)" in text
-    method = (ROOT / "docs" / "SMALL_HOMES_LAB.md").read_text(encoding="utf-8")
     draws = pa["draws"]
     n_flip = int(round(pa["statewide"]["top_benchmark_pair"]["flip_share"] * draws))
     assert f"{n_flip} of {draws:,}" in method or f"{n_flip} of {draws}" in method

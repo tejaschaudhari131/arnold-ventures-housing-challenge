@@ -113,6 +113,10 @@ def compact(analysis: dict[str, Any], code: str) -> dict[str, Any]:
         "close_call_flip_share": analysis["close_call_flip_share"],
         "coverage": {k: round(v, 4) for k, v in analysis["coverage"].items()},
         "implied_cost_elasticity": round(analysis["implied_cost_elasticity"], 3),
+        "background_adu_flow": {
+            "homes": _r(analysis["central"].get("background_adu_flow", {}).get("homes", 0.0)),
+            "lots": _r(analysis["central"].get("background_adu_flow", {}).get("lots", 0.0)),
+        },
         "scenarios": [
             {"id": sid, "label": scenarios[sid]["label"], "short": scenarios[sid]["short"], "kind": scenarios[sid]["kind"]}
             for sid in scenarios

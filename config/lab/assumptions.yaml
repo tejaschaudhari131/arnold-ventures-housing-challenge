@@ -63,7 +63,7 @@ params:
   hazard_homeowner_feasible:
     {low: 0.0012, central: 0.003, high: 0.0062, unit: per year, group: uptake, ui: true,
      label: Homeowner uptake hazard (feasible lots),
-     rationale: "ASSUMPTION (F_CA = 0.5), until F_CA is computed. All-lots ADU band (0.0006/0.0015/0.0031) divided by an assumed California feasible share of 0.5. Used only by mm2 (keep the house, add one), which still multiplies by F. Keeps mm2 from taking both the all-lots cut and F."}
+     rationale: "ASSUMPTION (F_CA = 0.5), until F_CA is computed. All-lots ADU band (0.0006/0.0015/0.0031) divided by an assumed California feasible share of 0.5. Used only by mm2 (keep the house, add one), which still multiplies by F. Keeps mm2 from taking both the all-lots cut and F. MM moves roughly one-for-one with this rate (0.0015 gives 3,149 Pennsylvania homes; 0.006 gives 12,869). Minneapolis Fed 2026 (https://www.minneapolisfed.org/article/2026/minneapolis-2040-plan-indicators-point-to-stable-rents-stalled-development) is a low-side anchor: after Minneapolis 2040 upzoning, duplex/triplex/fourplex permits stayed small while multifamily construction stalled."}
   hazard_developer:
     {low: 0.0006, central: 0.0015, high: 0.0031, unit: per year, group: uptake, ui: true,
      label: Developer rebuild hazard (feasible lots),

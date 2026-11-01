@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from src.lab.results import load_results
 from src.lab.uncertainty import compared_scenarios
-from src.plain import homes
+from src.plain import homes, is_draw_tie, ranking_phrase, top_pair_tie_clause
 
 
 LABELS = {
@@ -77,6 +77,26 @@ def sampling_error_sentence(code: str = "PA", doc: dict | None = None) -> str:
     return (
         f"Envelope sampling error (bootstrap SE of the statewide P50, "
         f"{locked['draws']:,} draws, seed {locked['seed']}): " + "; ".join(bits) + "."
+    )
+
+
+def pa_ranking_sentence(doc: dict | None = None) -> str:
+    """PA top-pair sentence from the locked results. Numbers are never hard-coded."""
+    locked = doc or load_results("PA", allow_compute=False)
+    sw = locked["statewide"]
+    rank = ranking_phrase(sw["benchmark_ranking"], sw["top_benchmark_pair"])
+    if is_draw_tie(sw["top_benchmark_pair"]):
+        return f"**Ranking of the four Handbook benchmarks: {rank}.** {top_pair_tie_clause(sw['top_benchmark_pair'], sw['results'])}."
+    return f"**Ranking of the four Handbook benchmarks: {rank}.**"
+
+
+def nh_background_adu_sentence(doc: dict | None = None) -> str:
+    locked = doc or load_results("NH", allow_compute=False)
+    bg = locked["background_adu_flow"]
+    return (
+        f"The host model still counts a background ADU flow of {homes(bg['homes'])} homes "
+        f"over five years on {homes(bg['lots'])} lots where ADUs are already legal. "
+        "NH OPD permit data may undercount ADUs."
     )
 
 

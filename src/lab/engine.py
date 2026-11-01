@@ -566,6 +566,7 @@ def evaluate_county(
     host_base = HostOutcome()
     host_delta: dict[str, HostOutcome] = {}
     coverage = {"adu": 0.0, "mm": 0.0, "hosts": 0.0}
+    background_adu = {"homes": 0.0, "lots": 0.0}
     for index, cell in enumerate(county.cells):
         scale = inputs.detached_scale if cell.host_type == "detached" else inputs.attached_scale
         hosts = cell.hosts.value * scale
@@ -581,6 +582,9 @@ def evaluate_county(
             ):
                 now = outcome(index, cell, seg_hosts, part.legal_now, e0, part)
                 pre0 = outcome(index, cell, seg_hosts, part.legal_pre, e0, part)
+                if "adu" in part.legal_pre:
+                    background_adu["homes"] += part.weight * pre0.by_option.get("adu", 0.0)
+                    background_adu["lots"] += part.weight * pre0.lots_by_option.get("adu", 0.0)
                 adj = HostOutcome()
                 adj.add(now, 1.0)
                 adj.add(pre0, -1.0)
@@ -634,6 +638,7 @@ def evaluate_county(
         "hosts": coverage["hosts"],
         "coverage": {"adu": coverage["adu"] / hosts_total, "mm": coverage["mm"] / hosts_total},
         "coverage_hosts": {"adu": coverage["adu"], "mm": coverage["mm"]},
+        "background_adu_flow": background_adu,
         "scenarios": results,
     }
 
@@ -674,6 +679,10 @@ def evaluate_state(
         row["by_option"] = by_option
         totals[sid] = row
     hosts = sum(c["hosts"] for c in counties) or 1.0
+    background_adu = {
+        "homes": sum(c.get("background_adu_flow", {}).get("homes", 0.0) for c in counties),
+        "lots": sum(c.get("background_adu_flow", {}).get("lots", 0.0) for c in counties),
+    }
     return {
         "state": state.code,
         "params": p,
@@ -683,6 +692,7 @@ def evaluate_state(
             "mm": sum(c["coverage_hosts"]["mm"] for c in counties) / hosts,
         },
         "implied_cost_elasticity": implied_cost_elasticity(p),
+        "background_adu_flow": background_adu,
         "counties": counties,
     }
 
