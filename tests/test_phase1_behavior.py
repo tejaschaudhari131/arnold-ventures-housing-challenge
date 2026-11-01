@@ -13,6 +13,7 @@ import io
 import json
 import subprocess
 import threading
+from itertools import combinations, permutations
 
 import pytest
 from http.server import ThreadingHTTPServer
@@ -427,6 +428,44 @@ def test_pandas_reads_lab_csv_and_duplicate_reforms_are_rejected():
             dumped = json.dumps(body)
             assert "adu, adu" not in dumped
             assert "98.2" not in dumped
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_why_options_are_identical_for_every_reform_order():
+    httpd = _server()
+    base = f"http://127.0.0.1:{httpd.server_address[1]}"
+    reforms = ["adu", "missing_middle", "parking", "fees"]
+
+    def options_for(ids, scenario="selection"):
+        code, body, _ = _post(
+            base,
+            "/api/lab/why",
+            {"state": "PA", "county": "Adams", "scenario": scenario, "reforms": ids},
+        )
+        assert code == 200, (ids, body)
+        return body["options"]
+
+    def mm2(rows):
+        return next(row for row in rows if row["option"] == "mm2")
+
+    try:
+        for size in (2, 3):
+            for combo in combinations(reforms, size):
+                expected = None
+                for perm in permutations(combo):
+                    got = options_for(list(perm))
+                    if expected is None:
+                        expected = got
+                    else:
+                        assert got == expected, perm
+        missing_middle = options_for([], scenario="missing_middle")
+        with_fees = options_for(["fees", "missing_middle"])
+        with_parking = options_for(["parking", "missing_middle"])
+        assert mm2(with_fees)["cost"] < mm2(missing_middle)["cost"]
+        assert mm2(with_parking)["spaces"] != mm2(missing_middle)["spaces"]
+        assert options_for(["missing_middle", "fees"]) == with_fees
     finally:
         httpd.shutdown()
         httpd.server_close()

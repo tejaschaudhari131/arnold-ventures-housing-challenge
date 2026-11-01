@@ -38,7 +38,7 @@ from src.lab.engine import (
     scenario_econ,
     state_unit_values,
 )
-from src.lab.options import evaluate_option
+from src.lab.options import Econ, evaluate_option
 from src.lab.results import load_results
 from src.lab.uncertainty import compared_scenarios, run_moe, zoning_bounds, zoning_runs
 from src.model.assumptions import AssumptionError
@@ -257,6 +257,46 @@ def _is_full_package(chosen: list[str]) -> bool:
     return set(chosen) == set(_SELECTABLE)
 
 
+def _selection_econ(chosen: list[str], p: dict[str, float]) -> Econ:
+    """Fee, parking, and ADU-parking levers from every selected reform.
+
+    A lever applies when any selected reform sets it. Request order does not
+    matter. This prices the illustrative pro forma only. County delivery stays
+    a labeled sum of the standalone runs.
+    """
+    catalog = load_scenarios()["scenarios"]
+    fee_cut = 0.0
+    parking_eliminated = False
+    adu_no_parking = False
+    approval = False
+    for sid in chosen:
+        levers = catalog[sid].get("levers") or {}
+        fee_cut = max(fee_cut, float(levers.get("fee_cut_share") or 0.0))
+        if levers.get("parking_minimums") == "eliminated":
+            parking_eliminated = True
+        if levers.get("adu_parking_spaces") == 0:
+            adu_no_parking = True
+        if levers.get("approval_reform"):
+            approval = True
+    return Econ(
+        fee=p["fee_per_unit"] * (1.0 - fee_cut),
+        parking="market" if parking_eliminated else "minimum",
+        adu_no_parking=adu_no_parking,
+        approval=approval,
+    )
+
+
+_OPTION_NOTE = (
+    "The ADU pro forma is illustrative: urban detached lot, one parking space "
+    "if the scenario still requires one, current ACS rents and the published assumptions. "
+    "It is not a construction bid."
+)
+_MIX_OPTION_NOTE = (
+    _OPTION_NOTE
+    + " For this mix, the fee cut, parking minimums, and ADU parking rule from every selected reform apply together."
+)
+
+
 def why_county(
     code: str,
     county_key: str,
@@ -309,14 +349,16 @@ def why_county(
     if scenario not in scenarios and scenario != "selection":
         raise AssumptionError("Unknown scenario.")
     multi = scenario == "selection"
-    econ_scenario = chosen[0] if multi else scenario
     p = central_params()
     p.update(overrides or {})
     values = state_unit_values(state)
     evaluated = evaluate_county(
         county, state, p, state_values=values, variants=package_variants(p)
     )
-    econ = scenario_econ(econ_scenario if econ_scenario != "baseline" else "baseline", p)
+    if multi:
+        econ = _selection_econ(chosen, p)
+    else:
+        econ = scenario_econ(scenario if scenario != "baseline" else "baseline", p)
     adu_spaces = 1.0
     options = []
     for opt in ("adu", "mm2", "mm4", "mm6"):
@@ -442,11 +484,7 @@ def why_county(
         "inputs": inputs,
         "assumptions": used,
         "options": options,
-        "option_note": (
-            "The ADU pro forma is illustrative: urban detached lot, one parking space "
-            "if the scenario still requires one, current ACS rents and the published assumptions. "
-            "It is not a construction bid."
-        ),
+        "option_note": _MIX_OPTION_NOTE if multi else _OPTION_NOTE,
         "formulas": FORMULAS,
         "result": {
             "delivery": row.get("delivery", 0.0) if scenario == "baseline" else row.get("delta", 0.0),
