@@ -20,10 +20,17 @@ statewide:
     homes to allow one accessory dwelling unit. HB 577 (effective 2025-07-01)
     made one attached or detached ADU allowed by right, let towns require up to
     one added parking space, and let towns prohibit ADUs on attached
-    single-family homes such as townhouses. SB 284 (Chapter 258, effective
-    2025-09-13) caps residential parking minimums at one space per unit.
-    HB 631 permits residential building in commercial zones; it does not
-    change single-family districts, so 2–6 homes there stay unknown.
+    single-family homes such as townhouses. The attached-host prior is
+    prior_adu_prohibited_nh_attached (0.10 / 0.30 / 0.60), not the PA 0.85
+    prior: the default is allowed unless a town acts (RSA 674:72 I–II).
+    ASSUMPTION, widened range; the 2024 MLUR survey has no townhouse field.
+    Towns may require owner occupancy (179 of 227 zoned jurisdictions, OPD
+    2024). The Lab has no owner-occupancy friction, so that 0.79 share is
+    documented here and is not applied as an extra multiplier. SB 284
+    (Chapter 258, effective 2025-09-13) caps residential parking minimums at
+    one space per unit. HB 631 permits residential building in commercial
+    zones; it does not change single-family districts, so 2–6 homes there
+    stay unknown.
   sources:
     - https://gc.nh.gov/rsa/html/LXIV/674/674-72.htm
     - https://gc.nh.gov/bill_status/legacy/bs2016/results.aspx?lsr=0119&sortoption=&txtbillnumber=HB577&txtsessionyear=2025
@@ -57,7 +64,9 @@ rules:
     confidence: high
     summary: >-
       Towns may prohibit ADUs on attached single-family homes. Which towns do
-      is not recorded, so these lots stay unknown and use the prior.
+      is not recorded, so these lots stay unknown and use
+      prior_adu_prohibited_nh_attached (0.10 / 0.30 / 0.60), not the PA 0.85
+      prior. ASSUMPTION, widened range.
     sources:
       - https://gc.nh.gov/rsa/html/LXIV/674/674-72.htm
 

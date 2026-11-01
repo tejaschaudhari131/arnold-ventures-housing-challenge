@@ -33,6 +33,7 @@ from src.lab.engine import (
     CountyInputs,
     evaluate_county,
     evaluate_state,
+    implied_cost_elasticity,
     package_decomposition,
     package_variants,
     scenario_ids,
@@ -40,7 +41,13 @@ from src.lab.engine import (
 )
 
 MOE_INPUTS = ("detached", "attached", "rent_1br", "rent_2br", "median_value")
-ZONING_PRIORS = ("prior_adu_prohibited", "prior_mm_prohibited", "prior_adu_parking_required")
+ZONING_PRIORS = (
+    "prior_adu_prohibited",
+    "prior_adu_prohibited_nh_attached",
+    "prior_mm_prohibited",
+    "prior_adu_parking_required",
+)
+ELASTICITY_ZERO_SIGMA = 1000.0
 
 
 def compared_scenarios() -> list[str]:
@@ -76,8 +83,30 @@ def _quantile(values: list[float], q: float) -> float:
     return ordered[lo] + (ordered[hi] - ordered[lo]) * (pos - lo)
 
 
-def summarize(values: list[float]) -> dict[str, float]:
-    return {"p10": _quantile(values, 0.10), "p50": _quantile(values, 0.50), "p90": _quantile(values, 0.90)}
+def summarize(values: list[float], seed: int | None = None, boots: int = 200) -> dict[str, float]:
+    out = {"p10": _quantile(values, 0.10), "p50": _quantile(values, 0.50), "p90": _quantile(values, 0.90)}
+    if seed is None or len(values) < 2:
+        return out
+    rng = random.Random(seed)
+    n = len(values)
+    p10s: list[float] = []
+    p50s: list[float] = []
+    p90s: list[float] = []
+    for _ in range(boots):
+        sample = [values[rng.randrange(n)] for _ in range(n)]
+        p10s.append(_quantile(sample, 0.10))
+        p50s.append(_quantile(sample, 0.50))
+        p90s.append(_quantile(sample, 0.90))
+
+    def se(series: list[float]) -> float:
+        mean = sum(series) / len(series)
+        var = sum((x - mean) ** 2 for x in series) / (len(series) - 1)
+        return math.sqrt(var)
+
+    out["p10_se"] = se(p10s)
+    out["p50_se"] = se(p50s)
+    out["p90_se"] = se(p90s)
+    return out
 
 
 # ---------------------------------------------------------- layer 1
@@ -376,7 +405,7 @@ def analyze(state: StateData, draws: int | None = None, seed: int | None = None,
             values = [d[sid] for d in draws_vals]
             scen[sid] = {
                 "central": baseline if sid == "baseline" else central_vals[sid],
-                "envelope": summarize(values),
+                "envelope": summarize(values, seed=env["seed"] if index is None else None),
                 "zoning": bounds[sid],
                 "acs_moe": moe_vals[sid],
             }
@@ -421,8 +450,31 @@ def analyze(state: StateData, draws: int | None = None, seed: int | None = None,
         oat = one_at_a_time(evaluate, p)
         out["one_at_a_time"] = oat
         top_b = out["statewide"]["top_benchmark_pair"]
+        switches = what_would_change(evaluate, p, top_b["leader"], top_b["trailer"], oat)
+        zero_p = dict(p)
+        zero_p["pipeline_sigma"] = ELASTICITY_ZERO_SIGMA
+        zero_run = evaluate_state(state, zero_p)
+        zero_vals = {sid: zero_run["statewide"][sid]["delta"] for sid in sids}
+        zero_vals["baseline"] = zero_run["statewide"]["baseline"]["delivery"]
+        switches.append(
+            {
+                "param": "implied_cost_elasticity",
+                "label": "Cost elasticity of 0 (pipeline_sigma → ∞; probit cannot reach 0)",
+                "unit": "elasticity",
+                "central": float(central["implied_cost_elasticity"]),
+                "switch_at": 0.0,
+                "direction": "low",
+                "band": [0.0, float(central["implied_cost_elasticity"])],
+                "zero_pipeline": {sid: zero_vals[sid] for sid in sids},
+            }
+        )
         out["what_would_change"] = {
             "pair": [top_b["leader"], top_b["trailer"]],
-            "switches": what_would_change(evaluate, p, top_b["leader"], top_b["trailer"], oat),
+            "switches": switches,
+        }
+        out["elasticity_zero"] = {
+            "pipeline_sigma": ELASTICITY_ZERO_SIGMA,
+            "implied_cost_elasticity": implied_cost_elasticity(zero_p),
+            "statewide": zero_vals,
         }
     return out

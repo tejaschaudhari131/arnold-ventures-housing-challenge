@@ -3,7 +3,7 @@
 """Why-drawer payloads, live recomputes, and Lab briefs.
 
 The browser reads locked results (``load_results(..., allow_compute=False)``)
-so Vercel never runs the 200-draw envelope. Changing one assumption
+so Vercel never runs the 2,000-draw envelope. Changing one assumption
 recomputes the central case, the zoning bound, and the ACS band. The
 envelope stays on the locked file; the response says so.
 """
@@ -71,9 +71,9 @@ FORMULAS = [
     {
         "id": "delivery",
         "label": "Host delivery",
-        "formula": "N = Σ H × F × p(T) × d",
+        "formula": "N = Σ H × F × p(T) × d  (ADU: N = Σ H × p(T) × d)",
         "tags": ["calculated"],
-        "note": "Each lot takes at most one option. d is net homes that option adds.",
+        "note": "Each lot takes at most one option. d is net homes that option adds. The ADU hazard is an all-lots rate, so F is not applied to the ADU delivery term.",
     },
     {
         "id": "increment",
@@ -458,7 +458,7 @@ def recompute(code: str, overrides: dict[str, float] | None = None, county_key: 
         "state": code,
         "overrides": overrides,
         "envelope_note": (
-            "The p10–p90 envelope is from the locked 200-draw run "
+            f"The p10–p90 envelope is from the locked {locked['draws']:,}-draw run "
             f"(seed {locked['seed']}) and does not move when you change one slider. "
             "Central values, zoning bounds, and the ACS band are live."
         ),
@@ -527,6 +527,17 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
         f"Top pair: {leader} leads {trailer} by {homes(top['gap'])} homes.",
         f"The {threshold} is 10 percent of assumption draws.",
     ]
+    se_bits = []
+    for sid in ["baseline"] + list(compared_scenarios()):
+        env = locked["statewide"]["results"][sid]
+        if "p50_se" in env:
+            label = SCENARIO_SHORT.get(sid) or next(s["short"] for s in locked["scenarios"] if s["id"] == sid)
+            se_bits.append(f"{label} ±{homes(env['p50_se'])}")
+    if se_bits:
+        lines.append(
+            f"Envelope sampling error (bootstrap SE of P50, {locked['draws']:,} draws, seed {locked['seed']}): "
+            + "; ".join(se_bits) + "."
+        )
     if top["close_call"]:
         lines.append("**Ranking is close.** " + "; ".join(top["reasons"]) + ".")
     decomp = sw["package_decomposition"]

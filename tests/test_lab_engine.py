@@ -121,24 +121,40 @@ def test_one_best_option_per_host_is_not_a_sum():
     both = resolve_hosts([a, b], lags, lots, 1000, 0.25, 5)
     only_a = resolve_hosts([a], lags, lots, 1000, 0.25, 5)
     only_b = resolve_hosts([b], lags, lots, 1000, 0.25, 5)
-    assert both.delivered == pytest.approx(max(only_a.delivered, only_b.delivered))
+    # ADU is all-lots; mm2 takes only the feasible lots. Combined is not a sum.
     assert both.delivered < only_a.delivered + only_b.delivered
-    assert set(both.by_option) == {"mm2"}
+    assert "mm2" in both.by_option and "adu" in both.by_option
+    assert both.delivered > only_b.delivered
     assert both.feasible == pytest.approx(1000 * lots.survival(1000) * normal_cdf(-0.1 / 0.25))
+
+
+def test_adu_delivery_does_not_multiply_by_feasibility():
+    lots = LotDist(5000, 0.6)
+    adu = _opt("adu", -0.5, 1000, hazard=0.01)
+    out = resolve_hosts([adu], {"adu": 1.0}, lots, 1000, 0.25, 5)
+    hosts = 1000 * lots.survival(1000)
+    timing = timing_share(0.01, 5, 1.0, 0.5)
+    assert out.delivered == pytest.approx(hosts * timing)
+    assert out.feasible == pytest.approx(hosts * normal_cdf(-0.5 / 0.25))
+    mm2 = _opt("mm2", -0.5, 1000, hazard=0.01)
+    rebuild = resolve_hosts([mm2], {"mm2": 1.0}, lots, 1000, 0.25, 5)
+    assert rebuild.delivered == pytest.approx(hosts * normal_cdf(-0.5 / 0.25) * timing)
 
 
 def test_legalizing_a_better_option_does_not_strand_lots_already_building():
     lots = LotDist(5000, 0.6)
     adu = _opt("adu", -0.2, 1000, hazard=0.01)
     mm2 = _opt("mm2", -0.2, 1000, hazard=0.01)
-    lags = {"adu": 0.0, "mm2": 1.5}
+    lags = {"adu": 0.0, "mm2": 1.5, "mm6": 1.5}
     alone = resolve_hosts([adu], lags, lots, 1000, 0.25, 5)
-    # Same margin, later lag: the incumbent keeps going, nothing is lost.
+    # Same net, later lag: the all-lots ADU path continues on leftover lots,
+    # so delivery stays near the ADU-only total.
     tie = resolve_hosts([adu, _opt("mm2", -0.2 + 1e-9, 1000, hazard=0.01)], lags, lots, 1000, 0.25, 5)
-    assert tie.delivered == pytest.approx(alone.delivered, rel=1e-6)
-    better = resolve_hosts([adu, _opt("mm2", 0.0, 1000, hazard=0.01)], lags, lots, 1000, 0.25, 5)
+    assert tie.by_option["adu"] > 0
+    assert tie.delivered == pytest.approx(alone.delivered, rel=0.2)
+    better = resolve_hosts([adu, _opt("mm6", 0.0, 1000, net=5, hazard=0.01)], lags, lots, 1000, 0.25, 5)
     assert better.delivered > alone.delivered
-    assert better.by_option["adu"] > 0 and better.by_option["mm2"] > 0
+    assert better.by_option["adu"] > 0 and better.by_option["mm6"] > 0
     assert mm2.option == "mm2"
 
 
@@ -149,8 +165,9 @@ def test_lots_too_small_for_the_best_option_take_the_next_one():
     out = resolve_hosts([adu, mm6], {"adu": 1, "mm6": 1}, lots, 100, 0.25, 5)
     small = lots.survival(2000) - lots.survival(4000)
     large = lots.survival(4000)
-    assert out.lots_by_option["adu"] == pytest.approx(100 * small)
-    assert out.lots_by_option["mm6"] == pytest.approx(100 * large)
+    take_mm = normal_cdf(0.1 / 0.25)
+    assert out.lots_by_option["mm6"] == pytest.approx(100 * large * take_mm)
+    assert out.lots_by_option["adu"] == pytest.approx(100 * small + 100 * large * (1 - take_mm))
     assert out.eligible == pytest.approx(100 * (small * 1 + large * 5))
 
 
@@ -161,6 +178,28 @@ def test_unknown_zoning_splits_into_prior_partitions():
     assert sum(part.weight for part in parts) == pytest.approx(1.0)
     prohibited_both = [x for x in parts if not x.legal_now]
     assert prohibited_both[0].weight == pytest.approx(P["prior_adu_prohibited"] * P["prior_mm_prohibited"])
+
+
+def test_nh_attached_hosts_use_the_townhouse_prior():
+    seg = LegalSegment(share=1.0, adu="unknown", mm="prohibited")
+    pa = expand_segment(seg, P, "2027-01-01", [2023, 2024, 2025], state_code="PA", host_type="attached")
+    nh = expand_segment(seg, P, "2027-01-01", [2023, 2024, 2025], state_code="NH", host_type="attached")
+    det = expand_segment(seg, P, "2027-01-01", [2023, 2024, 2025], state_code="NH", host_type="detached")
+    pa_prohibited = sum(part.weight for part in pa if "adu" not in part.legal_now)
+    nh_prohibited = sum(part.weight for part in nh if "adu" not in part.legal_now)
+    det_prohibited = sum(part.weight for part in det if "adu" not in part.legal_now)
+    assert pa_prohibited == pytest.approx(P["prior_adu_prohibited"])
+    assert nh_prohibited == pytest.approx(P["prior_adu_prohibited_nh_attached"])
+    assert nh_prohibited < pa_prohibited
+    assert det_prohibited == pytest.approx(P["prior_adu_prohibited"])
+
+
+def test_nh_adu_parking_is_capped_at_one_space():
+    seg = LegalSegment(share=1.0, adu="allowed_with_parking", mm="prohibited", adu_parking=2.0)
+    nh = expand_segment(seg, P, "2027-01-01", [2023, 2024, 2025], state_code="NH")
+    pa = expand_segment(seg, P, "2027-01-01", [2023, 2024, 2025], state_code="PA")
+    assert max(part.adu_spaces for part in nh) == 1.0
+    assert max(part.adu_spaces for part in pa) == 2.0
 
 
 def test_post_window_rule_is_baseline_not_reform():
@@ -193,11 +232,19 @@ def test_philadelphia_benchmark_adu_counts_in_full(pa):
 def test_fee_pipeline_threshold_closed_form():
     f0, sigma, h = P["pipeline_f0"], P["pipeline_sigma"], P["hurdle_developer"]
     elasticity = implied_cost_elasticity(P)
-    assert 1.0 <= elasticity <= 3.0
+    # ε = φ(z0)/F0 × (1+h)/σ_p. F0 is fixed at 0.5; central σ_p = 0.52 → ε ≈ 1.75 (Saiz).
+    assert f0 == pytest.approx(0.5)
+    assert elasticity == pytest.approx(
+        NormalDist().pdf(NormalDist().inv_cdf(f0)) / f0 * (1 + h) / sigma, rel=1e-9
+    )
+    assert elasticity == pytest.approx(1.75, abs=0.02)
     z0 = NormalDist().inv_cdf(f0)
     cost = 500000.0
     f1 = normal_cdf(z0 + (1 + h) * 25000 / cost / sigma)
     assert f1 / f0 - 1 == pytest.approx(elasticity * 25000 / cost, rel=0.05)
+    zero = dict(P)
+    zero["pipeline_sigma"] = 1000.0
+    assert implied_cost_elasticity(zero) < 0.01
 
 
 def test_scenario_levers_map_to_economics():
@@ -223,3 +270,24 @@ def test_every_benchmark_adds_homes(pa, nh):
     for result in (pa, nh):
         for sid in ("adu", "missing_middle", "parking", "fees", "package", "approval"):
             assert result["statewide"][sid]["delta"] > 0, (result["state"], sid)
+
+
+# Greenaway-McGrevy & Phillips 2023, JUE 136:103555: 21,808 extra dwellings
+# over five years ≈ 4.11% of Auckland's regional dwelling stock. Published
+# figure (the working paper said 5.13%). Gross permits, not net completions.
+AUCKLAND_STOCK_CEILING = 0.041
+
+
+def test_missing_middle_stays_under_the_auckland_stock_ceiling(pa, nh):
+    for result, code in ((pa, "PA"), (nh, "NH")):
+        state = load_state(code)
+        stock = sum(county.housing_units.value for county in state.counties)
+        assert stock > 0
+        statewide = result["statewide"]["missing_middle"]["delta"] / stock
+        assert statewide <= AUCKLAND_STOCK_CEILING, (code, statewide)
+        for county, row in zip(state.counties, result["counties"]):
+            units = county.housing_units.value
+            if units <= 0:
+                continue
+            share = row["scenarios"]["missing_middle"]["delta"] / units
+            assert share <= AUCKLAND_STOCK_CEILING, (code, county.name, share)

@@ -8,14 +8,17 @@ For each county c and scenario s the Lab reports three numbers:
   feasible capacity   of those, homes whose pro forma clears the hurdle
   delivery            expected completions inside the five-year window
 
-Host delivery is N = sum_j H_j * F_j * p_j(T) * d_j over host groups j:
+Host delivery is N = sum_j H_j * F_j * p_j(T) * d_j over host groups j,
+except ADU: N_ADU = sum_j H_j * p_j(T) * d_j (the homeowner hazard is an
+all-lots rate from CA permits / SF stock, so multiplying by F again would
+double-count feasibility).
 
   H  observed single-family lots in the group (ACS B25024 by tract context)
   F  Phi(x_best / sigma): share of lots whose own margin clears the hurdle,
      where x_best is the largest excess margin among options that are legal
-     AND fit the lot. Each lot takes at most one option.
-  p  1 - exp(-lambda * max(0, T - legal lag - build lag)): chance a feasible
-     lot finishes inside the window
+     AND fit the lot. Each lot takes at most one option. ADU delivery skips F.
+  p  1 - exp(-lambda * max(0, T - legal lag - build lag)): chance a lot
+     finishes inside the window (feasible lots for rebuilds; all lots for ADU)
   d  net homes the chosen option adds
 
 Legal status is resolved by partition. A lot whose zoning is unknown is
@@ -159,6 +162,11 @@ def resolve_hosts(
     adds 2–6 homes), lots keep building the incumbent until the new option's
     lag ends, and the lots not yet built then switch. Legalizing a better
     option therefore never strands lots that were already building.
+
+    The ADU hazard is an all-lots rate (CA permits / SF stock). ADU delivery
+    does not multiply by F — that would double-count an unverified CA F.
+    When a better non-ADU option is legal, it takes only the feasible lots;
+    the rest stay on the all-lots ADU path if an ADU is legal.
     """
     out = HostOutcome()
     if not results or hosts <= 0:
@@ -176,24 +184,68 @@ def resolve_hosts(
         lots_here = hosts * mass
         out.eligible += lots_here * max(r.net for r in fitting)
         out.feasible += lots_here * share_feasible * best.net
-        timing = timing_share(best.hazard, horizon, best_lag, best.build_lag)
+        adu = next((r for r in fitting if r.option == "adu"), None)
         earlier = [r for r in fitting if lags[r.option] < best_lag - 1e-12]
-        phase_one = 0.0
-        if earlier:
-            incumbent = max(earlier, key=lambda r: (r.excess, r.net))
-            share_incumbent = normal_cdf(incumbent.excess / sigma)
-            start = lags[incumbent.option]
-            stop = min(best_lag, horizon - incumbent.build_lag)
-            built = 1.0 - math.exp(-incumbent.hazard * max(0.0, stop - start))
-            phase_one = lots_here * share_incumbent * built * incumbent.net
-            remaining = max(0.0, share_feasible - share_incumbent * built)
-            out.by_option[incumbent.option] = out.by_option.get(incumbent.option, 0.0) + phase_one
-            delivered = lots_here * remaining * timing * best.net
+        if best.option == "adu":
+            timing = timing_share(best.hazard, horizon, best_lag, best.build_lag)
+            if earlier:
+                incumbent = max(earlier, key=lambda r: (r.excess, r.net))
+                share_inc = 1.0 if incumbent.option == "adu" else normal_cdf(incumbent.excess / sigma)
+                start = lags[incumbent.option]
+                stop = min(best_lag, horizon - incumbent.build_lag)
+                built = 1.0 - math.exp(-incumbent.hazard * max(0.0, stop - start))
+                phase_one = lots_here * share_inc * built * incumbent.net
+                remaining = max(0.0, 1.0 - share_inc * built)
+                out.by_option[incumbent.option] = out.by_option.get(incumbent.option, 0.0) + phase_one
+                delivered = lots_here * remaining * timing * best.net
+                out.delivered += phase_one + delivered
+                out.by_option["adu"] = out.by_option.get("adu", 0.0) + delivered
+            else:
+                delivered = lots_here * timing * best.net
+                out.delivered += delivered
+                out.by_option["adu"] = out.by_option.get("adu", 0.0) + delivered
+            out.lots_by_option["adu"] = out.lots_by_option.get("adu", 0.0) + lots_here
+        elif adu is not None:
+            # All-lots ADU until the better option's lag ends; then feasible
+            # lots take it and the rest stay ADU so legalizing MM cannot
+            # erase the ADU baseline.
+            start = lags[adu.option]
+            stop = min(best_lag, horizon - adu.build_lag)
+            built = 1.0 - math.exp(-adu.hazard * max(0.0, stop - start))
+            phase_one = lots_here * built * adu.net
+            unbuilt = max(0.0, 1.0 - built)
+            timing_best = timing_share(best.hazard, horizon, best_lag, best.build_lag)
+            timing_adu_rest = timing_share(adu.hazard, horizon, stop, adu.build_lag)
+            # Only peel feasible lots off the all-lots ADU path when the new
+            # option delivers more homes in the window (mm2 often does not).
+            switch = timing_best * best.net > timing_adu_rest * adu.net + 1e-12
+            take = share_feasible if switch else 0.0
+            delivered_best = lots_here * unbuilt * take * timing_best * best.net
+            delivered_adu = lots_here * unbuilt * (1.0 - take) * timing_adu_rest * adu.net
+            out.by_option["adu"] = out.by_option.get("adu", 0.0) + phase_one + delivered_adu
+            out.by_option[best.option] = out.by_option.get(best.option, 0.0) + delivered_best
+            out.delivered += phase_one + delivered_best + delivered_adu
+            out.lots_by_option[best.option] = out.lots_by_option.get(best.option, 0.0) + lots_here * take
+            out.lots_by_option["adu"] = out.lots_by_option.get("adu", 0.0) + lots_here * (1.0 - take)
         else:
-            delivered = lots_here * share_feasible * timing * best.net
-        out.delivered += phase_one + delivered
-        out.by_option[best.option] = out.by_option.get(best.option, 0.0) + delivered
-        out.lots_by_option[best.option] = out.lots_by_option.get(best.option, 0.0) + lots_here
+            timing = timing_share(best.hazard, horizon, best_lag, best.build_lag)
+            if earlier:
+                incumbent = max(earlier, key=lambda r: (r.excess, r.net))
+                share_inc = normal_cdf(incumbent.excess / sigma)
+                start = lags[incumbent.option]
+                stop = min(best_lag, horizon - incumbent.build_lag)
+                built = 1.0 - math.exp(-incumbent.hazard * max(0.0, stop - start))
+                phase_one = lots_here * share_inc * built * incumbent.net
+                remaining = max(0.0, share_feasible - share_inc * built)
+                out.by_option[incumbent.option] = out.by_option.get(incumbent.option, 0.0) + phase_one
+                delivered = lots_here * remaining * timing * best.net
+                out.delivered += phase_one + delivered
+                out.by_option[best.option] = out.by_option.get(best.option, 0.0) + delivered
+            else:
+                delivered = lots_here * share_feasible * timing * best.net
+                out.delivered += delivered
+                out.by_option[best.option] = out.by_option.get(best.option, 0.0) + delivered
+            out.lots_by_option[best.option] = out.lots_by_option.get(best.option, 0.0) + lots_here
     return out
 
 
@@ -216,9 +268,16 @@ def expand_segment(
     window_start: str,
     bps_years: list[int],
     priors: dict[str, float] | None = None,
+    state_code: str = "",
+    host_type: str = "",
 ) -> list[Partition]:
     priors = priors or {}
     pa = priors.get("prior_adu_prohibited", p["prior_adu_prohibited"])
+    if state_code == "NH" and host_type == "attached":
+        pa = priors.get(
+            "prior_adu_prohibited_nh_attached",
+            p.get("prior_adu_prohibited_nh_attached", pa),
+        )
     pm = priors.get("prior_mm_prohibited", p["prior_mm_prohibited"])
     pq = priors.get("prior_adu_parking_required", p["prior_adu_parking_required"])
     lag = p["adoption_lag_years"]
@@ -235,6 +294,8 @@ def expand_segment(
         adu_states = [(1.0, True, segment.adu_parking or 0.0, segment.adu_effective, "ADU allowed (observed)")]
     elif segment.adu == "allowed_with_parking":
         spaces = segment.adu_parking if segment.adu_parking is not None else 1.0
+        if state_code == "NH":
+            spaces = min(spaces, 1.0)
         adu_states = [
             (pq, True, spaces, segment.adu_effective, "ADU allowed, parking required (prior)"),
             (1 - pq, True, 0.0, segment.adu_effective, "ADU allowed, no parking (prior)"),
@@ -509,7 +570,9 @@ def evaluate_county(
                 coverage["adu"] += seg_hosts
             if segment.mm != "unknown":
                 coverage["mm"] += seg_hosts
-            for part in expand_segment(segment, p, window_start, bps_years, priors):
+            for part in expand_segment(
+                segment, p, window_start, bps_years, priors, state.code, cell.host_type
+            ):
                 now = outcome(index, cell, seg_hosts, part.legal_now, e0, part)
                 pre0 = outcome(index, cell, seg_hosts, part.legal_pre, e0, part)
                 adj = HostOutcome()

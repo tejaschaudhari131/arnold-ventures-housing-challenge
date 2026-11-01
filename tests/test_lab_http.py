@@ -108,7 +108,7 @@ def test_lab_recompute_moves_central_and_rejects_unknown_overrides():
         code, raw, _ = _post(
             base,
             "/api/lab/recompute",
-            {"state": "PA", "overrides": {"hazard_homeowner": 0.003}, "county": "42003"},
+            {"state": "PA", "overrides": {"hazard_homeowner": 0.0006}, "county": "42003"},
         )
         live = json.loads(raw.decode("utf-8"))
         assert code == 200

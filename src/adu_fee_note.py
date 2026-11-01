@@ -73,15 +73,16 @@ def _waterfall(state: Any, lab_fee: float, core_fee: float, core_cap: float, cor
     return steps
 
 
-def _baseline_note(lab_base: float, core_base: float) -> str:
+def _baseline_note(lab_base: float, core_base: float, host_adj: float = 78.0) -> str:
     lab = homes(lab_base)
     core = homes(core_base)
+    host = homes(host_adj, signed=True)
     return (
         f"The Lab baseline ({lab}) and the core baseline ({core}) use the same "
         "completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab "
         "uses the 2023-2025 permit average and the core uses 2022-2024. That "
         "moves Pennsylvania by +1,988, mostly from 5+ unit permits (+2,170). "
-        "The Lab also adds a +78 host adjustment for already-legal homes."
+        f"The Lab also adds a {host} host adjustment for already-legal homes."
     )
 
 
@@ -92,6 +93,7 @@ def comparison(state: str = "PA") -> dict[str, Any]:
     lab = load_results(code, allow_compute=False)
     lab_adu = float(lab["statewide"]["results"]["adu"]["central"])
     lab_base = float(lab["statewide"]["results"]["baseline"]["central"])
+    host_adj = float(lab["statewide"]["results"]["baseline"].get("host_adjustment", 0.0))
     lab_fee = float(central_params()["fee_per_unit"])
 
     fixtures, assumptions = load_bundle()
@@ -124,7 +126,7 @@ def comparison(state: str = "PA") -> dict[str, Any]:
         "after_yield": _round_homes(after_yield),
         "after_lags": _round_homes(after_lags),
         "close_share": round(gap, 2),
-        "baseline_note": _baseline_note(lab_base, core_base),
+        "baseline_note": _baseline_note(lab_base, core_base, host_adj),
         "provenance": {
             "lab_adu": tag_block(
                 _round_homes(lab_adu),

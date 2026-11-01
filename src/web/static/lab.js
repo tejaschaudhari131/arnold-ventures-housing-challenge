@@ -6,7 +6,7 @@
   var ORDER = ["adu", "missing_middle", "parking", "fees", "package", "approval"];
   var BENCHMARKS = ["adu", "missing_middle", "parking", "fees"];
   var WALK = [
-    { title: "Pennsylvania is loaded", text: "All 67 counties and four Handbook scenarios are already computed. Baseline is 111,016 five-year completions. Unknown zoning is a prior, never zero." },
+    { title: "Pennsylvania is loaded", text: "All 67 counties and four Handbook scenarios are already computed. Baseline is 111,313 five-year completions. Unknown zoning is a prior, never zero." },
     { title: "Pick a reform", text: "Start with ADUs: one detached or semi-detached ADU of at least 600 sq ft, no added parking." },
     { title: "Open Allegheny County", text: "Allegheny is the walkthrough. Pittsburgh's October 2026 ADU ordinance is observed; the rest of the county is unknown." },
     { title: "Why this result?", text: "Every input is tagged observed, assumed, or calculated. The ADU pro forma is illustrative." },
@@ -17,7 +17,7 @@
     "pro forma": "A simple cost-and-value worksheet for one building type.",
     "uptake hazard": "The yearly chance a feasible lot actually starts a project.",
     "prior": "A published guess used when a local rule has not been read.",
-    Envelope: "The likely range from 200 test runs of the published assumptions.",
+    Envelope: "The likely range from 2,000 test runs of the published assumptions.",
     Zoning: "How the answer moves if unknown local rules are more or less strict.",
     "ACS MOE": "Census survey error on the counts and prices that feed the model."
   };
@@ -504,7 +504,7 @@
     var names = Object.keys(overrides);
     if (!names.length) {
       live = null;
-      envelopeNote.textContent = "Move one slider. Central values, zoning bounds, and the ACS band recompute. The p10–p90 envelope stays on the locked 200-draw run.";
+      envelopeNote.textContent = "Move one slider. Central values, zoning bounds, and the ACS band recompute. The p10–p90 envelope stays on the locked " + ((locked && locked.draws) ? Number(locked.draws).toLocaleString("en-US") : "2,000") + "-draw run.";
       renderAll();
       if (whyOpen) loadWhy();
       setStatus("");
@@ -653,7 +653,7 @@
   document.getElementById("reset").addEventListener("click", function () {
     overrides = {};
     live = null;
-    envelopeNote.textContent = "Move one slider. Central values, zoning bounds, and the ACS band recompute. The p10–p90 envelope stays on the locked 200-draw run.";
+    envelopeNote.textContent = "Move one slider. Central values, zoning bounds, and the ACS band recompute. The p10–p90 envelope stays on the locked " + ((locked && locked.draws) ? Number(locked.draws).toLocaleString("en-US") : "2,000") + "-draw run.";
     renderAll();
     if (whyOpen) loadWhy();
     setStatus("");

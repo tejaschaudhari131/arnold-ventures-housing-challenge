@@ -67,6 +67,19 @@ def allegheny_table(doc: dict | None = None) -> str:
     return "\n".join(lines)
 
 
+def sampling_error_sentence(code: str = "PA", doc: dict | None = None) -> str:
+    locked = doc or load_results(code, allow_compute=False)
+    sw = locked["statewide"]["results"]
+    bits = []
+    for sid in ORDER:
+        se = sw[sid].get("p50_se", 0.0)
+        bits.append(f"{LABELS[sid]} ±{homes(se)}")
+    return (
+        f"Envelope sampling error (bootstrap SE of the statewide P50, "
+        f"{locked['draws']:,} draws, seed {locked['seed']}): " + "; ".join(bits) + "."
+    )
+
+
 def nh_table(doc: dict | None = None) -> str:
     sw = (doc or load_results("NH", allow_compute=False))["statewide"]["results"]
     short = {

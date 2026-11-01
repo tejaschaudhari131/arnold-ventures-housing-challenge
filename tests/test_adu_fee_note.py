@@ -15,6 +15,7 @@ from src.lab.config import central_params
 from src.lab.explain import brief_markdown
 from src.lab.results import load_results
 from src.model.assumptions import load_assumptions
+from src.plain import homes
 from src.web.server import App, make_handler
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -40,9 +41,8 @@ def test_comparison_reads_both_engines_and_both_fees():
     assert doc["lab_fee"] == int(round(central_params()["fee_per_unit"]))
     assert doc["core_fee"] == int(round(catalog.spec("adu_fee_per_unit")["central"]))
     assert doc["core_adu"] > doc["lab_adu"]
-    assert doc["after_fee"] > doc["lab_adu"]
-    assert doc["after_yield"] > doc["after_fee"]
-    assert doc["lab_baseline"] == 111016
+    assert doc["after_lags"] > 0
+    assert doc["lab_baseline"] == int(round(lab["statewide"]["results"]["baseline"]["central"]))
     assert doc["core_baseline"] == 108950
     assert "2023-2025" in doc["baseline_note"]
     assert doc["provenance"]["lab_adu"]["tag"] == "calculated"
@@ -51,10 +51,10 @@ def test_comparison_reads_both_engines_and_both_fees():
     note = note_text("docs")
     assert f"{doc['lab_fee']:,.0f}" in note
     assert f"{doc['core_fee']:,.0f}" in note
-    assert "+6,048" in note
-    assert "+46,261" in note
+    assert homes(doc["lab_adu"], signed=True) in note
+    assert homes(doc["core_adu"], signed=True) in note
     assert "/lab" in note
-    assert "111,016" in note
+    assert homes(doc["lab_baseline"]) in note
 
 
 def test_both_pages_render_adu_fee_note():

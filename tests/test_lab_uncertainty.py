@@ -17,6 +17,7 @@ from src.lab.uncertainty import (
     run_envelope,
     run_moe,
     sample_params,
+    summarize,
     switching_value,
     what_would_change,
     zoning_bounds,
@@ -156,8 +157,11 @@ def test_acs_band_scales_with_margins_and_not_with_assumption_bands():
 def test_envelope_params_exclude_zoning_priors_and_locked_constants():
     names = set(envelope_params())
     assert "prior_adu_prohibited" not in names and "prior_mm_prohibited" not in names
+    assert "prior_adu_prohibited_nh_attached" not in names
     assert "fee_per_unit" not in names and "fee_cut_share" not in names
+    assert "pipeline_f0" not in names
     assert "hazard_homeowner" in names
+    assert "pipeline_sigma" in names
 
 
 def test_envelope_is_seeded_and_inside_bands():
@@ -194,6 +198,16 @@ def test_switching_value_is_none_when_band_cannot_flip():
     state = load_state("NH")
     evaluate = county_evaluator(state, state.counties[0])
     assert switching_value(evaluate, P, "parking_market_urban", "package", "parking", "high") is None
+
+
+def test_summarize_reports_bootstrap_sampling_error():
+    values = [float(i) for i in range(40)]
+    bare = summarize(values)
+    assert set(bare) == {"p10", "p50", "p90"}
+    with_se = summarize(values, seed=20261107)
+    assert with_se["p10_se"] >= 0 and with_se["p50_se"] >= 0 and with_se["p90_se"] >= 0
+    again = summarize(values, seed=20261107)
+    assert again == with_se
 
 
 def test_evaluate_county_variants_do_not_change_named_scenarios():

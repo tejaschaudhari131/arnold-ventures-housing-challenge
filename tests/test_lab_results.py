@@ -35,12 +35,17 @@ def test_committed_central_values_reproduce(code):
 @pytest.mark.parametrize("code", sorted(LAB_STATES))
 def test_result_layers_are_reported_separately(code):
     doc = json.loads(sample_path(code).read_text())
-    assert doc["draws"] >= 100
+    assert doc["draws"] >= 2000
+    assert "elasticity_zero" in doc["statewide"]
+    assert doc["statewide"]["elasticity_zero"]["implied_cost_elasticity"] < 0.01
     for row in doc["statewide"]["results"].values():
         assert row["p10"] <= row["p50"] <= row["p90"]
         assert row["zoning_low"] <= row["zoning_high"]
         assert row["logical_low"] <= row["zoning_low"] + 0.1 and row["zoning_high"] <= row["logical_high"] + 0.1
         assert row["acs_moe"] >= 0
+        assert row["p50_se"] >= 0
+        assert row["p10_se"] >= 0
+        assert row["p90_se"] >= 0
     top = doc["statewide"]["top_benchmark_pair"]
     assert top["leader"] == doc["statewide"]["benchmark_ranking"][0]
     assert len(doc["counties"]) == (67 if code == "PA" else 10)
