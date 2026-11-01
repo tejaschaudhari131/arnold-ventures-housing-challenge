@@ -48,6 +48,7 @@
 
   var stateCode = "PA";
   var scenarioId = "missing_middle";
+  var unknownOn = [];
   var selectedFips = "42003";
   var on = new Set(["missing_middle"]);
   var mapId = "";
@@ -448,15 +449,18 @@
       unknownState = "";
       stateCode = st;
     }
+    unknownOn = [];
     if (q.has("on")) {
       var raw = q.get("on") || "";
       on = new Set();
       if (raw && raw !== "none") {
         raw.split(",").forEach(function (part) {
+          if (!part) return;
           var id = ALIAS[part] || part;
           if (BENCHMARKS.indexOf(id) >= 0) on.add(id);
+          else unknownOn.push(id);
         });
-        if (!on.size) on.add("missing_middle");
+        if (!on.size && !unknownOn.length) on.add("missing_middle");
       }
     }
     if (q.has("ov")) {
@@ -1388,18 +1392,28 @@
     }
   }
 
-  function loadWhy() {
-    if (!selectedFips) { whyBody.innerHTML = "<p>Pick a county.</p>"; return; }
-    var ids = selectedIds();
-    var sid = !ids.length || (ids.length > 1 && ids.length < 4) ? "selection" : (ids.length === 4 ? "package" : ids[0]);
-    var payload = {
+  function whyRequest() {
+    var ids = selectedIds().slice();
+    unknownOn.forEach(function (id) {
+      if (ids.indexOf(id) < 0) ids.push(id);
+    });
+    var sid = "selection";
+    if (!unknownOn.length) {
+      if (ids.length === 4) sid = "package";
+      else if (ids.length === 1) sid = ids[0];
+    }
+    return {
       state: stateCode,
       county: selectedFips,
       scenario: sid,
       reforms: ids,
       overrides: overrides
     };
-    post("/api/lab/why", payload).then(function (doc) {
+  }
+
+  function loadWhy() {
+    if (!selectedFips) { whyBody.innerHTML = "<p>Pick a county.</p>"; return; }
+    post("/api/lab/why", whyRequest()).then(function (doc) {
       whyDoc = doc;
       renderWhy();
       renderKeyPoints();
@@ -1418,11 +1432,13 @@
   function funnelCell(stage, name) {
     if (!stage) return "—";
     var value = stage[name];
-    if (value === null || value === undefined) return "—";
+    if (value === null || value === undefined || value === "") return "—";
+    var n = Number(value);
+    if (!isFinite(n)) return "—";
     if (name === "completion" || name === "timing" || name === "homes_per_lot" || name === "go_ahead_share") {
-      return (100 * Number(value)).toFixed(1) + "%";
+      return (100 * n).toFixed(1) + "%";
     }
-    return integer(value);
+    return integer(n);
   }
 
   function renderLotFunnel(whyDoc) {
@@ -1870,6 +1886,8 @@
   if (typeof window !== "undefined") {
     window.StateframeLab = {
       selection: function () { return selectedIds().slice(); },
+      whyRequest: whyRequest,
+      funnelCell: funnelCell,
       overrideMap: function () { return Object.assign({}, overrides); },
       describeRange: describeRange,
       writeUrl: writeUrl,

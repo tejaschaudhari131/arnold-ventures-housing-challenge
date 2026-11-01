@@ -16,11 +16,8 @@ statewide:
   parking_cap_per_unit: 1.0
   parking_cap_effective: "2025-09-13"
   note: >-
-    RSA 674:71–73 (2017) requires every municipality that allows single-family
-    homes to allow one accessory dwelling unit. HB 577 (effective 2025-07-01)
-    made one attached or detached ADU allowed by right, let towns require up to
-    one added parking space, and let towns prohibit ADUs on attached
-    single-family homes such as townhouses. The attached-host prior is
+    RSA 674:71-73 (2016 ch. 6, effective 2017-06-01) required towns to allow one attached ADU (by right, conditional use, or special exception); detached ADUs were optional until 2025 ch. 197 (HB 577, effective 2025-07-01) made one attached or detached ADU allowed by right.
+    The attached-host prior is
     prior_adu_prohibited_nh_attached (0.10 / 0.30 / 0.60), not the PA 0.85
     prior: the default is allowed unless a town acts (RSA 674:72 I–II).
     ASSUMPTION, widened range; the 2024 MLUR survey has no townhouse field.
@@ -45,16 +42,20 @@ rules:
     status: allowed_with_parking
     parking_spaces: 1
     effective: "2025-07-01"
-    confidence: medium
+    confidence: high
     summary: >-
-      One ADU is legal on every detached single-family lot. The current RSA
-      674:72 text says attached or detached as a matter of right. The pre-2025
-      text was not retrieved, so the date detached ADUs became by-right is
-      UNVERIFIED and is recorded as the 2025-07-01 effective date of chapter
-      197:2 rather than 2017-06-01. Towns may require one added parking space;
-      the Handbook benchmark requires none. The share of towns that impose the
-      space is an assumption (prior_adu_parking_required).
+      HB 577 (2025 ch. 197, sections 197:2 and 197:3) allows one attached or
+      detached ADU by right on a detached single-family lot from 2025-07-01.
+      Detached ADUs were optional for towns before that date, and some towns
+      already allowed them. That pre-reform share is
+      nh_detached_adu_already_legal (about 129/227, assumed; NHMA 2024 survey,
+      figure not re-verified). Only the remaining share becomes newly legal on
+      2025-07-01, and the adoption lag runs from that date. Towns may require
+      one added parking space; the Handbook benchmark requires none. The share
+      of towns that impose the space is an assumption
+      (prior_adu_parking_required).
     sources:
+      - https://gc.nh.gov/bill_status/legacy/bs2016/billText.aspx?id=125
       - https://gc.nh.gov/rsa/html/LXIV/674/674-72.htm
 
   - id: nh_adu_electrical_panel_2026

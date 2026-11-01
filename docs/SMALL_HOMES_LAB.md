@@ -62,9 +62,9 @@ The terms in the table are defined as follows:
 
 ## 6. Baseline and increments
 
-**Pipeline baseline.** The 2023–2025 Building Permits Survey county average, by structure size, × 5 years × an assumed completion share. Pipeline shares are 0.93 for 1-unit, 0.90 for 2–4, and 0.84 for 5+. Census does not publish an abandonment rate, so those shares are labeled assumed. The lot path uses the screening completion ratios instead.
+**Pipeline baseline.** The 2023–2025 Building Permits Survey county average, by structure size, × 5 years × an assumed completion share. Shares are 0.93 for 1-unit, 0.90 for 2–4, and `completion_ratio_mf` (0.90) for 5+. Census does not publish an abandonment rate, so those shares are labeled assumed. The lot path uses the same screening ratios (ADU 0.92, 2–4 0.90, 5+ 0.90).
 
-The Lab baseline is 110,974. The core Pennsylvania baseline is 113,269. Both use the 2023–2025 county permit files. Core completion ratios are 0.93/0.90/0.90 with an explicit build lag. The Lab pipeline still uses 0.93/0.90/0.84, and it adds a host adjustment for homes the permit window cannot contain yet.
+For Pennsylvania the Lab pipeline baseline equals the core screening baseline (113,269). The published Lab baseline is higher by the host adjustment for homes the permit window cannot contain yet. New Hampshire matches the same way on the pipeline; its headline baseline also includes the host adjustment and the parking-cap response.
 
 **Baseline adjustments.** Homes the permit window cannot contain yet are added to Baseline:
 
@@ -129,21 +129,21 @@ The screening Monte Carlo (`src/model/sensitivity.py`, also section 12 of `docs/
 
 **Auckland ceiling.** Greenaway-McGrevy & Phillips 2023 (JUE 136:103555; https://doi.org/10.1016/j.jue.2023.103555) report 21,808 extra dwellings permitted over five years, about 4.11% of Auckland's regional dwelling stock. Five-year Missing Middle, ADU + Missing Middle, and package net completions divided by ACS B25001 housing stock must stay at or under 4.1% for every state and county output (`tests/test_lab_engine.py`). Any result above that needs explicit justification.
 
-In Pennsylvania, Central estimate favors Missing middle; Fees ahead in 46% of draws (draw medians Fees 4,117 vs MM 4,346) (924 of 2,000). The Lab envelope is 2,000 assumption draws. It would flip at any of these values:
+In Pennsylvania, Central estimate favors Missing middle; Fees ahead in 46% of draws (draw medians Fees 4,134 vs MM 4,346) (922 of 2,000). The Lab envelope is 2,000 assumption draws. It would flip at any of these values:
 
-- homeowner uptake hazard (feasible lots) 0.27% a year (central 0.30% a year)
-- conversion / addition hard cost per added home $167,311 (central $160,000)
-- homeowner uptake hazard (all lots) 0.17% a year (central 0.15% a year)
-- capitalization rate 6.2% (central 6.0%)
-- new-home rent premium over acs median 105.8% (central 110.0%)
-- operating cost share 32.7% (central 30.0%)
-- lot-to-lot margin spread 0.295 (central 0.25)
-- soft costs 22.6% (central 18.0%)
-- homeowner hurdle margin 0.055 (central 0)
-- adu hard cost $337 (central $275)
-- conversion / addition permit-to-completion 1.35 (central 1)
-- adu size 751.13 (central 600)
-- cost elasticity of 0 (`pipeline_sigma` → 1,000): fees +85, parking +94 (central ε 1.76)
+- project-to-project margin spread 0.4821 (central 0.52)
+- homeowner uptake hazard (feasible lots) 0.28% a year (central 0.30% a year)
+- conversion / addition hard cost per added home $164,301 (central $160,000)
+- capitalization rate 6.1% (central 6.0%)
+- new-home rent premium over ACS median 107.6% (central 110.0%)
+- operating cost share 31.5% (central 30.0%)
+- homeowner hurdle margin 0.0191 (central 0)
+- lot-to-lot margin spread 0.2149 (central 0.25)
+- pipeline response lag 0.5858 (central 0.75)
+- small multifamily permit-to-completion 1.19 (central 1.5)
+- conversion / addition permit-to-completion 1.21 (central 1)
+- soft costs 23.0% (central 18.0%)
+- cost elasticity of 0 (`pipeline_sigma` → 1,000): fees +27, parking +100 (central ε 1.76)
 
 
 **Package decomposition.** The package is decomposed in steps, and each step is an exact model run:
@@ -156,30 +156,30 @@ The decomposition also reports the separate scenarios summed, to show what doubl
 
 | PA step | Homes |
 | ------- | ----- |
-| Legalization if summed (ADU + missing middle) | 12,021 |
-| Legalization resolved, one option per lot | 8,544 |
-| + fee cut | +8,957 |
-| + parking minimums removed | +522 |
-| **Package** | **18,023** |
-| Sum of the four separate scenarios | 17,584 |
+| Legalization if summed (ADU + missing middle) | 8,517 |
+| Legalization resolved, one option per lot | 5,424 |
+| + fee cut | +7,321 |
+| + parking minimums removed | +540 |
+| **Package** | **13,285** |
+| Sum of the four separate scenarios | 14,178 |
 
-Resolution removes 3,477 double-counted homes. The fee cut adds more inside the package than alone (5,280), because it also improves the newly legal options. The net interaction is +439.
+Resolution removes 3,093 double-counted homes. The fee cut adds more inside the package (7,321) than the fee scenario alone (5,360), because it also improves the newly legal options. The net interaction is −893.
 
 ## 9. Why the Lab's ADU total differs from the core engine's
 
-Lab at the Handbook's $50,000 fee: +2,742. Lab at a $6,000 fee: +5,652. Core at a $6,000 fee: +30,213. The same $6,000 fee does not match because the Lab is a county-level model and the core uses a different adoption and valuation model. The Lab's Pennsylvania ADU increment (+2,742) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +30,213. Walking the Lab toward the core: value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+14,392); then drop adoption and build lags (+22,481), within about 26 percent of the core. The Lab numbers answer the Handbook scenarios (Handbook $50,000 per-home fees, county-level model). The core numbers are an eleven-state screening model with a $6,000 ADU fee. Pennsylvania package: Lab +13,128, core +46,219. See the Lab at https://stateframe-housing.vercel.app/lab and the core engine at https://stateframe-housing.vercel.app/. The Lab baseline (110,974) and the core baseline (113,269) differ by -2,295. Pennsylvania's core permits are the same 2023-2025 county files as the Lab. Core completion ratios are assumed never-complete shares (0.93/0.90/0.90, with an explicit build lag). The Lab pipeline still uses 0.93/0.90/0.84 (-2,331 is the residual after the host term). The Lab also adds a +36 host adjustment for already-legal homes.
+Lab at the Handbook's $50,000 fee: +2,742. Lab at a $6,000 fee: +5,652. Core at a $6,000 fee: +30,213. The same $6,000 fee does not match because the Lab is a county-level model and the core uses a different adoption and valuation model. The Lab's Pennsylvania ADU increment (+2,742) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +30,213. Walking the Lab toward the core: value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+14,392); then drop adoption and build lags (+22,481), within about 26 percent of the core. The Lab numbers answer the Handbook scenarios (Handbook $50,000 per-home fees, county-level model). The core numbers are an eleven-state screening model with a $6,000 ADU fee. Pennsylvania package: Lab +13,285, core +46,219. See the Lab at https://stateframe-housing.vercel.app/lab and the core engine at https://stateframe-housing.vercel.app/. The Lab baseline (113,305) and the core baseline (113,269) differ by +36. Pennsylvania's core permits are the same 2023-2025 county files as the Lab. The Lab pipeline uses the same never-complete shares as the core (0.93/0.90/0.90), including completion_ratio_mf for 5+ homes, so the pipeline baselines match. The residual after the host term is +0. The Lab also adds a +36 host adjustment for already-legal homes the permit window cannot contain yet.
 
 
 The two engines also answer different questions. The table below moves the Lab's assumptions toward the core engine's one at a time, cumulatively.
 
 | Step | PA ADU homes |
 | ---- | ------------ |
-| Lab central (Handbook $50,000 fee per home, investor yield, adoption and build lags) | 5,617 |
-| Lab with a $6,000 fee instead of the Handbook's $50,000 | 13,130 |
-| Homeowner yield: cap rate 4.5%, no operating share, rent × 0.85 | 12,463 |
-| No adoption lag and no build lag | 19,761 |
+| Lab central (Handbook $50,000 fee per home, investor yield, adoption and build lags) | 2,742 |
+| Lab with a $6,000 fee instead of the Handbook's $50,000 | 5,652 |
+| Homeowner yield: cap rate 4.5%, no operating share, rent × 0.85 | 14,392 |
+| No adoption lag and no build lag | 22,481 |
 
-The two engines also define hosts and lots differently, and after the ADU gate the last step lands about 57% from the core figure rather than on it. The remaining gap is the one-engine-versus-two question, which this milestone does not change.
+The two engines also define hosts and lots differently, and the last step is within about 26 percent of the core figure rather than on it. The remaining gap is the one-engine-versus-two question, which this milestone does not change.
 
 Three choices explain the gap:
 

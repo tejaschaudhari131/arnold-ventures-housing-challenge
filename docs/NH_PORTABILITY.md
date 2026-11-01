@@ -14,8 +14,8 @@ The Lab's second state is New Hampshire: ten counties, no local lot-area extract
 
 `config/lab/evidence/NH.yaml`:
 
-- **RSA 674:72 (HB 577, 2017).** One ADU is allowed on a detached single-family host, with parking. Effective 2017-06-01, so it is in-window: remaining adoption lag is zero. Attached hosts stay unknown and use `prior_adu_prohibited_nh_attached` (0.10 / 0.30 / 0.60), not the Pennsylvania 0.85 prior, because the statute's default is allowed unless a town acts. ASSUMPTION, widened range. Towns may require owner occupancy (179 of 227 zoned jurisdictions); the Lab has no owner-occupancy friction, so that 0.79 share is not applied. RSA 674:72 IV caps an added ADU parking space at one.
-- **SB 284 (Chapter 258, 2025).** Statewide cap of one required parking space per home, effective 2025-09-13. The pipeline response (69 five-year completions) is a Baseline adjustment, not a parking-scenario increment.
+- **RSA 674:72-73 (HB 577, 2025 ch. 197).** One attached or detached ADU is allowed by right on a detached single-family host from 2025-07-01, with up to one parking space. This falls inside the window, so the adoption lag applies from that date. Towns that already allowed detached ADUs before it count as already legal. That share is `nh_detached_adu_already_legal` (central 0.57, band 0.45–0.70), assumed from the NHMA 2024 survey (about 129 of 227 towns; figure not re-verified) and drawn in the Monte Carlo. Attached hosts stay unknown and use `prior_adu_prohibited_nh_attached` (0.10 / 0.30 / 0.60), not the Pennsylvania 0.85 prior, because the statute's default is allowed unless a town acts. ASSUMPTION, widened range. Towns may require owner occupancy (179 of 227 zoned jurisdictions); the Lab has no owner-occupancy friction, so that 0.79 share is not applied.
+- **SB 284 (Chapter 258, 2025).** Statewide cap of one required parking space per home, effective 2025-09-13. The pipeline response (73 five-year completions) is a Baseline adjustment, not a parking-scenario increment.
 
 ADU evidence coverage is 92 percent of hosts. Missing-middle coverage is 0 percent — the same gap as Pennsylvania.
 
@@ -23,19 +23,19 @@ ADU evidence coverage is 92 percent of hosts. Missing-middle coverage is 0 perce
 
 | Scenario | NH increment | Likely range | Zoning | Census survey error |
 | -------- | -----------: | -----------: | -----: | ------------------: |
-| Baseline (level) | 22,099 | 21,041–23,237 | 22,099–22,099 | ±0 |
-| ADUs | +15 | 9–28 | 4–34 | ±1 |
-| Missing middle | +958 | 268–1,704 | 826–1,064 | ±65 |
-| Parking | +3 | 0–13 | 3–3 | ±0 |
-| Fees | +842 | 348–1,063 | 842–842 | ±0 |
-| Package | +1,740 | 808–2,580 | 1,626–1,837 | ±66 |
-| Approval | +1,302 | 898–2,138 | 1,302–1,302 | ±0 |
+| Baseline (level) | 22,788 | 21,147–23,472 | 22,756–22,810 | ±19 |
+| ADUs | +38 | 6–57 | 19–60 | ±3 |
+| Missing middle | +870 | 267–1,499 | 750–966 | ±67 |
+| Parking | +29 | 6–43 | 19–36 | ±2 |
+| Fees | +1,001 | 408–1,161 | 981–1,015 | ±8 |
+| Package | +1,890 | 949–2,583 | 1,749–2,003 | ±72 |
+| Approval | +1,327 | 899–2,185 | 1,327–1,327 | ±0 |
 
-Baseline is the BPS 2023–2025 run-rate plus the SB 284 parking-cap adjustment. The ADU increment is attached-host priors and the no-parking lever — almost all detached hosts already have a legal ADU path. Missing middle is unknown everywhere, so the prior does the work (nearly all `mm2`). Parking is incremental to SB 284's already-in-Baseline cap. Fees use the same $50,000 → $25,000 Handbook lever as Pennsylvania. The package is resolved, not summed. Approval is the discretionary-share pipeline only.
+Baseline is the BPS 2023–2025 run-rate, the same completion shares as the core engine, the SB 284 parking-cap adjustment (73 homes), and a host adjustment. The ADU increment is +38: about 57 percent of detached hosts already allowed a detached ADU and stay in Baseline; the rest became legal on 2025-07-01. Missing middle is unknown everywhere, so the prior does the work (nearly all `mm2`). Parking is incremental to SB 284's already-in-Baseline cap. Fees use the same $50,000 → $25,000 Handbook lever as Pennsylvania. The package is resolved, not summed. Approval is the discretionary-share pipeline only.
 
-Handbook ranking: Missing middle > Fees > ADUs > Parking. The top pair is Missing middle over Fees (42% of draws flip). 9 of ten counties have a close top-benchmark pair.
+Handbook ranking: Fees > Missing middle > ADUs > Parking. The top pair is Fees over Missing middle (47% of draws flip). 9 of ten counties have a close top-benchmark pair.
 
 
 ## What this test is for
 
-A second state with less local data should not require new code. It did not. The ADU result staying small, at +72, is the intended check: a reform that is already law is in Baseline. The host model still counts a background ADU flow of 43 homes over five years on 20,209 lots where ADUs are already legal. NH OPD permit data may undercount ADUs. A team that treated unknown as zero would report a zero missing-middle increment in both states. A team that treated unknown as allowed would erase Baseline. The Lab does neither.
+A second state with less local data should not require new code. It did not. The ADU result staying small, at +38, is the intended check: a reform that is already law is in Baseline. The host model still counts a background ADU flow of 413 homes over five years on 244,313 lots where ADUs are already legal. NH OPD permit data may undercount ADUs. A team that treated unknown as zero would report a zero missing-middle increment in both states. A team that treated unknown as allowed would erase Baseline. The Lab does neither.

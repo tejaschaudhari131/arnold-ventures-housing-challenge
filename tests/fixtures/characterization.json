@@ -9,9 +9,9 @@
     "reform_capacity_basis": "increment"
   },
   "lab_pa": {
-    "baseline_central": {"value": 110974.0, "role": "characterized", "defect": 6},
+    "baseline_central": {"value": 113304.6, "role": "characterized", "defect": 6},
     "adu_central": {"value": 2741.7, "role": "characterized", "defect": 6},
-    "package_central": {"value": 13128.2, "role": "characterized"},
+    "package_central": {"value": 13284.9, "role": "characterized"},
     "adu_mm_joint": {"value": 5423.7, "role": "characterized", "defect": 4, "note": "package_decomposition.legalization_resolved"},
     "adu_mm_sum": {"value": 8517.0, "role": "characterized", "defect": 4, "note": "package_decomposition.legalization_if_summed. The UI still labels partial packages as a simple sum."}
   }

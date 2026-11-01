@@ -79,11 +79,13 @@ def test_county_sum_matches_state(state):
 
 
 def test_lab_packages_after_lot_completion():
-    """D12 re-solves inside the engine. PA matches the first-order 13,128.
-    NH is higher because the detached-ADU effective date is 2025-07-01.
+    """D12 re-solves inside the engine. The published PA package is 13,285
+    after the pipeline reads completion_ratio_mf. NH is 1,890: the detached
+    ADU effective date is 2025-07-01, and towns that already allowed detached
+    ADUs stay in the baseline.
     """
-    assert round(run("PA")["statewide"]["package"]["delta"]) == 13128
-    assert round(run("NH")["statewide"]["package"]["delta"]) == 2109
+    assert round(run("PA")["statewide"]["package"]["delta"]) == 13285
+    assert round(run("NH")["statewide"]["package"]["delta"]) == 1890
 
 
 def doc(state: str) -> dict:

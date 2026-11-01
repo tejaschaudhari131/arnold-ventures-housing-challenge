@@ -103,6 +103,32 @@ class Assumptions:
             if name.startswith("completion_ratio_")
         }
 
+    def lab_completion_lot(self) -> dict[str, Any]:
+        """D12 mapping from a Lab lot option to a screening completion ratio."""
+        ratios = self.completion_ratios()
+
+        def band(name: str) -> dict[str, Any]:
+            row = ratios[name]
+            return {"param": name, "central": row["central"], "low": row["low"], "high": row["high"]}
+
+        return {
+            "status": "decided",
+            "tag": "assumed",
+            "unit": "share",
+            "mapping": {
+                "adu": band("completion_ratio_adu"),
+                "mm2": band("completion_ratio_small"),
+                "mm4": band("completion_ratio_small"),
+                "mm6": band("completion_ratio_mf"),
+            },
+            "note": (
+                "D12, decided: the Lab lot path uses the screening completion ratios. "
+                "ADU lots use completion_ratio_adu; mm2 and mm4 use completion_ratio_small; "
+                "mm6 uses completion_ratio_mf. The Lab pipeline's 5+ share is also "
+                "completion_ratio_mf. Bands are those parameters and are drawn in the Lab Monte Carlo."
+            ),
+        }
+
     def resolve(self, state: str, overrides: dict[str, Any] | None = None) -> dict[str, float]:
         if state not in self.states:
             raise AssumptionError(f"Unknown state '{state}'")

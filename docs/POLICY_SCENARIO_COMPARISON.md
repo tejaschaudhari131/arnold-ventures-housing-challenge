@@ -6,27 +6,27 @@ The Lab is the challenge entry. It compares four Handbook benchmarks — ADUs, m
 
 ## Pennsylvania, statewide
 
-Baseline is 110,974 five-year completions: the 2023–2025 Building Permits Survey run-rate, converted with assumed pipeline completion shares, plus a small host adjustment. Every other column is an increment versus that Baseline. Pennsylvania's core engine now uses the same 2023–2025 county files. Its baseline is 113,269 because its multifamily completion ratio is 0.90 and its host term differs.
+Baseline is 113,305 five-year completions: the 2023–2025 Building Permits Survey run-rate, converted with the same completion shares as the core engine (0.93 / 0.90 / 0.90), plus a host adjustment of 36 homes. Every other column is an increment versus that Baseline. The core baseline is 113,269. The two pipelines match; the published Lab baseline is higher by that host adjustment.
 
 | Scenario | Central | Likely range | Zoning bound | Census survey error |
 | -------- | ------: | -----------: | -----------: | ------------------: |
-| Baseline (level) | 110,974 | 105,660–116,393 | 110,970–110,977 | ±3 |
+| Baseline (level) | 113,305 | 105,247–117,010 | 113,300–113,307 | ±3 |
 | ADUs | +2,742 | 457–4,438 | 2,013–3,303 | ±86 |
 | Missing middle (2–6) | +5,775 | 1,564–9,547 | 4,708–6,568 | ±120 |
-| Parking | +283 | 97–568 | 283–283 | ±0 |
-| Fees | +5,222 | 2,067–6,513 | 5,219–5,224 | ±2 |
-| Package (extra) | +13,128 | 6,309–17,437 | 11,619–14,266 | ±111 |
-| Approval (extra) | +6,524 | 4,492–10,873 | 6,524–6,524 | ±0 |
+| Parking | +301 | 96–561 | 301–301 | ±0 |
+| Fees | +5,360 | 2,047–6,511 | 5,356–5,362 | ±2 |
+| Package (extra) | +13,285 | 6,313–17,512 | 11,776–14,423 | ±111 |
+| Approval (extra) | +6,657 | 4,500–10,926 | 6,657–6,657 | ±0 |
 
 Three uncertainty layers are reported and never added. The envelope is 2,000 seeded triangular draws over the published assumptions, except the zoning priors and the locked Handbook fee. The zoning bound moves only those priors. The ACS band moves host counts, rents, and values by their 90 percent margins and combines the effects in quadrature. Stock-weighted evidence coverage is 13.1 percent for ADUs (Philadelphia prohibited, Pittsburgh allowed as of 2026-10-29) and 0 percent for 2–6 homes. Unknown zoning is a prior, never zero.
 
-Envelope sampling error (bootstrap SE of the statewide P50, 2,000 draws, seed 20261107): Baseline (level) ±98; ADUs ±33; Missing middle (2–6) ±84; Parking ±6; Fees ±40; Package (extra) ±92; Approval (extra) ±73.
+Envelope sampling error (bootstrap SE of the statewide P50, 2,000 draws, seed 20261107): Baseline (level) ±123; ADUs ±33; Missing middle (2–6) ±84; Parking ±6; Fees ±38; Package (extra) ±92; Approval (extra) ±70.
 
-**Ranking of the four Handbook benchmarks: Missing middle > Fees > ADUs > Parking.** Central estimate favors Missing middle; Fees ahead in 46% of draws (draw medians Fees 4,117 vs MM 4,346). That pair is a close call (924 of 2,000 draws) and it flips at a zoning bound, so it is not a Statistical tie: the trailer does not win a majority of draws. F_CA, the judgmental California feasible-lot share, is in the envelope (central 0.5, range 0.3 to 0.7). Rebuilds of four or six homes almost never pencil; the missing-middle increment is nearly all `mm2`. The envelope draws supply elasticity ε ~ triangular(0.25, 1.75, 3.0) and sets σ_p = 0.918/ε.
+**Ranking of the four Handbook benchmarks: Missing middle > Fees > ADUs > Parking.** Central estimate favors Missing middle; Fees ahead in 46% of draws (draw medians Fees 4,134 vs MM 4,346). That pair is a close call (922 of 2,000 draws) and it flips at a zoning bound, so it is not a Statistical tie: the trailer does not win a majority of draws. F_CA, the judgmental California feasible-lot share, is in the envelope (central 0.5, range 0.3 to 0.7). Rebuilds of four or six homes almost never pencil; the missing-middle increment is nearly all `mm2`. The envelope draws supply elasticity ε ~ triangular(0.25, 1.75, 3.0) and sets σ_p = 0.918/ε.
 
-**The package is not a sum.** Legalizing ADUs and 2–6 homes on the same lots, resolved one option per lot, delivers 5,424 homes. Adding the two separate scenarios would count 8,517 (competition reduces that sum by 3,093). The fee cut then adds 7,183 and removing parking minimums adds 521, for a package of 13,128 against 14,022 if the four benchmarks are added. Lot delivery uses the screening completion ratios.
+**The package is not a sum.** Legalizing ADUs and 2–6 homes on the same lots, resolved one option per lot, delivers 5,424 homes. Adding the two separate scenarios would count 8,517 (competition reduces that sum by 3,093). The fee cut then adds 7,321 and removing parking minimums adds 540, for a package of 13,285 against 14,178 if the four benchmarks are added. Lot delivery uses the screening completion ratios.
 
-Implied cost elasticity at central values is 1.75, the Saiz 2010 metro-level mean (QJE 125(3); https://doi.org/10.1162/qjec.2010.125.3.1253). F0 is fixed at 0.5; the envelope draws ε ~ triangular(0.25, 1.75, 3.0) and sets σ_p = 0.918/ε. A probit cannot reach ε = 0; that case is a separate sensitivity row. ASSUMPTION, widened range. At ε = 0 (`pipeline_sigma` → 1,000) the fee increment is +85 and parking is +94.
+Implied cost elasticity at central values is 1.75, the Saiz 2010 metro-level mean (QJE 125(3); https://doi.org/10.1162/qjec.2010.125.3.1253). F0 is fixed at 0.5; the envelope draws ε ~ triangular(0.25, 1.75, 3.0) and sets σ_p = 0.918/ε. A probit cannot reach ε = 0; that case is a separate sensitivity row. ASSUMPTION, widened range. At ε = 0 (`pipeline_sigma` → 1,000) the fee increment is +27 and parking is +100.
 
 ## Allegheny County walkthrough
 
@@ -34,31 +34,31 @@ Allegheny is the worked example: 436,257 single-family hosts, ACS 2020–2024, w
 
 | Scenario | Allegheny increment | Likely range | Zoning | Census survey error |
 | -------- | ------------------: | -----------: | -----: | ------------------: |
-| Baseline (level) | 13,733 | 13,072–14,398 | 13,729–13,736 | ±3 |
+| Baseline (level) | 14,275 | 12,878–14,606 | 14,271–14,278 | ±3 |
 | ADUs | +127 | 11–257 | 93–153 | ±10 |
 | Missing middle | +386 | 67–737 | 323–432 | ±25 |
-| Parking | +76 | 24–130 | 76–76 | ±0 |
-| Fees | +800 | 293–979 | 797–802 | ±2 |
-| Package | +1,504 | 655–1,959 | 1,396–1,584 | ±35 |
-| Approval | +798 | 550–1,330 | 798–798 | ±0 |
+| Parking | +81 | 23–130 | 81–81 | ±0 |
+| Fees | +838 | 291–986 | 835–841 | ±2 |
+| Package | +1,548 | 657–1,977 | 1,440–1,629 | ±35 |
+| Approval | +828 | 550–1,338 | 828–828 | ±0 |
 
-Fees lead ADUs here (gap 421; 31% of draws flip). The county has more pipeline to move and fewer unknown lots that a legalization reform can unlock. Open https://stateframe-housing.vercel.app/lab, pick ADUs, click Allegheny, and open Why this result? Every input is tagged observed, assumed, or calculated. The ADU pro forma in that drawer is illustrative.
+Fees lead missing middle here (gap 453; 20% of draws flip). The county has more pipeline to move and fewer unknown lots that a legalization reform can unlock. Open https://stateframe-housing.vercel.app/lab, pick ADUs, click Allegheny, and open Why this result? Every input is tagged observed, assumed, or calculated. The ADU pro forma in that drawer is illustrative.
 
 ## New Hampshire portability
 
-New Hampshire is the lower-data test: 10 counties, no WPRDC-style lot file, and a statewide ADU statute (RSA 674:72; the detached-host effective date is recorded as 2025-07-01 and is unverified) plus SB 284's one-space parking cap (effective 2025-09-13). ADU evidence coverage is 92 percent. Missing-middle coverage is still 0 percent.
+New Hampshire is the lower-data test: 10 counties, no WPRDC-style lot file, and a statewide ADU statute (RSA 674:72; the detached-host effective date is recorded as 2025-07-01) plus SB 284's one-space parking cap (effective 2025-09-13). ADU evidence coverage is 92 percent. Missing-middle coverage is still 0 percent.
 
 | Scenario | NH increment | Likely range | Zoning | Census survey error |
 | -------- | -----------: | -----------: | -----: | ------------------: |
-| Baseline (level) | 22,686 | 21,426–23,752 | 22,611–22,737 | ±45 |
-| ADUs | +72 | 12–109 | 40–104 | ±5 |
+| Baseline (level) | 22,788 | 21,147–23,472 | 22,756–22,810 | ±19 |
+| ADUs | +38 | 6–57 | 19–60 | ±3 |
 | Missing middle | +870 | 267–1,499 | 750–966 | ±67 |
-| Parking | +62 | 13–94 | 40–79 | ±4 |
-| Fees | +1,168 | 503–1,342 | 1,122–1,200 | ±20 |
-| Package | +2,109 | 1,073–2,805 | 1,922–2,255 | ±64 |
-| Approval | +1,302 | 897–2,172 | 1,302–1,302 | ±0 |
+| Parking | +29 | 6–43 | 19–36 | ±2 |
+| Fees | +1,001 | 408–1,161 | 981–1,015 | ±8 |
+| Package | +1,890 | 949–2,583 | 1,749–2,003 | ±72 |
+| Approval | +1,327 | 899–2,185 | 1,327–1,327 | ±0 |
 
-The ADU increment is small because those ADUs are already legal: they sit in Baseline, not in the reform. SB 284's parking-cap response (69 homes) is also in Baseline. Missing middle still leads, and the MM-versus-fees pair is a close call (42% of draws). The same code, the same assumption file, and the same three uncertainty layers run both states. Switching New Hampshire on at https://stateframe-housing.vercel.app/lab is the portability demonstration. Detail: `docs/NH_PORTABILITY.md`.
+The ADU increment is small (+38) because about 57 percent of detached hosts already allowed a detached ADU, and that slice stays in Baseline. SB 284's parking-cap response (73 homes) is also in Baseline. Fees lead missing middle, and that pair is a close call (47% of draws). The same code, the same assumption file, and the same three uncertainty layers run both states. Switching New Hampshire on at https://stateframe-housing.vercel.app/lab is the portability demonstration. Detail: `docs/NH_PORTABILITY.md`.
 
 ## What the Lab will not say
 
@@ -79,7 +79,7 @@ bash scripts/run.sh                             # http://127.0.0.1:8080/lab
 
 The core Stateframe engine (`src/model/`) answers a different question: statewide completions for all five Handbook reforms, including transit-oriented density, on eleven states. Baseline is the level. Every other column is net completions added. Generated by `src/model/engine.py` from `config/assumptions.yaml`. Do not add these columns to the Lab table.
 
-Pennsylvania's core baseline is 113,269. The Lab baseline is 110,974. Both use 2023–2025 permits for Pennsylvania. The core multifamily completion ratio is an assumed never-complete share of 0.90, with an explicit build lag. The Lab pipeline still uses 0.84 for 5+ homes. Best use in the core package is county-level.
+Pennsylvania's core baseline is 113,269. The Lab pipeline baseline is the same number. The published Lab baseline is 113,305, higher by a host adjustment of 36 homes for already-legal homes the permit window cannot contain yet. Both use 2023–2025 permits for Pennsylvania and the same never-complete shares (0.93 / 0.90 / 0.90), with an explicit build lag. Best use in the core package is county-level.
 
 | State | Tier | Baseline completions | ADUs | Missing middle | TOD | Parking | Fees | Package | Permit data |
 | ----- | ---- | -------------------: | ---: | -------------: | --: | ------: | ---: | ------: | --- |
@@ -95,7 +95,7 @@ Pennsylvania's core baseline is 113,269. The Lab baseline is 110,974. Both use 2
 | RI | 2 | 6,527 | 1,842 | 2,073 | 111 | 55 | 82 | 4,550 | BPS 2022-2024 |
 | NH | 2 | 22,463 | 2,278 | 1,143 | 5 | 102 | 247 | 4,180 | BPS 2023-2025 |
 
-Lab at the Handbook's $50,000 fee: +2,742. Lab at a $6,000 fee: +5,652. Core at a $6,000 fee: +30,213. The same $6,000 fee does not match because the Lab is a county-level model and the core uses a different adoption and valuation model. The Lab's Pennsylvania ADU increment (+2,742) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +30,213. Walking the Lab toward the core: value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+14,392); then drop adoption and build lags (+22,481), within about 26 percent of the core. The Lab numbers answer the Handbook scenarios (Handbook $50,000 per-home fees, county-level model). The core numbers are an eleven-state screening model with a $6,000 ADU fee. Pennsylvania package: Lab +13,128, core +46,219. See the Lab at https://stateframe-housing.vercel.app/lab and the core engine at https://stateframe-housing.vercel.app/. The Lab baseline (110,974) and the core baseline (113,269) differ by -2,295. Pennsylvania's core permits are the same 2023-2025 county files as the Lab. Core completion ratios are assumed never-complete shares (0.93/0.90/0.90, with an explicit build lag). The Lab pipeline still uses 0.93/0.90/0.84 (-2,331 is the residual after the host term). The Lab also adds a +36 host adjustment for already-legal homes.
+Lab at the Handbook's $50,000 fee: +2,742. Lab at a $6,000 fee: +5,652. Core at a $6,000 fee: +30,213. The same $6,000 fee does not match because the Lab is a county-level model and the core uses a different adoption and valuation model. The Lab's Pennsylvania ADU increment (+2,742) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +30,213. Walking the Lab toward the core: value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+14,392); then drop adoption and build lags (+22,481), within about 26 percent of the core. The Lab numbers answer the Handbook scenarios (Handbook $50,000 per-home fees, county-level model). The core numbers are an eleven-state screening model with a $6,000 ADU fee. Pennsylvania package: Lab +13,285, core +46,219. See the Lab at https://stateframe-housing.vercel.app/lab and the core engine at https://stateframe-housing.vercel.app/. The Lab baseline (113,305) and the core baseline (113,269) differ by +36. Pennsylvania's core permits are the same 2023-2025 county files as the Lab. The Lab pipeline uses the same never-complete shares as the core (0.93/0.90/0.90), including completion_ratio_mf for 5+ homes, so the pipeline baselines match. The residual after the host term is +0. The Lab also adds a +36 host adjustment for already-legal homes the permit window cannot contain yet.
 
 Rank reforms by units inside one model. The primary outcome is homes, not the percent lift. The fee cut is the most stable core-engine reform (about 5 to 7 percent of baseline in ten states). Transit-oriented density is local: 10,789 in Virginia, 8 in New Hampshire. Already-legal shares, station counts, and the $50,000 fee stack are assumptions in the core; the Lab locks that fee for the Handbook comparison and applies it to ADUs.
 

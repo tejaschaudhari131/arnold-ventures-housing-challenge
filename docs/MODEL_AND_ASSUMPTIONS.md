@@ -42,6 +42,8 @@ Permit data is the file actually loaded. Pennsylvania and New Hampshire use the 
 
 The fee cut on the baseline pipeline is half of that segment's own fee, divided by that segment's own cost stack. Homes created by a zoning reform carry the fee cut inside their own pro forma only when fees are in the package.
 
+Where the Lab has county permit files (Pennsylvania and New Hampshire), its pipeline baseline is the same sum: five times the 2023–2025 county average, times 0.93 / 0.90 / 0.90. The Lab reads the 5+ share from `completion_ratio_mf`. That pipeline total matches the core baseline. The Lab's published baseline is the pipeline plus a host adjustment for already-legal homes the permit window cannot contain yet, so the two headline baselines are not the same number.
+
 County permit cells are reconciled to the state Building Permits Survey total. Counties present in the county file keep their counts. Any residual is spread to non-reporting counties by housing-unit weight. If the reporting counties already exceed the state, they are scaled down. After reconciliation, county permits sum to the state total.
 
 ## 4. Shared building blocks

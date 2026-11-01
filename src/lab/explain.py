@@ -136,6 +136,14 @@ def clamp_overrides(raw: Any) -> dict[str, float]:
     return out
 
 
+def _screening_completion_block() -> tuple[dict[str, Any], dict[str, Any]]:
+    """Same completion ratios and D12 mapping as /api/assumptions."""
+    from src.model.assumptions import load_assumptions as load_screening
+
+    assumptions = load_screening()
+    return assumptions.completion_ratios(), assumptions.lab_completion_lot()
+
+
 def assumption_catalog() -> dict[str, Any]:
     doc = load_assumptions()
     params = []
@@ -164,6 +172,8 @@ def assumption_catalog() -> dict[str, Any]:
         "seed": doc["monte_carlo_seed"],
         "reconciliation_note": load_ui()["reconciliation_note"],
         "parameters": params,
+        "completion_ratios": _screening_completion_block()[0],
+        "lab_completion_lot": _screening_completion_block()[1],
         "scenarios": [
             {
                 "id": sid,
@@ -533,7 +543,14 @@ def _with_reference(row: dict[str, Any], locked_row: dict[str, Any] | None) -> d
     return out
 
 
-def _layer_row(sid: str, central: dict[str, Any], bounds: dict[str, float], moe: float) -> dict[str, Any]:
+def _layer_row(
+    sid: str,
+    central: dict[str, Any],
+    bounds: dict[str, float],
+    moe: float,
+    *,
+    keep_baseline: bool = True,
+) -> dict[str, Any]:
     field = "delivery" if sid == "baseline" else "delta"
     source = central[sid]
     out = {
@@ -553,6 +570,9 @@ def _layer_row(sid: str, central: dict[str, Any], bounds: dict[str, float], moe:
         for key in ("eligible", "feasible", "host_delta", "pipeline_delta", "timing_delta"):
             out[key] = source.get(key, 0.0)
         out["by_option"] = {k: v for k, v in source.get("by_option", {}).items() if abs(v) >= 0.05}
+        from src.lab.results import _funnel
+
+        out["funnel"] = _funnel(source.get("funnel"), keep_baseline=keep_baseline)
     return out
 
 
@@ -654,7 +674,13 @@ def recompute(code: str, overrides: dict[str, float] | None = None, county_key: 
                 "name": row["name"],
                 "results": {
                     sid: _with_reference(
-                        _layer_row(sid, row["scenarios"], cb[sid], moe["county"][index][sid]),
+                        _layer_row(
+                            sid,
+                            row["scenarios"],
+                            cb[sid],
+                            moe["county"][index][sid],
+                            keep_baseline=False,
+                        ),
                         locked_cells.get(sid),
                     )
                     for sid in ["baseline"] + sids

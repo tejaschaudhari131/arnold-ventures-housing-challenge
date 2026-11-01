@@ -254,6 +254,10 @@ params:
     {low: 0.10, central: 0.30, high: 0.60, unit: probability, group: zoning, ui: true, zoning_bound: true,
      label: NH attached-host ADU prohibited (townhouse exception),
      rationale: "ASSUMPTION, widened range. RSA 674:72 I–II: one ADU is allowed as of right on attached or detached single-family hosts unless a town acts to prohibit ADUs on attached homes; if the ordinance is silent, the ADU is permitted. No count of towns that opt out exists (2024 MLUR survey has no townhouse field). https://gc.nh.gov/rsa/html/LXIV/674/674-72.htm"}
+  nh_detached_adu_already_legal:
+    {low: 0.45, central: 0.57, high: 0.70, unit: share, group: zoning, ui: true,
+     label: NH detached ADUs already legal before 2025,
+     rationale: "Assumed. About 129 of 227 towns already allowed a detached ADU before 2025 ch. 197 (HB 577), about 0.57. Source: NHMA 2024 survey, figure not re-verified. Only the remaining share becomes newly legal on 2025-07-01. Drawn in the Monte Carlo. https://gc.nh.gov/bill_status/legacy/bs2016/billText.aspx?id=125"}
   prior_mm_prohibited:
     {low: 0.80, central: 0.90, high: 0.97, unit: probability, group: zoning, ui: true, zoning_bound: true,
      label: 2–6 homes prohibited where zoning is unknown,
@@ -297,7 +301,7 @@ params:
   completion_share_5plus:
     {low: 0.78, central: 0.84, high: 0.90, unit: share, group: pipeline, ui: false,
      label: 5+ home permits completed,
-     rationale: "Assumed. Used only on the permit pipeline. The lot path uses the screening completion ratios (D12), not this pipeline share."}
+     rationale: "Assumed, and no longer read by the pipeline. The pipeline's 5+ share is completion_ratio_mf (D10, central 0.90). This 0.84 central is the old schedule-mixed value, kept so the constant is visible."}
 
   # ---------------------------------------------- approval (extra scenario)
   approval_time_saved_years:

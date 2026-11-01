@@ -65,7 +65,7 @@ def test_baseline_pipeline_matches_hand_calculation():
     expected = 5 * (
         avg["u1"] * P["completion_share_1"]
         + (avg["u2"] + avg["u34"]) * P["completion_share_2to4"]
-        + avg["u5"] * P["completion_share_5plus"]
+        + avg["u5"] * P["completion_ratio_mf"]
     )
     result = evaluate_county(county, state, P, ["baseline"])
     assert result["scenarios"]["baseline"]["pipeline_baseline"] == pytest.approx(expected)
@@ -197,6 +197,26 @@ def test_nh_attached_hosts_use_the_townhouse_prior():
     assert nh_prohibited == pytest.approx(P["prior_adu_prohibited_nh_attached"])
     assert nh_prohibited < pa_prohibited
     assert det_prohibited == pytest.approx(P["prior_adu_prohibited"])
+
+
+def test_nh_detached_already_legal_share_is_not_all_new():
+    from src.lab.engine import years_between
+
+    seg = LegalSegment(
+        share=1.0,
+        adu="allowed_with_parking",
+        mm="prohibited",
+        adu_parking=1.0,
+        adu_effective="2025-07-01",
+    )
+    parts = expand_segment(seg, P, "2027-01-01", [2023, 2024, 2025], state_code="NH", host_type="detached")
+    already = [part for part in parts if "adu" in part.legal_pre]
+    fresh = [part for part in parts if "adu" in part.legal_now and "adu" not in part.legal_pre]
+    assert sum(part.weight for part in already) == pytest.approx(P["nh_detached_adu_already_legal"])
+    assert sum(part.weight for part in fresh) == pytest.approx(1.0 - P["nh_detached_adu_already_legal"])
+    lag_left = max(0.0, P["adoption_lag_years"] - years_between("2025-07-01", "2027-01-01"))
+    assert all(dict(part.lags)["adu"] == pytest.approx(lag_left) for part in fresh)
+    assert all(dict(part.lags)["adu"] == 0.0 for part in already)
 
 
 def test_nh_adu_parking_is_capped_at_one_space():

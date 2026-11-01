@@ -308,6 +308,35 @@ class Partition:
     label: str
 
 
+def _nh_detached_already_legal(
+    adu_states: list[tuple],
+    p: dict[str, float],
+    priors: dict[str, float],
+    state_code: str,
+    host_type: str,
+) -> list[tuple]:
+    """Towns that already allowed a detached ADU stay in the baseline.
+
+    2025 ch. 197 made detached ADUs by right. Before that they were optional,
+    and about 129 of 227 towns already allowed them. Only the remaining share
+    is newly legal on the statute date, so the adoption lag runs from that date.
+    """
+    if state_code != "NH" or host_type != "detached":
+        return adu_states
+    share = float(priors.get("nh_detached_adu_already_legal", p.get("nh_detached_adu_already_legal", 0.0)))
+    share = min(1.0, max(0.0, share))
+    if share <= 0.0:
+        return adu_states
+    split: list[tuple] = []
+    for weight, legal, spaces, effective, label in adu_states:
+        if not legal or weight <= 0.0:
+            split.append((weight, legal, spaces, effective, label))
+            continue
+        split.append((weight * share, True, spaces, None, f"{label}; already allowed before 2025"))
+        split.append((weight * (1.0 - share), True, spaces, effective, f"{label}; newly legal on the statute date"))
+    return split
+
+
 def expand_segment(
     segment: LegalSegment,
     p: dict[str, float],
@@ -348,6 +377,7 @@ def expand_segment(
         ]
     else:
         adu_states = [(1.0, False, 0.0, None, "ADU prohibited (observed)")]
+    adu_states = _nh_detached_already_legal(adu_states, p, priors, state_code, host_type)
     if segment.mm == "unknown":
         mm_states = [(pm, False, None, "2–6 prohibited (prior)"), (1 - pm, True, None, "2–6 allowed (prior)")]
     elif segment.mm == "allowed":
@@ -441,7 +471,8 @@ def pipeline_effect(
     window = sum((1.0 + trend) ** t for t in range(1, int(horizon) + 1))
     annual = {"sf": avg["u1"], "small": avg["u2"] + avg["u34"], "mf": avg["u5"]}
     values = {"sf": avg["v1"], "small": avg["v2"] + avg["v34"], "mf": avg["v5"]}
-    completion = {"sf": p["completion_share_1"], "small": p["completion_share_2to4"], "mf": p["completion_share_5plus"]}
+    # 5+ uses the screening never-complete share (D10), not the old 0.84 pipeline constant.
+    completion = {"sf": p["completion_share_1"], "small": p["completion_share_2to4"], "mf": p["completion_ratio_mf"]}
     build = {"sf": p["build_lag_sf_years"], "small": p["build_lag_newbuild_years"], "mf": p["build_lag_newbuild_years"]}
     soft = 1.0 + p["soft_cost_share"]
     h = p["hurdle_developer"]

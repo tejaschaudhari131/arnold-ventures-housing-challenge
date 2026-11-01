@@ -52,6 +52,20 @@ _PERMISSIONS = (
 )
 
 
+def _reforms_query(query: dict[str, list[str]]) -> list[str]:
+    """Reform ids from a query string. Commas and repeated keys are one list.
+
+    An empty value is an empty selection. Unknown ids are not dropped here;
+    ``why_county`` rejects them with the same 400 as ``POST /api/lab/recompute``.
+    """
+    chosen: list[str] = []
+    for raw in query.get("reforms") or []:
+        for part in str(raw).split(","):
+            if part:
+                chosen.append(part)
+    return chosen
+
+
 def public_error(message: str) -> str:
     """Short 400 text. User input is not repeated."""
     cleaned = []
@@ -167,48 +181,12 @@ class App:
     def assumption_catalog(self, state: str) -> dict[str, Any]:
         self._check_state(state)
         meta = self.assumptions.states[state]
-        ratios = self.assumptions.completion_ratios()
         return {
             "state": state,
             "legal_note": meta.get("legal_note", ""),
             "parameters": self.assumptions.ui_parameters(state),
-            "completion_ratios": ratios,
-            "lab_completion_lot": {
-                "status": "decided",
-                "tag": "assumed",
-                "unit": "share",
-                "mapping": {
-                    "adu": {
-                        "param": "completion_ratio_adu",
-                        "central": ratios["completion_ratio_adu"]["central"],
-                        "low": ratios["completion_ratio_adu"]["low"],
-                        "high": ratios["completion_ratio_adu"]["high"],
-                    },
-                    "mm2": {
-                        "param": "completion_ratio_small",
-                        "central": ratios["completion_ratio_small"]["central"],
-                        "low": ratios["completion_ratio_small"]["low"],
-                        "high": ratios["completion_ratio_small"]["high"],
-                    },
-                    "mm4": {
-                        "param": "completion_ratio_small",
-                        "central": ratios["completion_ratio_small"]["central"],
-                        "low": ratios["completion_ratio_small"]["low"],
-                        "high": ratios["completion_ratio_small"]["high"],
-                    },
-                    "mm6": {
-                        "param": "completion_ratio_mf",
-                        "central": ratios["completion_ratio_mf"]["central"],
-                        "low": ratios["completion_ratio_mf"]["low"],
-                        "high": ratios["completion_ratio_mf"]["high"],
-                    },
-                },
-                "note": (
-                    "D12, decided: the Lab lot path uses the screening completion ratios. "
-                    "ADU lots use completion_ratio_adu; mm2 and mm4 use completion_ratio_small; "
-                    "mm6 uses completion_ratio_mf. Bands are those parameters and are drawn in the Lab Monte Carlo."
-                ),
-            },
+            "completion_ratios": self.assumptions.completion_ratios(),
+            "lab_completion_lot": self.assumptions.lab_completion_lot(),
         }
 
     def simulate(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -535,16 +513,14 @@ def make_handler(app: App):
                 elif path == "/api/lab/assumptions":
                     self._json(200, app.lab_assumptions())
                 elif path == "/api/lab/why":
-                    self._json(
-                        200,
-                        app.lab_why(
-                            {
-                                "state": query.get("state", ["PA"])[0],
-                                "county": query.get("county", ["Allegheny"])[0],
-                                "scenario": query.get("scenario", ["adu"])[0],
-                            }
-                        ),
-                    )
+                    why_payload = {
+                        "state": query.get("state", ["PA"])[0],
+                        "county": query.get("county", ["Allegheny"])[0],
+                        "scenario": query.get("scenario", ["adu"])[0],
+                    }
+                    if "reforms" in query:
+                        why_payload["reforms"] = _reforms_query(query)
+                    self._json(200, app.lab_why(why_payload))
                 elif path == "/api/lab/export":
                     county = query.get("county", [None])[0]
                     fmt = query.get("format", ["md"])[0]
