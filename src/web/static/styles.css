@@ -13,8 +13,18 @@ body {
 .skip {
   position: absolute;
   left: -999px;
+  min-height: 24px;
 }
-.skip:focus { left: 12px; top: 12px; background: white; padding: 8px; z-index: 5; }
+.skip:focus, .skip:focus-visible {
+  left: 12px;
+  top: 12px;
+  background: white;
+  padding: 8px 12px;
+  z-index: 5;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+}
 
 .top {
   display: flex;
@@ -310,7 +320,9 @@ footer p { margin: 0 0 6px; }
   color: var(--ink);
 }
 .skip-map {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
   margin: 0 0 8px;
   font-size: 13px;
 }

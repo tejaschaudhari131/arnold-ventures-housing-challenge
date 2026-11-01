@@ -50,6 +50,7 @@
   var scenarioId = "missing_middle";
   var selectedFips = "42003";
   var on = new Set(["missing_middle"]);
+  var mapId = "";
   var view = "map";
   var locked = null;
   var live = null;
@@ -63,12 +64,12 @@
   var requestId = 0;
   var aduCompare = null;
   var shown = 0;
+  var animToken = 0;
   var lastFocus = null;
   var tourIndex = 0;
   var projBox = null;
 
   var statusEl = document.getElementById("status");
-  var stateList = document.getElementById("state-list");
   var headline = document.getElementById("headline");
   var cards = document.getElementById("cards");
   var extraCards = document.getElementById("extra-cards");
@@ -198,6 +199,29 @@
     return ids.reduce(function (a, k) { return a + Number(cell(row, k).central); }, 0);
   }
 
+  function mapScenarioId() {
+    if (mapId === "package") return "package";
+    if (mapId && BENCHMARKS.indexOf(mapId) >= 0) return mapId;
+    return activeScenario();
+  }
+
+  function countyMapValue(row) {
+    var sid = mapScenarioId();
+    if (sid === "package") return cell(row, "package").central;
+    if (BENCHMARKS.indexOf(sid) >= 0) return Number(cell(row, sid).central);
+    return countyPackageValue(row);
+  }
+
+  function stateNameOf(code) {
+    return code === "NH" ? "New Hampshire" : "Pennsylvania";
+  }
+
+  function countyPhrase(row) {
+    var name = (row && row.name) || "";
+    if (!/ County$/i.test(name)) name = name + " County";
+    return "In " + name + ":";
+  }
+
   function get(path) {
     return fetch(path).then(function (res) {
       if (!res.ok) return res.json().then(function (body) { throw new Error(body.error || res.statusText); });
@@ -229,6 +253,14 @@
       });
       if (!on.size) on.add("missing_middle");
     }
+    var mapped = q.get("map");
+    if (mapped) {
+      if (mapped === "all" || mapped === "package") mapId = "package";
+      else {
+        var mid = ALIAS[mapped] || mapped;
+        mapId = BENCHMARKS.indexOf(mid) >= 0 ? mid : "";
+      }
+    }
     var county = q.get("county");
     if (county) selectedFips = county;
     var v = q.get("view");
@@ -241,6 +273,7 @@
     var q = new URLSearchParams();
     q.set("st", stateCode);
     q.set("on", selectedIds().map(function (id) { return SHORT[id]; }).join(","));
+    if (mapId) q.set("map", mapId === "package" ? "package" : (SHORT[mapId] || mapId));
     if (selectedFips) q.set("county", selectedFips);
     q.set("view", view);
     history.replaceState(null, "", "?" + q.toString() + location.hash);
@@ -249,11 +282,30 @@
   function fillAduFeeNote() {
     var el = document.getElementById("adu-fee-note");
     if (!el || !aduCompare) return;
+    if (el.querySelector("details") || (el.textContent || "").replace(/\s+/g, " ").trim()) return;
     el.innerHTML = aduCompare.notes.lab_html;
   }
 
   function loadAll() {
     var id = ++requestId;
+    var nameEl = document.getElementById("state-name");
+    if (nameEl) nameEl.textContent = stateNameOf(stateCode);
+    if (stateSelect) stateSelect.value = stateCode;
+    if (locked && locked.state !== stateCode) {
+      live = null;
+      shown = 0;
+      animToken += 1;
+      if (headline) headline.innerHTML = "";
+      var countEl = document.getElementById("count");
+      if (countEl) countEl.textContent = "…";
+      var rangeEl = document.getElementById("rangeline");
+      if (rangeEl) rangeEl.textContent = "";
+      var relateEl = document.getElementById("relate");
+      if (relateEl) relateEl.textContent = "";
+      if (countyDetail) { countyDetail.hidden = true; countyDetail.textContent = ""; }
+      var mini = document.getElementById("mini-total");
+      if (mini) { mini.hidden = true; mini.textContent = ""; }
+    }
     setStatus("Loading " + (stateCode === "PA" ? "Pennsylvania's 67 counties" : "New Hampshire's 10 counties") + "…");
     return Promise.all([
       get("/api/lab/results?state=" + stateCode),
@@ -281,7 +333,7 @@
   }
 
   function renderAll() {
-    renderStates();
+    if (!locked || locked.state !== stateCode) return;
     renderHeadline();
     renderCount();
     renderCards();
@@ -301,25 +353,12 @@
     writeUrl();
   }
 
-  function renderStates() {
-    if (!stateList) return;
-    stateList.innerHTML = ["PA", "NH"].map(function (code) {
-      var name = code === "PA" ? "Pennsylvania" : "New Hampshire";
-      var role = code === "PA" ? "primary" : "portability";
-      return '<button type="button" class="state-btn' + (code === stateCode ? " active" : "") +
-        '" data-state="' + code + '"><strong>' + name + "</strong><span>" + role + "</span></button>";
-    }).join("");
-    stateList.querySelectorAll("[data-state]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        changeState(btn.getAttribute("data-state"));
-      });
-    });
-  }
-
   function changeState(code) {
     stateCode = code;
     selectedFips = code === "PA" ? "42003" : null;
     walkStep = 0;
+    shown = 0;
+    animToken += 1;
     loadAll();
   }
 
@@ -356,9 +395,13 @@
       return '<span class="badge-holds">Ranking holds</span>';
     }
     if (isDrawTie(pair) && sw) {
+      var trail = sw.results[pair.trailer];
+      var lead = sw.results[pair.leader];
       return '<span class="badge-close" title="The envelope median ranking disagrees with the central ranking. The ' +
         escapeHtml(threshold) + ' is 10 percent of draws.">Ranking is a tie: ' +
-        escapeHtml(topPairTieClause(sw)) + "</span>";
+        escapeHtml(scenarioLabel(pair.trailer)) + " comes out ahead in " +
+        Math.round(pair.flip_share * 100) + " of 100 test runs (draw medians " +
+        integer(trail.p50) + " vs " + integer(lead.p50) + ").</span>";
     }
     var keep = pair.flip_share != null ? Math.max(1, Math.round((1 - pair.flip_share) * 5)) : 4;
     return '<span class="badge-close" title="The top two Handbook reforms are close enough that a different published assumption can swap them. The ' +
@@ -368,39 +411,41 @@
   }
 
   function answerLine() {
+    var t = packageTotal();
     var sw = docStatewide();
-    var pair = sw.top_benchmark_pair;
-    var pack = sw.results.package;
-    var leader = (sw.benchmark_ranking || BENCHMARKS)[0];
-    var leadRow = sw.results[leader];
-    var adu = sw.results.adu;
-    if (stateCode === "NH") {
-      return "New Hampshire already allows ADUs statewide, so the ADU reform adds little there (" +
-        signed(adu.central) + "). " + scenarioLabel(leader) + " still leads (" +
-        signed(leadRow.central) + "). Same code, same assumptions, a second state.";
+    var baseline = sw.results.baseline.central;
+    if (!on.size) return "Turn on a reform below to start.";
+    if (t.exact) {
+      return "Your package: about " + integer(t.c) + " extra homes (likely " +
+        integer(t.lo) + "–" + integer(t.hi) + ") on top of " +
+        integer(baseline) + " expected.";
     }
-    if (isDrawTie(pair)) {
-      return "In " + locked.name + " over 2027–2031, " + topPairTieClause(sw) +
-        ". All four reforms together add " + signed(pack.central) + " on top of " +
-        integer(sw.results.baseline.central) + " expected.";
-    }
-    return "In " + locked.name + " over 2027–2031, " + scenarioLabel(leader) +
-      " adds the most: about " + signed(leadRow.central) + " homes. All four reforms together add " +
-      signed(pack.central) + " on top of " + integer(sw.results.baseline.central) + " expected.";
+    return "Your package: about " + integer(t.c) +
+      " extra homes (simple sum, not modeled) on top of " +
+      integer(baseline) + " expected.";
   }
 
   function renderHeadline() {
     var sw = docStatewide();
-    var sid = activeScenario();
+    var t = packageTotal();
+    var sid = t.exact && on.size === 1 ? selectedIds()[0] : (t.exact && on.size === 4 ? "package" : activeScenario());
     var row = sw.results[sid] || sw.results.adu;
-    var env = locked.statewide.results[sid] || locked.statewide.results.adu;
     var pair = sw.top_benchmark_pair;
+    var meta = "";
+    if (t.exact && on.size) {
+      meta = '<p class="hero-meta">' + jargon("Envelope") + " " + integer(t.lo) + "–" + integer(t.hi) + tag("calculated") +
+        " · " + jargon("Zoning") + " " + integer(row.zoning_low) + "–" + integer(row.zoning_high) + tag("calculated") +
+        " · " + jargon("ACS MOE") + " ±" + integer(row.acs_moe) + tag("observed") + "</p>";
+    }
+    var nh = "";
+    if (locked.state === "NH") {
+      nh = '<p class="hero-meta">New Hampshire already allows ADUs statewide, so the ADU reform adds ' +
+        signed(sw.results.adu.central) + ". Same code, same assumptions, a second state.</p>";
+    }
     headline.innerHTML =
       '<p class="headline-answer">' + escapeHtml(answerLine()) + tag("calculated") + "</p>" +
-      '<p class="help">' + rankingBadge(pair, sw) + " · " + escapeHtml(rankingLine(sw)) + "</p>" +
-      '<p class="help">' + jargon("Envelope") + " " + integer(env.p10) + "–" + integer(env.p90) + tag("calculated") +
-      " · " + jargon("Zoning") + " " + integer(row.zoning_low) + "–" + integer(row.zoning_high) + tag("calculated") +
-      " · " + jargon("ACS MOE") + " ±" + integer(row.acs_moe) + tag("observed") + "</p>";
+      '<p class="hero-rank">' + rankingBadge(pair, sw) + "</p>" +
+      nh + meta;
     document.getElementById("state-name").textContent = locked.name;
     var years = catalog ? catalog.window_start.slice(0, 4) + "–" +
       (Number(catalog.window_start.slice(0, 4)) + Number(catalog.horizon_years) - 1) : "2027–2031";
@@ -408,14 +453,16 @@
   }
 
   function anim(to) {
+    var token = ++animToken;
     var from = shown;
     var t0 = performance.now();
     var dur = RM ? 0 : 900;
     function step(t) {
+      if (token !== animToken) return;
       var p = dur ? Math.min(1, (t - t0) / dur) : 1;
       var e = 1 - Math.pow(1 - p, 3);
       shown = from + (to - from) * e;
-      document.getElementById("count").textContent = "+" + integer(shown);
+      document.getElementById("count").textContent = "+" + integer(Math.max(0, shown));
       if (p < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
@@ -457,6 +504,11 @@
       ? "That's about " + (t.c / baseline * 100).toFixed(1) + "% more homes than " +
         locked.name + " is expected to finish anyway over five years."
       : "";
+    var mini = document.getElementById("mini-total");
+    if (mini) {
+      mini.hidden = !on.size;
+      mini.textContent = on.size ? ("Your package: +" + integer(t.c) + " extra homes") : "";
+    }
   }
 
   function renderRecon() {
@@ -470,10 +522,7 @@
     }
     box.hidden = false;
     box.textContent = note;
-    if (methods) {
-      methods.hidden = false;
-      methods.textContent = note;
-    }
+    if (methods) methods.hidden = true;
   }
 
   function closeBadgeHtml(k, sw) {
@@ -497,10 +546,10 @@
     cards.innerHTML = rank.map(function (k, i) {
       var row = sw.results[k];
       var pressed = on.has(k);
-      return '<article class="card" role="listitem" aria-pressed="' + pressed + '">' +
+      return '<article class="card" role="listitem">' +
         '<button type="button" class="tog" aria-pressed="' + pressed + '" data-k="' + k + '">' +
-        "<span><span class='help'>#" + (i + 1) + " on its own</span><h3>" + escapeHtml(PLAIN[k]) +
-        "</h3></span><span class='sw' aria-hidden='true'></span></button>" +
+        "<span><span class='help'>#" + (i + 1) + " on its own</span><span class='card-title'>" +
+        escapeHtml(PLAIN[k]) + "</span></span><span class='sw' aria-hidden='true'></span></button>" +
         '<div class="n">' + signed(row.central) + tag("calculated") + "</div>" +
         '<div class="mini" aria-hidden="true"><i style="left:' + (row.p10 / mx * 100) +
         "%;width:" + ((row.p90 - row.p10) / mx * 100) + '%"></i><b style="left:' +
@@ -586,24 +635,23 @@
   function renderChips() {
     var el = document.getElementById("chips");
     var ids = rankedBenchmarks();
+    var shown = mapScenarioId();
     el.innerHTML = ids.map(function (k) {
-      return '<button type="button" aria-pressed="' + on.has(k) + '" data-chip="' + k + '">' +
+      return '<button type="button" aria-pressed="' + (shown === k) + '" data-chip="' + k + '">' +
         escapeHtml(CHIP_LABEL[k]) + "</button>";
     }).join("") +
-      '<button type="button" aria-pressed="' + (on.size === 4) + '" data-chip="all">All four</button>';
+      '<button type="button" aria-pressed="' + (shown === "package") + '" data-chip="all">All four</button>';
     el.querySelectorAll("[data-chip]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var k = btn.getAttribute("data-chip");
-        if (k === "all") {
-          if (on.size === 4) on = new Set([rankedBenchmarks()[0]]);
-          else on = new Set(BENCHMARKS);
-        } else if (on.has(k) && on.size === 1) {
-          return;
-        } else {
-          on = new Set([k]);
-          scenarioId = k;
-        }
-        renderAll();
+        mapId = k === "all" ? "package" : k;
+        renderMap();
+        renderTable();
+        renderChart();
+        renderCountyDetail();
+        renderChips();
+        renderKeyPoints();
+        writeUrl();
         if (whyOpen) loadWhy();
       });
     });
@@ -696,11 +744,11 @@
     }
     var maxAbs = 0;
     docCounties().forEach(function (c) {
-      maxAbs = Math.max(maxAbs, Math.abs(countyPackageValue(c)));
+      maxAbs = Math.max(maxAbs, Math.abs(countyMapValue(c)));
     });
     var paths = geoDoc.counties.map(function (c) {
       var row = countyRow(c.fips);
-      var value = row ? countyPackageValue(row) : 0;
+      var value = row ? countyMapValue(row) : 0;
       var d = (c.rings || []).map(function (ring) {
         return ring.map(function (pt, i) {
           var p = xy(pt[0], pt[1]);
@@ -764,11 +812,10 @@
   function renderCountyLine(fips) {
     var row = countyRow(fips);
     if (!row) return;
-    var ids = selectedIds();
-    var value = countyPackageValue(row);
-    var sid = ids.length === 1 ? ids[0] : ids.length === 4 ? "package" : null;
+    var value = countyMapValue(row);
+    var sid = mapScenarioId();
     var env = sid ? cell(row, sid) : null;
-    var text = row.name + ": " + signed(value) + " extra homes" +
+    var text = countyPhrase(row) + " " + signed(value) + " extra homes" +
       (env ? " (likely " + integer(env.p10) + "–" + integer(env.p90) + ")" :
         ids.length ? " (simple sum; model run pending)" : "") +
       " on top of " + integer(cell(row, "baseline").central) + " expected.";
@@ -787,15 +834,15 @@
   function renderCountyDetail() {
     var row = selectedFips ? countyRow(selectedFips) : null;
     if (!row) { countyDetail.hidden = true; return; }
-    var sid = activeScenario();
+    var sid = mapScenarioId();
     var current = cell(row, sid);
     var env = lockedCell(row.fips, sid) || current;
     var pair = row.top_benchmark_pair;
     var cover = row.coverage || {};
     countyDetail.hidden = false;
     countyDetail.innerHTML =
-      "<p><strong>" + escapeHtml(row.name) + "</strong> — " +
-      scenarioLabel(sid) + " " + signed(countyPackageValue(row)) + tag("calculated") +
+      "<p>" + escapeHtml(countyPhrase(row)) + " " +
+      scenarioLabel(sid) + " " + signed(countyMapValue(row)) + tag("calculated") +
       " (likely " + integer(env.p10) + "–" + integer(env.p90) + tag("assumed") +
       ") on top of " + integer(cell(row, "baseline").central) + " expected " + tag("calculated") +
       ". Eligible " + integer(current.eligible) + tag("calculated") +
@@ -807,16 +854,16 @@
   }
 
   function renderTable() {
-    var sid = activeScenario();
+    var sid = mapScenarioId();
     var rows = docCounties().slice().sort(function (a, b) {
-      return Math.abs(countyPackageValue(b)) - Math.abs(countyPackageValue(a));
+      return Math.abs(countyMapValue(b)) - Math.abs(countyMapValue(a));
     });
     countyBody.innerHTML = rows.map(function (row) {
       var current = cell(row, sid);
       var env = lockedCell(row.fips, sid) || current;
       return "<tr data-fips='" + row.fips + "' class='" + (row.fips === selectedFips ? "selected" : "") + "'>" +
         "<td>" + escapeHtml(row.name) + "</td>" +
-        "<td>" + signed(countyPackageValue(row)) + "</td>" +
+        "<td>" + signed(countyMapValue(row)) + "</td>" +
         "<td>" + integer(current.eligible) + "</td>" +
         "<td>" + integer(current.feasible) + "</td>" +
         "<td>" + integer(env.p10) + "–" + integer(env.p90) + "</td>" +
@@ -835,16 +882,16 @@
     var stage = document.getElementById("chart-stage");
     if (!stage || !locked) return;
     var rows = docCounties().slice().sort(function (a, b) {
-      return countyPackageValue(b) - countyPackageValue(a);
+      return countyMapValue(b) - countyMapValue(a);
     }).slice(0, 15);
-    var sid = activeScenario();
+    var sid = mapScenarioId();
     var max = Math.max.apply(null, rows.map(function (r) {
       var env = lockedCell(r.fips, sid) || cell(r, sid);
-      return Math.max(countyPackageValue(r), env.p90 || 0);
+      return Math.max(countyMapValue(r), env.p90 || 0);
     }).concat([1]));
     var W = 720, rowH = 28, H = 40 + rows.length * rowH;
     var bars = rows.map(function (row, i) {
-      var v = countyPackageValue(row);
+      var v = countyMapValue(row);
       var env = lockedCell(row.fips, sid) || cell(row, sid);
       var y = 24 + i * rowH;
       var x0 = 180, usable = 500;
@@ -874,6 +921,7 @@
       if (tab) {
         tab.classList.toggle("active", onTab);
         tab.setAttribute("aria-selected", onTab ? "true" : "false");
+        tab.tabIndex = onTab ? 0 : -1;
       }
       if (panel && name !== "map") panel.hidden = !onTab;
     });
@@ -881,6 +929,22 @@
     if (view === "map" && !silent) {
       document.getElementById("map-stage").scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "center" });
     }
+  }
+
+  function onViewTabKey(event) {
+    var tabs = ["map", "table", "chart"];
+    var i = tabs.indexOf(view);
+    if (i < 0) i = 0;
+    var next = i;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (i + 1) % tabs.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (i - 1 + tabs.length) % tabs.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = tabs.length - 1;
+    else return;
+    event.preventDefault();
+    setView(tabs[next]);
+    var focus = document.getElementById("tab-" + tabs[next]);
+    if (focus) focus.focus();
   }
 
   function sliderValueText(spec, value) {
@@ -985,7 +1049,7 @@
 
   function loadWhy() {
     if (!selectedFips) { whyBody.innerHTML = "<p>Pick a county.</p>"; return; }
-    var sid = activeScenario();
+    var sid = mapScenarioId();
     var payload = { state: stateCode, county: selectedFips, scenario: sid === "package" ? "package" : sid, overrides: overrides };
     post("/api/lab/why", payload).then(function (doc) {
       whyDoc = doc;
@@ -1058,7 +1122,7 @@
   function renderKeyPoints() {
     var list = document.getElementById("keypoints-list");
     if (!list || !locked) return;
-    var sid = activeScenario();
+    var sid = mapScenarioId();
     var row = selectedFips ? countyRow(selectedFips) : null;
     var current = row ? cell(row, sid) : docStatewide().results[sid];
     var eligible = current.eligible;
@@ -1173,12 +1237,13 @@
     stateCode = "PA";
     on = new Set(BENCHMARKS);
     scenarioId = "package";
+    mapId = "package";
     selectedFips = "42003";
     view = "map";
     writeUrl();
     var go = function () {
       renderAll();
-      var target = document.getElementById("package");
+      var target = document.getElementById("hero");
       if (target) target.scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" });
     };
     if (!locked || locked.state !== "PA") loadAll().then(go);
@@ -1230,7 +1295,7 @@
   }
 
   function exportCsv() {
-    var sid = activeScenario();
+    var sid = mapScenarioId();
     var header = ["county", "fips", "extra_homes", "eligible", "feasible", "p10", "p90", "zoning_low", "zoning_high", "acs_moe"];
     var lines = [header.join(",")];
     docCounties().forEach(function (row) {
@@ -1239,7 +1304,7 @@
       lines.push([
         '"' + row.name.replace(/"/g, '""') + '"',
         row.fips,
-        Math.round(countyPackageValue(row)),
+        Math.round(countyMapValue(row)),
         Math.round(current.eligible),
         Math.round(current.feasible),
         Math.round(env.p10),
@@ -1364,10 +1429,15 @@
   document.getElementById("tour-next").addEventListener("click", function () { showTour(tourIndex + 1); });
   document.getElementById("tour-skip").addEventListener("click", function () { showTour(99); });
   ["map", "table", "chart"].forEach(function (name) {
-    document.getElementById("tab-" + name).addEventListener("click", function () { setView(name); });
+    var tab = document.getElementById("tab-" + name);
+    tab.addEventListener("click", function () { setView(name); });
+    tab.addEventListener("keydown", onViewTabKey);
   });
 
   parseUrl();
+  var bootName = document.getElementById("state-name");
+  if (bootName) bootName.textContent = stateNameOf(stateCode);
+  if (stateSelect) stateSelect.value = stateCode;
   var q = new URLSearchParams(location.search);
   var shouldTry = q.get("try") === "1";
   loadAll().then(function () {

@@ -94,18 +94,38 @@
   border: 0;
   padding: 0;
   margin: 0 0 8px;
-  color: #e6f0ee;
+  color: #f4fbf8;
   font: 16px/1.45 var(--sans);
 }
-.hero .headline-answer { font: 16px/1.45 var(--sans); color: #e6f0ee; }
+.hero .headline-answer {
+  grid-column: auto;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0 0 8px;
+  font: 18px/1.45 var(--sans);
+  color: #f4fbf8;
+}
+.hero .hero-rank,
+.hero .hero-meta,
+.hero .help,
+.hero .sub,
+.hero .rangeline,
+.hero abbr {
+  color: #f4fbf8;
+}
+.hero .rangeline b { color: #fff; }
+.hero .badge-close,
+.hero .badge-holds {
+  color: #6b430c;
+}
 .count {
   font: 700 64px/1 var(--serif);
   color: var(--sun);
   font-variant-numeric: tabular-nums;
 }
-.rangeline { font-size: 15px; color: #d8efe8; }
-.rangeline b { color: #fff; }
-.hero .sub { color: #e6f0ee; max-width: 56ch; }
+.rangeline { font-size: 15px; color: #f4fbf8; }
+.hero .sub { color: #f4fbf8; max-width: 56ch; }
 .bandwrap {
   margin: 10px 0 4px;
   height: 14px;
@@ -184,9 +204,13 @@
 .hero .county-pick { color: #e6f0ee; }
 .hero .county-pick select { color: var(--ink); }
 
+.lab-body { overflow-x: clip; }
 .lab-body .lab-layout {
   grid-template-columns: minmax(0, 1fr) 280px;
 }
+.lab-body main,
+.hero > div,
+.where-why { min-width: 0; }
 .lab-body main { padding: 24px 28px 48px; }
 .cards {
   display: grid;
@@ -204,9 +228,15 @@
   transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 .card:hover, .scenario-card:hover { transform: translateY(-2px); }
-.card[aria-pressed="true"], .scenario-card.selected {
+.card:has(button[aria-pressed="true"]), .scenario-card.selected {
   border-color: var(--teal);
   box-shadow: 0 6px 18px #0e6e5c22;
+}
+.card .card-title {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: var(--serif);
 }
 .card button.tog {
   all: unset;
@@ -327,8 +357,20 @@
   gap: 24px;
   margin: 28px 0;
 }
-.view-tabs { display: flex; gap: 6px; margin: 8px 0; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.where-map,
+.panel-head,
+.view-tabs,
+#chips {
+  min-width: 0;
+}
+.view-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.chips, #chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.exports { flex-wrap: wrap; }
 .chips button[aria-pressed="true"] {
   background: var(--navy);
   color: #fff;
@@ -436,14 +478,27 @@
   .where { grid-template-columns: 1fr; }
   .cards { grid-template-columns: 1fr; }
 }
+.mini-total {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 16;
+  background: var(--navy);
+  color: #fff;
+  padding: 8px 16px;
+  font-weight: 700;
+  min-height: 24px;
+}
+
 @media (max-width: 700px) {
   .hero { padding: 22px 16px; }
   .hero h1 { font-size: 24px; }
-  .count { font-size: 52px; }
+  .count { font-size: clamp(32px, 12vw, 52px); }
   .sf-top { padding: 10px 16px; gap: 8px; flex-wrap: wrap; }
   .sf-top nav { display: none; }
   .tour { left: 12px; right: 12px; width: auto; bottom: 12px; }
   .county-pick { display: block; }
+  .mini-total:not([hidden]) { display: block; }
 }
 @media print {
   .sf-top, .start-here, .hero, .lab-layout, .tour, footer, .no-print { display: none !important; }

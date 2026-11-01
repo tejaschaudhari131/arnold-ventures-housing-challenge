@@ -68,6 +68,10 @@ def test_reduced_motion_and_print_and_slider_size():
     assert "--sun: #f2b632" in TOKENS
     assert "role=\"dialog\"" in LAB
     assert "aria-live=\"polite\"" in LAB
+    assert 'id="state-list"' not in LAB
+    assert "onViewTabKey" in LAB_JS
+    assert 'class="tog" aria-pressed' in LAB_JS
+    assert 'role="listitem" aria-pressed' not in LAB_JS
 
 
 def test_lab_js_tags_envelope_as_calculated():

@@ -106,6 +106,7 @@ def test_census_boundary_files_and_keyboard_map():
 
 def test_shareable_url_and_exports_and_reduced_motion():
     assert 'q.get("st")' in LAB_JS or 'q.get("on")' in LAB_JS
+    assert 'q.get("map")' in LAB_JS
     assert "history.replaceState" in LAB_JS
     assert "exportPng" in LAB_JS
     assert "exportCsv" in LAB_JS
@@ -113,6 +114,41 @@ def test_shareable_url_and_exports_and_reduced_motion():
     assert "prefers-reduced-motion" in LAB_CSS
     assert "prefers-reduced-motion" not in LAB
     assert re.search(r"outline:\s*3px solid var\(--navy\)", (ROOT / "src" / "web" / "static" / "styles.css").read_text())
+
+
+def test_answer_matches_selection_and_plain_tie_badge():
+    assert 'Your package: about " + integer(t.c)' in LAB_JS
+    assert "All four reforms together add" not in LAB_JS
+    assert "comes out ahead in" in LAB_JS
+    assert "In \" + name + \":" in LAB_JS or "In \" + name + \" County" in LAB_JS
+    assert "countyPhrase" in LAB_JS
+    assert "mapId" in LAB_JS
+    assert "onViewTabKey" in LAB_JS
+    assert "locked.state !== stateCode" in LAB_JS
+    assert "animToken" in LAB_JS
+    assert 'id="hero"' in LAB
+    assert 'id="mini-total"' in LAB
+    assert 'id="state-list"' not in LAB
+    assert 'role="listitem" aria-pressed' not in LAB_JS
+    assert "<h3>" not in LAB_JS or 'class="card" role="listitem" aria-pressed' not in LAB_JS
+    assert 'class="card" role="listitem">' in LAB_JS
+    assert 'class="tog" aria-pressed' in LAB_JS
+    assert 'id="adu-fee-note"' in LAB and "<div id=\"adu-fee-note\"" in LAB
+    assert "querySelector(\"details\")" in LAB_JS
+
+
+def test_reflow_and_hero_contrast_and_skip_height():
+    assert re.search(r"\.where-map[\s\S]*min-width:\s*0", LAB_CSS)
+    assert re.search(r"\.panel-head[\s\S]*min-width:\s*0", LAB_CSS)
+    assert re.search(r"\.view-tabs[\s\S]*min-width:\s*0", LAB_CSS)
+    assert re.search(r"#chips[\s\S]*min-width:\s*0", LAB_CSS)
+    assert re.search(r"\.view-tabs\s*\{[^}]*flex-wrap:\s*wrap", LAB_CSS)
+    assert "background: transparent" in LAB_CSS
+    assert ".hero .headline-answer" in LAB_CSS
+    assert "#f4fbf8" in LAB_CSS
+    css = (ROOT / "src" / "web" / "static" / "styles.css").read_text(encoding="utf-8")
+    assert re.search(r"\.skip[^{]*\{[^}]*min-height:\s*24px", css)
+    assert re.search(r"\.skip-map\s*\{[^}]*min-height:\s*24px", css)
 
 
 def test_playhouse_license_and_boundary_disclosures():
