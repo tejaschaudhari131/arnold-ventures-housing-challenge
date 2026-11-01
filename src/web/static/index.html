@@ -72,14 +72,16 @@
         <p id="adu-fee-note" class="adu-fee-note callout"><!-- ADU_FEE_NOTE --></p>
       </section>
 
-      <nav class="tabs no-print" role="tablist" aria-label="Result views">
+      <nav class="tabs no-print" aria-label="Result views">
+        <div class="tablist" role="tablist" aria-label="Result views">
         <button type="button" class="tab active" role="tab" id="tab-compare" data-tab="compare" aria-selected="true" aria-controls="panel-compare">Compare</button>
         <button type="button" class="tab" role="tab" id="tab-math" data-tab="math" aria-selected="false" aria-controls="panel-math">Show the math</button>
         <button type="button" class="tab" role="tab" id="tab-counties" data-tab="counties" aria-selected="false" aria-controls="panel-counties">Counties</button>
         <button type="button" class="tab" role="tab" id="tab-brief" data-tab="brief" aria-selected="false" aria-controls="panel-brief">One-page brief</button>
+        </div>
         <div class="tabs-more">
           <button type="button" id="more-tabs" aria-expanded="false" aria-controls="more-tab-list">For analysts</button>
-          <div id="more-tab-list" hidden>
+          <div id="more-tab-list" hidden role="tablist" aria-label="Analyst views">
             <button type="button" class="tab" role="tab" id="tab-sensitivity" data-tab="sensitivity" aria-selected="false" aria-controls="panel-sensitivity">Sensitivity</button>
             <button type="button" class="tab" role="tab" id="tab-cross" data-tab="cross" aria-selected="false" aria-controls="panel-cross">Cross-check</button>
             <button type="button" class="tab" role="tab" id="tab-case" data-tab="case" aria-selected="false" aria-controls="panel-case">Pennsylvania case study</button>

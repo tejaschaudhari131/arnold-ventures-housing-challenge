@@ -138,6 +138,7 @@ main { padding: 18px 22px 48px; min-width: 0; }
 .ba .v { font-family: var(--serif); font-size: 22px; line-height: 1.15; }
 
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.tabs .tablist { display: flex; flex-wrap: wrap; gap: 6px; }
 .tab, button {
   font: inherit;
   border: 1px solid var(--line);

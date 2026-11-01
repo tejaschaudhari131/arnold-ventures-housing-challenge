@@ -46,6 +46,7 @@ def test_lab_why_drawer_and_table_headers_are_labeled():
 def test_core_tabs_and_card_buttons():
     assert 'role="tablist"' in INDEX
     assert 'role="tab"' in INDEX
+    assert re.search(r"<nav[^>]*role=", INDEX) is None
     assert 'id="more-tabs"' in INDEX
     assert "For analysts" in INDEX
     assert "createElement(\"h3\")" in APP_JS
