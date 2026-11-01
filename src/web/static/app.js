@@ -1045,8 +1045,9 @@
       "p10 " + tagged(mc.p10, "calculated", integer) +
       " · p50 " + tagged(mc.p50, "calculated", integer) +
       " · p90 " + tagged(mc.p90, "calculated", integer) +
-      ". The central point, with sliders at their published values, is " + tagged(central, "calculated", integer) +
-      ". Each draw samples every slider from a triangle on its low / central / high band." + flag;
+      ". The central point, with sliders at their current values, is " + tagged(central, "calculated", integer) +
+      ". Each draw samples every slider from a triangle on its published low-to-high band. " +
+      "An override becomes that slider's mode and the draw still varies." + flag;
     renderCards();
     renderCompare();
     renderBrief();
@@ -1262,7 +1263,7 @@
     setStatus("Running the tornado and the seeded band…");
     post("/api/sensitivity", {
       state: stateCode,
-      scenario: "combined",
+      scenario: scenarioId,
       draws: 80,
       overrides: overrides,
       reforms: reformsPayload()

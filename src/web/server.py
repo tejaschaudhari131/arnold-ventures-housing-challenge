@@ -67,17 +67,51 @@ def public_error(message: str) -> str:
 
 
 def finite_draws(raw: Any, default: int, low: int, high: int) -> int:
+    """Accept an integer in [low, high]. Reject anything else. Do not clamp or echo it."""
+    message = f"draws must be an integer from {low} to {high}."
     if raw is None:
         raw = default
-    if isinstance(raw, bool) or not isinstance(raw, (int, float, str)):
-        raise AssumptionError("draws must be a finite integer.")
-    try:
-        number = float(raw)
-    except (TypeError, ValueError) as exc:
-        raise AssumptionError("draws must be a finite integer.") from exc
-    if not math.isfinite(number):
-        raise AssumptionError("draws must be a finite integer.")
-    return max(low, min(int(number), high))
+    if isinstance(raw, bool):
+        raise AssumptionError(message)
+    if isinstance(raw, str):
+        text = raw.strip()
+        if not text.lstrip("+-").isdigit():
+            raise AssumptionError(message)
+        number = int(text)
+    elif isinstance(raw, int):
+        number = raw
+    elif isinstance(raw, float):
+        if not math.isfinite(raw) or not raw.is_integer():
+            raise AssumptionError(message)
+        number = int(raw)
+    else:
+        raise AssumptionError(message)
+    if number < low or number > high:
+        raise AssumptionError(message)
+    return number
+
+
+_VIEW_LABELS = {
+    "baseline": "the baseline",
+    "adu": "ADUs",
+    "missing_middle": "missing middle",
+    "tod": "transit-oriented density",
+    "parking": "parking reform",
+    "fees": "the fee cut",
+    "combined": "the active package",
+}
+
+
+def _sensitivity_label(scenario: str) -> str:
+    name = _VIEW_LABELS.get(scenario, "the selected view")
+    if scenario == "combined":
+        shown = "Showing the active package"
+    else:
+        shown = f"Showing {name}"
+    return (
+        f"{shown}. An overridden Monte Carlo parameter becomes the mode of its triangle "
+        "and still varies across draws."
+    )
 
 
 def read_doc(path: str) -> bytes | None:
@@ -196,9 +230,7 @@ class App:
                 overrides=overrides,
                 reform_weights=reforms,
             ),
-            "scenario_label": (
-                "Current scenario, including the active assumption overrides and reform mix."
-            ),
+            "scenario_label": _sensitivity_label(scenario),
             "reference": False,
         }
 

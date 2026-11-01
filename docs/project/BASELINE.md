@@ -52,7 +52,7 @@ SHA-256 prefixes of the committed files, and the Lab result stamps:
 | `data/sample/lab/results_PA.json` | `0fe789d6fdd62c7c` |
 | `data/sample/lab/results_NH.json` | `bf9d2a3782cdb128` |
 
-Lab result `fingerprint` field after the horizon-guard edit (source hash, not a numeric regen): PA `c80f359be200f18d`, NH `a1c2fa6fe66b03a7`. Before that edit they were `18b20e94b790213c` and `f0a85db0ee26fda1`.
+Lab result `fingerprint` field after the horizon guard in `src/lab/engine.py` and the unknown-state check in `src/lab/results.py` (source hash, not a numeric regen): PA `c80f359be200f18d`, NH `a1c2fa6fe66b03a7`. Before those edits they were `18b20e94b790213c` and `f0a85db0ee26fda1`.
 
 ## Commands actually run
 

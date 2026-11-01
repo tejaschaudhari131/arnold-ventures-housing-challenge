@@ -13,5 +13,5 @@
 | 2026-11-01 | Downloads require HTTPS and re-check the host allowlist after redirects. | A redirect could leave the allowlist. |
 | 2026-11-01 | CSP allows inline styles and only same-origin scripts. | The pages set `style` attributes from `innerHTML`. There are no inline scripts. |
 | 2026-11-01 | The SBOM is generated from the installed resolution of `requirements.txt`, split into `required` and `optional`. | The old file listed only the three direct pins. |
-| 2026-11-01 | Lab source fingerprints were rewritten after the horizon guard. | `fingerprint()` hashes `src/lab/engine.py`. Result numbers were not regenerated. |
+| 2026-11-01 | Lab source fingerprints were rewritten after the horizon guard and the CLI state check. | `fingerprint()` hashes `src/lab/engine.py` and `src/lab/results.py`. Result numbers were not regenerated. The new stamps are PA `c80f359be200f18d` and NH `a1c2fa6fe66b03a7`. |
 | 2026-11-01 | Phase 2's one-entry redesign is not in this PR. | The owner deferred it. Only the cheap 768/390 fixes are included. |

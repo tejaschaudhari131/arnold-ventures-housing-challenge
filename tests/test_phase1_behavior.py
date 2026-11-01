@@ -135,8 +135,63 @@ def test_sensitivity_uses_the_current_reform_mix():
         )
         assert sim_code == 200 and code == 200
         assert doc["reference"] is False
-        assert "Current scenario" in doc["scenario_label"]
+        assert "active package" in doc["scenario_label"]
+        assert doc["tornado"]["scenario"] == "combined"
         assert doc["tornado"]["central"] == screen["scenarios"]["combined"]["incremental_completions"]
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_sensitivity_follows_the_open_view():
+    httpd = _server()
+    base = f"http://127.0.0.1:{httpd.server_address[1]}"
+    try:
+        _, screen, _ = _post(base, "/api/simulate", {"state": "PA"})
+        code, adu, _ = _post(
+            base,
+            "/api/sensitivity",
+            {"state": "PA", "scenario": "adu", "draws": 20},
+        )
+        assert code == 200
+        assert adu["tornado"]["scenario"] == "adu"
+        assert adu["monte_carlo"]["scenario"] == "adu"
+        assert "Showing ADUs" in adu["scenario_label"]
+        assert "mode" in adu["scenario_label"]
+        assert adu["tornado"]["central"] == screen["scenarios"]["adu"]["incremental_completions"]
+        code, package, _ = _post(
+            base,
+            "/api/sensitivity",
+            {"state": "PA", "scenario": "combined", "draws": 20, "reforms": {"adu": 0}},
+        )
+        assert code == 200
+        assert package["tornado"]["scenario"] == "combined"
+        assert "active package" in package["scenario_label"]
+        assert package["tornado"]["central"] != screen["scenarios"]["combined"]["incremental_completions"]
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_out_of_range_draws_are_rejected():
+    httpd = _server()
+    base = f"http://127.0.0.1:{httpd.server_address[1]}"
+    try:
+        for bad in (0, -3, 2.5, 5, 401, 100000):
+            code, body, _ = _post(
+                base,
+                "/api/sensitivity",
+                {"state": "PA", "scenario": "combined", "draws": bad},
+            )
+            assert code == 400, bad
+            assert body["error"] == "draws must be an integer from 20 to 400."
+        code, ok, _ = _post(
+            base,
+            "/api/sensitivity",
+            {"state": "PA", "scenario": "adu", "draws": 20},
+        )
+        assert code == 200
+        assert ok["monte_carlo"]["draws"] == 20
     finally:
         httpd.shutdown()
         httpd.server_close()

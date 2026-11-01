@@ -89,7 +89,7 @@ Status words: reproducing, fixed on main, fixed here, only on PR #22 (now merged
 - Expected: the active package, including overrides and the reform mix.
 - Observed: hardcoded path through scenario `adu` / 80 draws.
 - Location: `src/web/static/app.js`; `App.sensitivity`; `src/model/sensitivity.py`.
-- Fix: the request sends `scenario: "combined"`, the active overrides, and the reform mix. The completion-ratio slider is wired through `simulate()`. Moving multifamily `completion_ratio_mf` from 0.70 to 0.93 changes both the baseline and the package headline (103,874 vs 112,214 baseline; 73,105 vs 74,763 package, rounded).
+- Fix: the request sends the open view (`scenarioId`): that reform when one reform is selected, and `combined` when the package is selected, plus the active overrides and reform mix. The response label names which one is shown. An override is the Monte Carlo mode and still varies. The completion-ratio slider is wired through `simulate()`. Moving multifamily `completion_ratio_mf` from 0.70 to 0.93 changes both the baseline and the package headline (103,874 vs 112,214 baseline; 73,105 vs 74,763 package, rounded). Draws outside 20–400 are a 400, not a clamped 200.
 - Regression: `test_sensitivity_uses_the_current_reform_mix` and `test_completion_ratio_slider_changes_the_headline`.
 - Owner: this branch.
 

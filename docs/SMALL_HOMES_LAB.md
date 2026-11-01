@@ -123,6 +123,8 @@ A comparison between two scenarios is flagged as a **close call** if any of the 
 
 **One at a time.** Each parameter is moved alone to its low and its high end, with the others at central.
 
+The screening Monte Carlo (`src/model/sensitivity.py`, also section 12 of `docs/MODEL_AND_ASSUMPTIONS.md`) is a different band. There, an overridden parameter becomes the mode of its triangle and still varies between the published low and high. The Lab envelope in the table above stays on the locked central modes.
+
 **Switching values.** For the leading benchmark pair, bisection finds the value of each parameter at which the pair ties, if that value lies inside the parameter's band. This is the "what would change our conclusion" view. A separate ε = 0 row sets `pipeline_sigma` to 1,000 (a probit cannot reach exactly 0).
 
 **Auckland ceiling.** Greenaway-McGrevy & Phillips 2023 (JUE 136:103555; https://doi.org/10.1016/j.jue.2023.103555) report 21,808 extra dwellings permitted over five years, about 4.11% of Auckland's regional dwelling stock. Five-year Missing Middle, ADU + Missing Middle, and package net completions divided by ACS B25001 housing stock must stay at or under 4.1% for every state and county output (`tests/test_lab_engine.py`). Any result above that needs explicit justification.
