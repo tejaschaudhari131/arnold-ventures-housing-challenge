@@ -59,11 +59,15 @@ params:
   hazard_homeowner:
     {low: 0.0006, central: 0.0015, high: 0.0031, unit: per year, group: uptake, ui: true,
      label: Homeowner uptake hazard (all lots),
-     rationale: "All-lots annual ADU start rate, sourced from CA HCD APR permits / DOF E-5 single-detached stock. Low 0.0006 is 2017 (first year after reform); central 0.0015 is the 2017–21 mean; high 0.0031 is the 2022 steady state. Permits, not completions — completion_share_1 already discounts. ASSUMPTION on treating this as an all-lots rate so the engine does not also multiply ADU delivery by F (that would double-count feasibility). Primary tables: HCD APR / data.ca.gov; denominator CA DOF E-5."}
+     rationale: "All-lots annual ADU start rate, sourced from CA HCD APR permits / DOF E-5 single-detached stock. Low 0.0006 is 2017 (first year after reform); central 0.0015 is the 2017–21 mean; high 0.0031 is the 2022 steady state. Permits, not completions — completion_share_1 already discounts. ASSUMPTION on treating this as an all-lots rate. ADU delivery multiplies by a fee/parking gate normalized to CA conditions instead of by F. Primary tables: HCD APR / data.ca.gov; denominator CA DOF E-5. Used for ADUs only."}
+  hazard_homeowner_feasible:
+    {low: 0.0012, central: 0.003, high: 0.0062, unit: per year, group: uptake, ui: true,
+     label: Homeowner uptake hazard (feasible lots),
+     rationale: "ASSUMPTION (F_CA = 0.5), until F_CA is computed. All-lots ADU band (0.0006/0.0015/0.0031) divided by an assumed California feasible share of 0.5. Used only by mm2 (keep the house, add one), which still multiplies by F. Keeps mm2 from taking both the all-lots cut and F."}
   hazard_developer:
-    {low: 0.0003, central: 0.00075, high: 0.00155, unit: per year, group: uptake, ui: true,
+    {low: 0.0006, central: 0.0015, high: 0.0031, unit: per year, group: uptake, ui: true,
      label: Developer rebuild hazard (feasible lots),
-     rationale: "Half the all-lots homeowner hazard (same ×0.5 factor as before). Teardown-and-rebuild still has to buy an occupied house. ASSUMPTION, scaled from the CA ADU all-lots rate."}
+     rationale: "Half the feasible-lot homeowner rate (0.0012/0.003/0.0062), applied once. Teardown-and-rebuild still has to buy an occupied house. ASSUMPTION, scaled from the CA ADU rate."}
 
   # ----------------------------------------------------------- feasibility
   host_margin_sigma:
@@ -263,8 +267,9 @@ params:
      rationale: "Fixed at 0.5. F0 is not identified separately from pipeline_sigma, so varying both double-counts uncertainty. ASSUMPTION."}
   pipeline_sigma:
     {low: 0.31, central: 0.52, high: 3.7, unit: margin, group: pipeline, ui: true,
+     envelope_on: elasticity, elasticity_low: 0.25, elasticity_central: 1.75, elasticity_high: 3.0,
      label: Project-to-project margin spread,
-     rationale: "ASSUMPTION, widened range, anchored to Saiz 2010 (QJE 125(3); https://doi.org/10.1162/qjec.2010.125.3.1253). With F0=0.5 and h=0.15, ε = 0.918/σ_p. Low 0.31 → ε=3; central 0.52 → ε=1.75 (Saiz metro mean); high 3.7 → ε=0.25. A probit cannot reach ε=0; that case is a separate sensitivity row."}
+     rationale: "ASSUMPTION, widened range, anchored to Saiz 2010 (QJE 125(3); https://doi.org/10.1162/qjec.2010.125.3.1253). With F0=0.5 and h=0.15, ε = 0.918/σ_p. The envelope draws ε ~ triangular(0.25, 1.75, 3.0) and sets σ_p = 0.918/ε so the published ε band is the quantity that is sampled. Low 0.31 → ε=3; central 0.52 → ε=1.75 (Saiz metro mean); high 3.7 → ε=0.25. A probit cannot reach ε=0; that case is a separate sensitivity row."}
   land_share:
     {low: 0.12, central: 0.20, high: 0.30, unit: share of total cost, group: pipeline, ui: false,
      label: Land share of total project cost,

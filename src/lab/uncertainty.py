@@ -48,6 +48,7 @@ ZONING_PRIORS = (
     "prior_adu_parking_required",
 )
 ELASTICITY_ZERO_SIGMA = 1000.0
+ELASTICITY_TO_SIGMA = 0.918  # φ(z0)/F0 × (1+h) at F0=0.5, h=0.15; ε = 0.918 / σ_p
 
 
 def compared_scenarios() -> list[str]:
@@ -68,7 +69,15 @@ def sample_params(draws: int, seed: int, base: dict[str, float] | None = None) -
         p = dict(base)
         for name in names:
             spec = param_spec(name)
-            p[name] = rng.triangular(float(spec["low"]), float(spec["high"]), float(spec["central"]))
+            if spec.get("envelope_on") == "elasticity":
+                eps = rng.triangular(
+                    float(spec.get("elasticity_low", 0.25)),
+                    float(spec.get("elasticity_high", 3.0)),
+                    float(spec.get("elasticity_central", 1.75)),
+                )
+                p[name] = ELASTICITY_TO_SIGMA / max(eps, 1e-9)
+            else:
+                p[name] = rng.triangular(float(spec["low"]), float(spec["high"]), float(spec["central"]))
         samples.append(p)
     return samples
 

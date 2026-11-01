@@ -69,11 +69,18 @@ FORMULAS = [
         "note": "T is five years. λ is the homeowner or developer hazard.",
     },
     {
+        "id": "adu_gate",
+        "label": "ADU economics gate",
+        "formula": "gate = min(1, Φ(x_ADU / σ) / Φ(x_ADU,ref / σ))",
+        "tags": ["calculated", "assumed"],
+        "note": "x_ref is the same ADU with fee = 0 and no parking. CA Gov. Code 65852.2(f)(3) (now 66311.5(c)(1)) exempts ADUs of 750 sq ft or less from impact fees. The Lab prototype is 600 sq ft.",
+    },
+    {
         "id": "delivery",
         "label": "Host delivery",
-        "formula": "N = Σ H × F × p(T) × d  (ADU: N = Σ H × p(T) × d)",
+        "formula": "N = Σ H × F × p(T) × d  (ADU: N = Σ H × gate × p(T) × d)",
         "tags": ["calculated"],
-        "note": "Each lot takes at most one option. d is net homes that option adds. The ADU hazard is an all-lots rate, so F is not applied to the ADU delivery term.",
+        "note": "Each lot takes at most one option. d is net homes that option adds. ADUs use the CA all-lots rate times a fee/parking gate normalized to CA conditions (fee 0 and no parking). mm2 uses a feasible-lot hazard and F.",
     },
     {
         "id": "increment",
@@ -272,7 +279,8 @@ def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dic
     used = []
     for name in (
         "cap_rate", "opex_share", "new_unit_rent_premium", "adu_cost_psf", "adu_sqft",
-        "conversion_cost_per_unit", "fee_per_unit", "hazard_homeowner", "host_margin_sigma",
+        "conversion_cost_per_unit", "fee_per_unit", "hazard_homeowner", "hazard_homeowner_feasible",
+        "host_margin_sigma",
         "adoption_lag_years", "prior_adu_prohibited", "prior_mm_prohibited",
     ):
         spec = param_spec(name)

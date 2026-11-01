@@ -11,6 +11,7 @@ from src.lab.config import SAMPLE_DIR, central_params, param_spec
 from src.lab.data import build_state, load_state
 from src.lab.engine import evaluate_county, evaluate_state, package_decomposition, package_variants
 from src.lab.uncertainty import (
+    ELASTICITY_TO_SIGMA,
     compare_pair,
     county_evaluator,
     envelope_params,
@@ -94,7 +95,9 @@ def test_observed_status_does_not_move_with_its_prior():
 def test_new_hampshire_bounds_are_narrow_where_law_is_statewide(nh_zoning):
     adu = zoning_bounds(nh_zoning)["adu"]
     mm = zoning_bounds(nh_zoning)["missing_middle"]
-    assert (adu["high"] - adu["low"]) / max(adu["high"], 1) < (mm["high"] - mm["low"]) / max(mm["high"], 1) + 0.5
+    # Statewide ADU law leaves a narrower absolute bound than unknown 2–6
+    # zoning. Relative widths are a poor check once the ADU increment is small.
+    assert (adu["high"] - adu["low"]) < (mm["high"] - mm["low"])
     assert mm["logical_low"] == pytest.approx(0.0, abs=1e-6)
 
 
@@ -161,7 +164,9 @@ def test_envelope_params_exclude_zoning_priors_and_locked_constants():
     assert "fee_per_unit" not in names and "fee_cut_share" not in names
     assert "pipeline_f0" not in names
     assert "hazard_homeowner" in names
+    assert "hazard_homeowner_feasible" in names
     assert "pipeline_sigma" in names
+    assert param_spec("pipeline_sigma").get("envelope_on") == "elasticity"
 
 
 def test_envelope_is_seeded_and_inside_bands():
@@ -172,8 +177,14 @@ def test_envelope_is_seeded_and_inside_bands():
     for draw in a:
         for name in envelope_params():
             spec = param_spec(name)
-            assert spec["low"] <= draw[name] <= spec["high"]
+            if spec.get("envelope_on") == "elasticity":
+                lo = ELASTICITY_TO_SIGMA / float(spec["elasticity_high"])
+                hi = ELASTICITY_TO_SIGMA / float(spec["elasticity_low"])
+                assert lo - 1e-9 <= draw[name] <= hi + 1e-9
+            else:
+                assert spec["low"] <= draw[name] <= spec["high"]
         assert draw["prior_adu_prohibited"] == P["prior_adu_prohibited"]
+        assert "hazard_homeowner_feasible" in draw
 
 
 # ------------------------------------------------ what would change it

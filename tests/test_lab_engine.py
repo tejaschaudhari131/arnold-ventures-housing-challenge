@@ -20,7 +20,7 @@ from src.lab.engine import (
     scenario_econ,
     timing_share,
 )
-from src.lab.options import Econ, OptionResult, evaluate_option, provided_parking, unit_value
+from src.lab.options import Econ, OptionResult, adu_economics_gate, evaluate_option, provided_parking, unit_value
 from src.model.equations import normal_cdf
 
 P = central_params()
@@ -81,6 +81,10 @@ def test_adu_pro_forma_closed_form():
     assert r.spaces == 0
     assert r.margin == pytest.approx(value / cost - 1)
     assert r.excess == pytest.approx(r.margin - P["hurdle_owner"])
+    ref_cost = P["adu_sqft"] * P["adu_cost_psf"] * (1 + P["soft_cost_share"])
+    assert r.ref_excess == pytest.approx(value / ref_cost - 1 - P["hurdle_owner"])
+    mm2 = evaluate_option("mm2", "detached", "suburban", 965, 1201, 227600, Econ(fee=50000), 0.0, P, None)
+    assert mm2.hazard == pytest.approx(P["hazard_homeowner_feasible"])
 
 
 def test_rebuild_pro_forma_includes_lot_and_demolition():
@@ -165,7 +169,7 @@ def test_lots_too_small_for_the_best_option_take_the_next_one():
     out = resolve_hosts([adu, mm6], {"adu": 1, "mm6": 1}, lots, 100, 0.25, 5)
     small = lots.survival(2000) - lots.survival(4000)
     large = lots.survival(4000)
-    take_mm = normal_cdf(0.1 / 0.25)
+    take_mm = max(0.0, normal_cdf(0.1 / 0.25) - normal_cdf(-0.3 / 0.25))
     assert out.lots_by_option["mm6"] == pytest.approx(100 * large * take_mm)
     assert out.lots_by_option["adu"] == pytest.approx(100 * small + 100 * large * (1 - take_mm))
     assert out.eligible == pytest.approx(100 * (small * 1 + large * 5))
@@ -278,16 +282,43 @@ def test_every_benchmark_adds_homes(pa, nh):
 AUCKLAND_STOCK_CEILING = 0.041
 
 
+def test_adu_economics_gate_normalizes_to_the_ca_reference():
+    assert adu_economics_gate(0.1, 0.1, 0.25) == pytest.approx(1.0)
+    assert adu_economics_gate(0.2, 0.1, 0.25) == pytest.approx(1.0)
+    assert 0.0 < adu_economics_gate(-0.2, 0.1, 0.25) < 1.0
+    assert adu_economics_gate(-0.5, None, 0.25) == pytest.approx(1.0)
+
+
+def test_adu_output_falls_as_fee_per_unit_rises():
+    state = load_state("PA")
+    county = state.county("42101")
+    zero = dict(P)
+    zero["fee_per_unit"] = 0.0
+    low = evaluate_county(county, state, zero, ["baseline", "adu"])
+    high = evaluate_county(county, state, P, ["baseline", "adu"])
+    assert high["scenarios"]["adu"]["delta"] < low["scenarios"]["adu"]["delta"]
+
+
 def test_missing_middle_stays_under_the_auckland_stock_ceiling(pa, nh):
     for result, code in ((pa, "PA"), (nh, "NH")):
         state = load_state(code)
         stock = sum(county.housing_units.value for county in state.counties)
         assert stock > 0
-        statewide = result["statewide"]["missing_middle"]["delta"] / stock
-        assert statewide <= AUCKLAND_STOCK_CEILING, (code, statewide)
+        statewide_mm = result["statewide"]["missing_middle"]["delta"] / stock
+        statewide_combo = (
+            result["statewide"]["adu"]["delta"] + result["statewide"]["missing_middle"]["delta"]
+        ) / stock
+        statewide_pkg = result["statewide"]["package"]["delta"] / stock
+        assert statewide_mm <= AUCKLAND_STOCK_CEILING, (code, "mm", statewide_mm)
+        assert statewide_combo <= AUCKLAND_STOCK_CEILING, (code, "adu+mm", statewide_combo)
+        assert statewide_pkg <= AUCKLAND_STOCK_CEILING, (code, "package", statewide_pkg)
         for county, row in zip(state.counties, result["counties"]):
             units = county.housing_units.value
             if units <= 0:
                 continue
-            share = row["scenarios"]["missing_middle"]["delta"] / units
-            assert share <= AUCKLAND_STOCK_CEILING, (code, county.name, share)
+            mm = row["scenarios"]["missing_middle"]["delta"] / units
+            combo = (row["scenarios"]["adu"]["delta"] + row["scenarios"]["missing_middle"]["delta"]) / units
+            pkg = row["scenarios"]["package"]["delta"] / units
+            assert mm <= AUCKLAND_STOCK_CEILING, (code, county.name, "mm", mm)
+            assert combo <= AUCKLAND_STOCK_CEILING, (code, county.name, "adu+mm", combo)
+            assert pkg <= AUCKLAND_STOCK_CEILING, (code, county.name, "package", pkg)

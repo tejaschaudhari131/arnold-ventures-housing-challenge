@@ -6,7 +6,7 @@
   var ORDER = ["adu", "missing_middle", "parking", "fees", "package", "approval"];
   var BENCHMARKS = ["adu", "missing_middle", "parking", "fees"];
   var WALK = [
-    { title: "Pennsylvania is loaded", text: "All 67 counties and four Handbook scenarios are already computed. Baseline is 111,313 five-year completions. Unknown zoning is a prior, never zero." },
+    { title: "Pennsylvania is loaded", text: "All 67 counties and four Handbook scenarios are already computed. Baseline is 111,061 five-year completions. Unknown zoning is a prior, never zero." },
     { title: "Pick a reform", text: "Start with ADUs: one detached or semi-detached ADU of at least 600 sq ft, no added parking." },
     { title: "Open Allegheny County", text: "Allegheny is the walkthrough. Pittsburgh's October 2026 ADU ordinance is observed; the rest of the county is unknown." },
     { title: "Why this result?", text: "Every input is tagged observed, assumed, or calculated. The ADU pro forma is illustrative." },

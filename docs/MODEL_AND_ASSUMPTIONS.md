@@ -38,7 +38,7 @@ H(g, T) = \begin{cases} T & \text{if } g = 0 \\ \dfrac{(1+g)^T - 1}{g} & \text{o
 
 Central \(g\) is 0, so five-year permits equal \(5 \times\) the annual run-rate exactly. That identity is tested. Completions in a segment equal permits times a completion ratio (central 0.93 single-family, 0.90 small buildings, 0.84 multifamily, 0.92 ADUs). The ratios are a steady-pipeline identity: homes permitted just before the window finish during it, and homes permitted at the end of the window finish after it. What the ratio removes is cancellation and the longer multifamily schedule, not a construction-duration model of each project.
 
-The Lab baseline (111,313) and the core baseline (108,950) use the same completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 permit average and the core uses 2022-2024. That moves Pennsylvania by +1,988, mostly from 5+ unit permits (+2,170). The Lab also adds a +375 host adjustment for already-legal homes.
+The Lab baseline (111,061) and the core baseline (108,950) use the same completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 permit average and the core uses 2022-2024. That moves Pennsylvania by +1,988, mostly from 5+ unit permits (+2,170). The Lab also adds a +123 host adjustment for already-legal homes.
 
 County permit cells are reconciled to the state Building Permits Survey total. Counties present in the county file keep their counts. Any residual is spread to non-reporting counties by housing-unit weight. If the reporting counties already exceed the state, they are scaled down. After reconciliation, county permits sum to the state total.
 

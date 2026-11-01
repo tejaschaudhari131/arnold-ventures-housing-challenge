@@ -9,16 +9,21 @@ For each county c and scenario s the Lab reports three numbers:
   delivery            expected completions inside the five-year window
 
 Host delivery is N = sum_j H_j * F_j * p_j(T) * d_j over host groups j,
-except ADU: N_ADU = sum_j H_j * p_j(T) * d_j (the homeowner hazard is an
-all-lots rate from CA permits / SF stock, so multiplying by F again would
-double-count feasibility).
+except ADU: N_ADU = sum_j H_j * gate_j * p_j(T) * d_j. The ADU hazard is
+an all-lots rate from CA permits / SF stock. The gate is
+min(1, Phi(x_ADU / sigma) / Phi(x_ref / sigma)), with x_ref the same ADU
+at fee 0 and no parking (CA Gov. Code 65852.2(f)(3), now 66311.5(c)(1);
+the Lab prototype is 600 sq ft). mm2 uses a feasible-lot hazard and still
+multiplies by F.
 
   H  observed single-family lots in the group (ACS B25024 by tract context)
   F  Phi(x_best / sigma): share of lots whose own margin clears the hurdle,
      where x_best is the largest excess margin among options that are legal
-     AND fit the lot. Each lot takes at most one option. ADU delivery skips F.
+     AND fit the lot. Each lot takes at most one option. ADU delivery uses
+     the gate, not F.
   p  1 - exp(-lambda * max(0, T - legal lag - build lag)): chance a lot
-     finishes inside the window (feasible lots for rebuilds; all lots for ADU)
+     finishes inside the window (feasible lots for mm2/rebuilds; all lots
+     times the gate for ADU)
   d  net homes the chosen option adds
 
 Legal status is resolved by partition. A lot whose zoning is unknown is
@@ -48,7 +53,7 @@ from typing import Any
 
 from src.lab.config import CONTEXTS, OPTIONS, central_params, load_assumptions, load_scenarios
 from src.lab.data import County, HostCell, LegalSegment, StateData, post_window
-from src.lab.options import Econ, OptionResult, evaluate_option, rebuild_space_cost
+from src.lab.options import Econ, OptionResult, adu_economics_gate, evaluate_option, rebuild_space_cost
 from src.model.equations import normal_cdf
 
 STD_NORMAL = NormalDist()
@@ -164,9 +169,10 @@ def resolve_hosts(
     option therefore never strands lots that were already building.
 
     The ADU hazard is an all-lots rate (CA permits / SF stock). ADU delivery
-    does not multiply by F — that would double-count an unverified CA F.
-    When a better non-ADU option is legal, it takes only the feasible lots;
-    the rest stay on the all-lots ADU path if an ADU is legal.
+    multiplies by a fee/parking gate normalized to CA conditions (fee 0 and
+    no parking) instead of by F. When a non-ADU option is also legal, lots
+    are split by a common shock: the overlap stays with the ADU and the
+    other option takes only lots that work for it but not for an ADU.
     """
     out = HostOutcome()
     if not results or hosts <= 0:
@@ -185,6 +191,7 @@ def resolve_hosts(
         out.eligible += lots_here * max(r.net for r in fitting)
         out.feasible += lots_here * share_feasible * best.net
         adu = next((r for r in fitting if r.option == "adu"), None)
+        gate = adu_economics_gate(adu.excess, adu.ref_excess, sigma) if adu is not None else 1.0
         earlier = [r for r in fitting if lags[r.option] < best_lag - 1e-12]
         if best.option == "adu":
             timing = timing_share(best.hazard, horizon, best_lag, best.build_lag)
@@ -194,34 +201,33 @@ def resolve_hosts(
                 start = lags[incumbent.option]
                 stop = min(best_lag, horizon - incumbent.build_lag)
                 built = 1.0 - math.exp(-incumbent.hazard * max(0.0, stop - start))
-                phase_one = lots_here * share_inc * built * incumbent.net
+                inc_scale = gate if incumbent.option == "adu" else 1.0
+                phase_one = lots_here * share_inc * built * incumbent.net * inc_scale
                 remaining = max(0.0, 1.0 - share_inc * built)
                 out.by_option[incumbent.option] = out.by_option.get(incumbent.option, 0.0) + phase_one
-                delivered = lots_here * remaining * timing * best.net
+                delivered = lots_here * remaining * timing * best.net * gate
                 out.delivered += phase_one + delivered
                 out.by_option["adu"] = out.by_option.get("adu", 0.0) + delivered
             else:
-                delivered = lots_here * timing * best.net
+                delivered = lots_here * gate * timing * best.net
                 out.delivered += delivered
                 out.by_option["adu"] = out.by_option.get("adu", 0.0) + delivered
             out.lots_by_option["adu"] = out.lots_by_option.get("adu", 0.0) + lots_here
         elif adu is not None:
-            # All-lots ADU until the better option's lag ends; then feasible
-            # lots take it and the rest stay ADU so legalizing MM cannot
-            # erase the ADU baseline.
+            # All-lots ADU (times the gate) until the other option's lag ends;
+            # then lots that work for that option but not for an ADU switch,
+            # and the overlap stays on the ADU path.
             start = lags[adu.option]
             stop = min(best_lag, horizon - adu.build_lag)
             built = 1.0 - math.exp(-adu.hazard * max(0.0, stop - start))
-            phase_one = lots_here * built * adu.net
+            phase_one = lots_here * built * adu.net * gate
             unbuilt = max(0.0, 1.0 - built)
             timing_best = timing_share(best.hazard, horizon, best_lag, best.build_lag)
             timing_adu_rest = timing_share(adu.hazard, horizon, stop, adu.build_lag)
-            # Only peel feasible lots off the all-lots ADU path when the new
-            # option delivers more homes in the window (mm2 often does not).
-            switch = timing_best * best.net > timing_adu_rest * adu.net + 1e-12
-            take = share_feasible if switch else 0.0
+            share_adu = normal_cdf(adu.excess / sigma)
+            take = max(0.0, share_feasible - share_adu)
             delivered_best = lots_here * unbuilt * take * timing_best * best.net
-            delivered_adu = lots_here * unbuilt * (1.0 - take) * timing_adu_rest * adu.net
+            delivered_adu = lots_here * unbuilt * (1.0 - take) * timing_adu_rest * adu.net * gate
             out.by_option["adu"] = out.by_option.get("adu", 0.0) + phase_one + delivered_adu
             out.by_option[best.option] = out.by_option.get(best.option, 0.0) + delivered_best
             out.delivered += phase_one + delivered_best + delivered_adu
