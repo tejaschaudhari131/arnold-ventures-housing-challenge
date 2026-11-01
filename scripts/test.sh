@@ -9,6 +9,9 @@ else
   PY="python3"
 fi
 export PYTHONPATH="$ROOT"
+# The Lab CSV test calls pandas.read_csv. pandas is not in requirements.txt:
+# NumPy's license expression includes CC0, which this project does not ship.
+"$PY" -m pip install --disable-pip-version-check -q 'pandas==2.2.3'
 "$PY" -m compileall -q src tests
 "$PY" -m pytest
 if [[ -x .venv/bin/ruff ]]; then

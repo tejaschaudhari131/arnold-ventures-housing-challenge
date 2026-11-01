@@ -62,7 +62,7 @@ def test_lab_phase2_landmarks_and_tour():
     assert "not labeled validated" in LAB
     assert "Copy link to this view" in LAB
     assert "Download PNG" in LAB
-    assert "One-page PDF" in LAB
+    assert "Print / save as PDF (one page)" in LAB
     assert 'id="recon"' in LAB
     assert "reconciliation_note" in LAB_JS
 
@@ -127,7 +127,8 @@ def test_answer_matches_selection_and_plain_tie_badge():
     assert "Unknown state " in LAB_JS
     assert "showing PA." in LAB_JS
     assert "draw medians" not in LAB_JS.split("rankingBadge")[1] if "rankingBadge" in LAB_JS else True
-    assert 'extra homes (likely "' in LAB_JS
+    assert "extra homes (" in LAB_JS
+    assert "Reference range (defaults)" in LAB_JS
     assert "<nav" in INDEX and 'role="tablist"' in INDEX
     assert re.search(r"<nav[^>]*role=", INDEX) is None
     assert re.search(r"#methods a\s*\{[^}]*min-height:\s*24px", LAB_CSS)
@@ -145,7 +146,7 @@ def test_answer_matches_selection_and_plain_tie_badge():
     assert 'class="card" role="listitem">' in LAB_JS
     assert 'class="tog" aria-pressed' in LAB_JS
     assert 'id="adu-fee-note"' in LAB and "<div id=\"adu-fee-note\"" in LAB
-    assert "querySelector(\"details\")" in LAB_JS
+    assert "aduCompare.notes.lab_html" in LAB_JS
 
 
 def test_reflow_and_hero_contrast_and_skip_height():

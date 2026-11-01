@@ -95,13 +95,14 @@ The committed extract used that workbook on 2026-10-31. Pass it with `python -m 
 | `data/sample/` | Small committed benchmark so tests run with no network |
 | `src/web/` | Standard-library server and the single-page app |
 | `docs/MODEL_AND_ASSUMPTIONS.md` | Equations, calibration, and limits |
+| `docs/API.md` | HTTP routes, including `draws: null` |
 | `docs/POLICY_SCENARIO_COMPARISON.md` | Lab comparison (≤4 pages) and the eleven-state core table |
 | `docs/SMALL_HOMES_LAB.md` | Lab method: hosts, options, uncertainty, core-engine gap |
 | `docs/NH_PORTABILITY.md` | New Hampshire as the lower-data portability test |
 | `docs/DATA_PROVENANCE.md` | Sources, vintages, cleaning, and privacy |
 | `docs/DISCLOSURES.md` | AI use, prior work, datasets, dependencies, and external services |
 | `docs/CASE_STUDY_PA_ALLEGHENY.md` | Allegheny County to Pennsylvania, with observed and imputed inputs separated |
-| `docs/sbom.cdx.json` | CycloneDX bill of materials for the direct pins |
+| `docs/sbom.cdx.json` | CycloneDX bill of materials for the resolved app and dev trees |
 | `data/sample/county_points.json` | Census 2024 gazetteer interior points for the eleven states |
 
 ## Tests that lock the economics

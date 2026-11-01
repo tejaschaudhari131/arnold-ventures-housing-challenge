@@ -59,8 +59,10 @@ def test_pages_name_the_team_and_simulate_pennsylvania():
         assert health_doc["ok"] is True
         assert health_doc["sha"] and health_doc["short_sha"]
         assert health_doc["date"]
-        assert health_doc["fingerprints"]["PA"] == "18b20e94b790213c"
-        assert health_doc["fingerprints"]["NH"] == "f0a85db0ee26fda1"
+        assert health_doc["fingerprints"]["PA"] == "c80f359be200f18d"
+        assert health_doc["fingerprints"]["NH"] == "a1c2fa6fe66b03a7"
+        assert health_doc["model_version"] == "1.0.0"
+        assert health_doc["model_date"] == "2026-10-25"
         assert health_headers["Cache-Control"] == "no-store"
         assert "s-maxage=60" in page_headers["Cache-Control"]
         assert "stale-while-revalidate=60" in page_headers["Cache-Control"]

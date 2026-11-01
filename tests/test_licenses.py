@@ -39,7 +39,7 @@ def test_requirements_are_pinned_and_allowlisted():
 def test_installed_metadata_matches_the_allowlist():
     for name, _version in _pins():
         info = metadata(name)
-        license_text = (info.get("License") or "") + " " + " ".join(
+        license_text = (info.get("License") or "") + " " + (info.get("License-Expression") or "") + " " + " ".join(
             item for item in info.get_all("Classifier") or [] if "License" in item
         )
         upper = license_text.upper()
@@ -47,3 +47,14 @@ def test_installed_metadata_matches_the_allowlist():
             assert token not in upper
         expected = APPROVED[name.lower()]
         assert expected.upper() in upper or expected.upper().replace("-", " ") in upper
+
+
+def test_resolved_tree_is_licensed_and_split_by_scope():
+    from src.sbom import resolved_graph
+
+    graph = resolved_graph()
+    assert graph["pyyaml"]["scope"] == "required"
+    for name in ("pytest", "ruff", "pluggy", "iniconfig", "packaging"):
+        assert graph[name]["scope"] == "optional", name
+        assert graph[name]["licenses"]
+    assert set(graph) >= {"pyyaml", "pytest", "ruff", "pluggy", "iniconfig", "packaging"}

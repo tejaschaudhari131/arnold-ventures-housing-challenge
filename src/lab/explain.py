@@ -13,10 +13,12 @@ from __future__ import annotations
 import csv
 import io
 import json
+import math
 from typing import Any
 
 import yaml
 
+from src.export.csvsafe import csv_cell
 from src.lab.config import (
     CONFIG_DIR,
     LAB_STATES,
@@ -36,7 +38,7 @@ from src.lab.engine import (
     scenario_econ,
     state_unit_values,
 )
-from src.lab.options import evaluate_option
+from src.lab.options import Econ, evaluate_option
 from src.lab.results import load_results
 from src.lab.uncertainty import compared_scenarios, run_moe, zoning_bounds, zoning_runs
 from src.model.assumptions import AssumptionError
@@ -122,12 +124,14 @@ def clamp_overrides(raw: Any) -> dict[str, float]:
     out: dict[str, float] = {}
     for key, value in raw.items():
         if key not in allowed:
-            raise AssumptionError(f"Unknown or locked Lab assumption '{key}'")
+            raise AssumptionError("Unknown or locked Lab assumption.")
         spec = param_spec(key)
         try:
             number = float(value)
         except (TypeError, ValueError) as exc:
-            raise AssumptionError(f"Assumption '{key}' must be a number") from exc
+            raise AssumptionError("Assumption must be a finite number.") from exc
+        if not math.isfinite(number):
+            raise AssumptionError("Assumption must be a finite number.")
         out[key] = min(float(spec["high"]), max(float(spec["low"]), number))
     return out
 
@@ -214,21 +218,147 @@ def _option_row(result: Any, illustrative: bool) -> dict[str, Any]:
     }
 
 
-def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dict[str, float] | None = None) -> dict[str, Any]:
+_SELECTABLE = ("adu", "missing_middle", "parking", "fees")
+_COUNT_BASIS = "sum of per-reform counts; lots may overlap; not a joint count"
+_CENTRAL_BASIS = "simple sum of standalone results, not modelled jointly"
+_CLOSE_MIX = "not computed for mix"
+_MIX_NOTE = (
+    "Eligible and feasible are the sum of per-reform counts; lots may overlap; not a joint count. "
+    "Central is a simple sum of standalone results, not modelled jointly. "
+    "A likely range is not computed for this mix. "
+    "Reference range (defaults) applies only to one reform or all four together."
+)
+
+
+def _selected_reforms(raw: Any) -> list[str]:
+    """Reform ids the caller named.
+
+    Unknown ids and repeats are errors. A repeated id is not dropped and is
+    not counted twice. Order does not matter for the full package.
+    """
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise AssumptionError("reforms must be a list.")
+    chosen: list[str] = []
+    seen: set[str] = set()
+    for item in raw:
+        if not isinstance(item, str) or item not in _SELECTABLE:
+            raise AssumptionError("Unknown reform.")
+        if item in seen:
+            raise AssumptionError("Duplicate reform.")
+        seen.add(item)
+        chosen.append(item)
+    return chosen
+
+
+def _is_full_package(chosen: list[str]) -> bool:
+    """True when the list is every Lab reform, in any order."""
+    return set(chosen) == set(_SELECTABLE)
+
+
+def _selection_econ(chosen: list[str], p: dict[str, float]) -> Econ:
+    """Fee, parking, and ADU-parking levers from every selected reform.
+
+    A lever applies when any selected reform sets it. Request order does not
+    matter. This prices the illustrative pro forma only. County delivery stays
+    a labeled sum of the standalone runs.
+    """
+    catalog = load_scenarios()["scenarios"]
+    fee_cut = 0.0
+    parking_eliminated = False
+    adu_no_parking = False
+    approval = False
+    for sid in chosen:
+        levers = catalog[sid].get("levers") or {}
+        fee_cut = max(fee_cut, float(levers.get("fee_cut_share") or 0.0))
+        if levers.get("parking_minimums") == "eliminated":
+            parking_eliminated = True
+        if levers.get("adu_parking_spaces") == 0:
+            adu_no_parking = True
+        if levers.get("approval_reform"):
+            approval = True
+    return Econ(
+        fee=p["fee_per_unit"] * (1.0 - fee_cut),
+        parking="market" if parking_eliminated else "minimum",
+        adu_no_parking=adu_no_parking,
+        approval=approval,
+    )
+
+
+_OPTION_NOTE = (
+    "The ADU pro forma is illustrative: urban detached lot, one parking space "
+    "if the scenario still requires one, current ACS rents and the published assumptions. "
+    "It is not a construction bid."
+)
+_MIX_OPTION_NOTE = (
+    _OPTION_NOTE
+    + " For this mix, the fee cut, parking minimums, and ADU parking rule from every selected reform apply together."
+)
+
+
+def why_county(
+    code: str,
+    county_key: str,
+    scenario: str = "adu",
+    overrides: dict[str, float] | None = None,
+    reforms: Any = None,
+) -> dict[str, Any]:
     """Observed / assumed / calculated inputs for one county and scenario."""
     code = check_state(code)
     state = load_state(code)
-    county = state.county(county_key)
+    try:
+        county = state.county(county_key)
+    except KeyError:
+        raise AssumptionError("Unknown county.") from None
     scenarios = load_scenarios()["scenarios"]
-    if scenario not in scenarios:
-        raise AssumptionError(f"Unknown scenario '{scenario}'")
+    chosen = _selected_reforms(reforms)
+    if scenario in {"selection", "none", ""}:
+        if not chosen:
+            from src.plain import snap_tree
+
+            return snap_tree(
+                {
+                    "state": code,
+                    "county": {"fips": county.fips, "name": county.name},
+                    "scenario": "selection",
+                    "empty": True,
+                    "reforms": [],
+                    "note": "No reforms selected.",
+                    "overrides": overrides or {},
+                    "inputs": [],
+                    "assumptions": [],
+                    "options": [],
+                    "formulas": [],
+                    "per_reform": [],
+                    "result": {
+                        "delivery": 0.0,
+                        "eligible": 0.0,
+                        "feasible": 0.0,
+                        "host_delta": 0.0,
+                        "pipeline_delta": 0.0,
+                        "by_option": {},
+                        "tag": "calculated",
+                    },
+                }
+            )
+        if len(chosen) == 1:
+            scenario = chosen[0]
+        elif _is_full_package(chosen):
+            scenario = "package"
+    if scenario not in scenarios and scenario != "selection":
+        raise AssumptionError("Unknown scenario.")
+    multi = scenario == "selection"
     p = central_params()
     p.update(overrides or {})
     values = state_unit_values(state)
     evaluated = evaluate_county(
         county, state, p, state_values=values, variants=package_variants(p)
     )
-    econ = scenario_econ(scenario if scenario != "baseline" else "baseline", p)
+    if multi:
+        econ = _selection_econ(chosen, p)
+    else:
+        econ = scenario_econ(scenario if scenario != "baseline" else "baseline", p)
     adu_spaces = 1.0
     options = []
     for opt in ("adu", "mm2", "mm4", "mm6"):
@@ -309,7 +439,30 @@ def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dic
                 "locked": bool(spec.get("locked")),
             }
         )
-    row = evaluated["scenarios"][scenario]
+    per_reform = None
+    if multi:
+        per_reform = []
+        for sid in chosen:
+            src = evaluated["scenarios"][sid]
+            per_reform.append(
+                {
+                    "id": sid,
+                    "delivery": src.get("delta", 0.0),
+                    "eligible": src.get("eligible", 0.0),
+                    "feasible": src.get("feasible", 0.0),
+                    "tag": "calculated",
+                }
+            )
+        row = {
+            "delta": sum(item["delivery"] for item in per_reform),
+            "eligible": sum(item["eligible"] for item in per_reform),
+            "feasible": sum(item["feasible"] for item in per_reform),
+            "host_delta": sum(evaluated["scenarios"][sid].get("host_delta", 0.0) for sid in chosen),
+            "pipeline_delta": sum(evaluated["scenarios"][sid].get("pipeline_delta", 0.0) for sid in chosen),
+            "by_option": {},
+        }
+    else:
+        row = evaluated["scenarios"][scenario]
     from src.plain import snap_tree
 
     decomp = package_decomposition(evaluated["scenarios"], key="scenarios")
@@ -322,16 +475,16 @@ def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dic
     payload = {
         "state": code,
         "county": {"fips": county.fips, "name": county.name},
-        "scenario": scenario,
+        "scenario": "selection" if multi else scenario,
+        "empty": False,
+        "reforms": chosen if multi else [],
+        "per_reform": per_reform or [],
+        "note": _MIX_NOTE if multi else "",
         "overrides": overrides or {},
         "inputs": inputs,
         "assumptions": used,
         "options": options,
-        "option_note": (
-            "The ADU pro forma is illustrative: urban detached lot, one parking space "
-            "if the scenario still requires one, current ACS rents and the published assumptions. "
-            "It is not a construction bid."
-        ),
+        "option_note": _MIX_OPTION_NOTE if multi else _OPTION_NOTE,
         "formulas": FORMULAS,
         "result": {
             "delivery": row.get("delivery", 0.0) if scenario == "baseline" else row.get("delta", 0.0),
@@ -349,6 +502,29 @@ def why_county(code: str, county_key: str, scenario: str = "adu", overrides: dic
         "package_decomposition": decomp,
     }
     return snap_tree(payload)
+
+
+REFERENCE_LABEL = "Reference range (defaults). Not recomputed for this assumption change."
+
+
+def _with_reference(row: dict[str, Any], locked_row: dict[str, Any] | None) -> dict[str, Any]:
+    """Attach the locked p10/p90 as a labeled reference, never a silent dash."""
+    out = dict(row)
+    p10 = None if not locked_row else locked_row.get("p10")
+    p90 = None if not locked_row else locked_row.get("p90")
+    if isinstance(p10, (int, float)) and isinstance(p90, (int, float)) and math.isfinite(p10) and math.isfinite(p90):
+        out["p10"] = p10
+        out["p90"] = p90
+        if isinstance(locked_row, dict) and "p50" in locked_row:
+            out["p50"] = locked_row["p50"]
+        out["interval_status"] = "reference"
+        out["interval_label"] = REFERENCE_LABEL
+    else:
+        out["p10"] = None
+        out["p90"] = None
+        out["interval_status"] = "unavailable"
+        out["interval_label"] = "Likely range unavailable."
+    return out
 
 
 def _layer_row(sid: str, central: dict[str, Any], bounds: dict[str, float], moe: float) -> dict[str, Any]:
@@ -440,13 +616,17 @@ def recompute(code: str, overrides: dict[str, float] | None = None, county_key: 
     benchmarks = sorted(BENCHMARKS, key=lambda sid: -sw_central[sid])
     top = (benchmarks[0], benchmarks[1])
     pair_key = "|".join(sorted(top))
+    locked_sw = locked["statewide"]["results"]
     statewide = {
         "results": {
-            sid: _layer_row(
-                sid,
-                central["statewide"],
-                bounds[sid],
-                moe["statewide"][sid],
+            sid: _with_reference(
+                _layer_row(
+                    sid,
+                    central["statewide"],
+                    bounds[sid],
+                    moe["statewide"][sid],
+                ),
+                locked_sw.get(sid),
             )
             for sid in ["baseline"] + sids
         },
@@ -458,14 +638,19 @@ def recompute(code: str, overrides: dict[str, float] | None = None, county_key: 
         "package_decomposition": package_decomposition(central),
     }
     counties = []
+    locked_by_fips = {item["fips"]: item for item in locked["counties"]}
     for index, row in enumerate(central["counties"]):
         cb = zoning_bounds(zruns, index=index)
+        locked_cells = locked_by_fips.get(row["fips"], {}).get("results", {})
         counties.append(
             {
                 "fips": row["fips"],
                 "name": row["name"],
                 "results": {
-                    sid: _layer_row(sid, row["scenarios"], cb[sid], moe["county"][index][sid])
+                    sid: _with_reference(
+                        _layer_row(sid, row["scenarios"], cb[sid], moe["county"][index][sid]),
+                        locked_cells.get(sid),
+                    )
                     for sid in ["baseline"] + sids
                 },
                 "coverage": row["coverage"],
@@ -474,14 +659,19 @@ def recompute(code: str, overrides: dict[str, float] | None = None, county_key: 
         )
     picked = None
     if county_key:
-        county = state.county(county_key)
+        try:
+            county = state.county(county_key)
+        except KeyError:
+            raise AssumptionError("Unknown county.") from None
         picked = next(c for c in counties if c["fips"] == county.fips)
     return {
         "state": code,
         "overrides": overrides,
+        "interval_status": "reference",
+        "interval_label": REFERENCE_LABEL,
         "envelope_note": (
-            f"The p10–p90 envelope is from the locked {locked['draws']:,}-draw run "
-            f"(seed {locked['seed']}) and does not move when you change one slider. "
+            f"Reference range (defaults) from the locked {locked['draws']:,}-draw run "
+            f"(seed {locked['seed']}). It is not recomputed for this assumption change. "
             "Central values, zoning bounds, and the ACS band are live."
         ),
         "coverage": central["coverage"],
@@ -509,7 +699,12 @@ def _band(low: float, high: float) -> str:
     return f"{left}–{right}"
 
 
-def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any] | None = None) -> str:
+def brief_markdown(
+    code: str,
+    county_key: str | None = None,
+    live: dict[str, Any] | None = None,
+    reforms: list[str] | None = None,
+) -> str:
     """One-page policy brief from locked or live results."""
     from src.plain import (
         CORE_URL,
@@ -533,10 +728,43 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
         f"Net new homes completed in 2027–2031 versus Baseline. {meta['name']} is the "
         f"{'primary case' if meta['role'] == 'primary' else 'portability test'}.",
         "",
+    ]
+    custom_mix = False
+    if reforms is not None:
+        selected = _selected_reforms(reforms)
+        custom_mix = len(selected) != 1 and not _is_full_package(selected)
+        if not selected:
+            lines.append("Selected reforms: none. Extra homes from that selection: 0.")
+            lines.append("Range for this mix: not computed. Blank cells are not the baseline range.")
+        elif len(selected) == 1:
+            lines.append(f"Selected reform: {selected[0]}.")
+        elif _is_full_package(selected):
+            lines.append("Selected reforms: all four Handbook reforms.")
+        else:
+            total = sum(float(results[sid]["central"]) for sid in selected)
+            eligible = sum(float(results[sid].get("eligible", 0.0)) for sid in selected)
+            feasible = sum(float(results[sid].get("feasible", 0.0)) for sid in selected)
+            lines.append(
+                "Selected reforms: "
+                + ", ".join(selected)
+                + f". Central: {homes(total, signed=True)}. "
+                + "Simple sum of standalone results, not modelled jointly. "
+                + f"Eligible {homes(eligible)}, feasible {homes(feasible)}. "
+                + "Sum of per-reform counts; lots may overlap; not a joint count."
+            )
+            lines.append(
+                "Range for this mix: not computed. Reference range (defaults) applies only to one reform or all four. "
+                "Blank range cells are not the baseline range."
+            )
+        lines.append("")
+    lines += [
+        "",
         f"Evidence coverage (stock-weighted): ADU {locked['coverage']['adu']:.1%}, "
         f"2–6 homes {locked['coverage']['mm']:.1%}. Unknown zoning is never treated as zero.",
         "",
-        "| Scenario | Central | Likely range | Zoning bound | Census survey error |",
+        "| Scenario | Central | "
+        + ("Reference range (defaults)" if live else "Likely range")
+        + " | Zoning bound | Census survey error |",
         "| --- | ---: | ---: | ---: | ---: |",
     ]
     for sid in ["baseline"] + list(compared_scenarios()):
@@ -548,43 +776,52 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
             f"| {label} | {central} | {_band(env['p10'], env['p90'])} | "
             f"{_band(row['zoning_low'], row['zoning_high'])} | ±{homes(row['acs_moe'])} |"
         )
-    top = sw["top_benchmark_pair"]
-    leader = SCENARIO_SHORT.get(top["leader"], top["leader"])
-    trailer = SCENARIO_SHORT.get(top["trailer"], top["trailer"])
-    threshold = locked.get("close_call_flip_share_label", "close-call threshold")
-    median_src = results
-    if is_draw_tie(top) and not (
-        "p50" in results.get(top["leader"], {}) and "p50" in results.get(top["trailer"], {})
-    ):
-        median_src = locked["statewide"]["results"]
-    if is_draw_tie(top):
-        pair_line = "Statistical tie. " + top_pair_tie_clause(top, median_src)
+    if live:
+        lines.append("")
+        lines.append(
+            "The range column is the locked p10–p90 at published assumptions "
+            "(Reference range (defaults)). It is not conditional on the assumption change."
+        )
+    if custom_mix:
+        lines += ["", "Close call: not computed for mix."]
     else:
-        pair_line = f"Top pair: {leader} leads {trailer} by {homes(top['gap'])} homes."
-    lines += [
-        "",
-        f"Handbook ranking: {ranking_phrase(sw['benchmark_ranking'], top)}.",
-        pair_line,
-        f"The {threshold} is 10 percent of assumption draws.",
-    ]
-    se_bits = []
-    for sid in ["baseline"] + list(compared_scenarios()):
-        env = locked["statewide"]["results"][sid]
-        if "p50_se" in env:
-            label = SCENARIO_SHORT.get(sid) or next(s["short"] for s in locked["scenarios"] if s["id"] == sid)
-            se_bits.append(f"{label} ±{homes(env['p50_se'])}")
-    if se_bits:
-        lines.append(
-            f"Envelope sampling error (bootstrap SE of P50, {locked['draws']:,} draws, seed {locked['seed']}): "
-            + "; ".join(se_bits) + "."
-        )
-    if is_draw_tie(top):
-        lines.append(
-            f"**Statistical tie.** The central estimate favors {leader}; "
-            f"{trailer} is ahead in {float(top['flip_share']):.0%} of assumption draws."
-        )
-    elif top["close_call"]:
-        lines.append("**Ranking is close.** " + "; ".join(top["reasons"]) + ".")
+        top = sw["top_benchmark_pair"]
+        leader = SCENARIO_SHORT.get(top["leader"], top["leader"])
+        trailer = SCENARIO_SHORT.get(top["trailer"], top["trailer"])
+        threshold = locked.get("close_call_flip_share_label", "close-call threshold")
+        median_src = results
+        if is_draw_tie(top) and not (
+            "p50" in results.get(top["leader"], {}) and "p50" in results.get(top["trailer"], {})
+        ):
+            median_src = locked["statewide"]["results"]
+        if is_draw_tie(top):
+            pair_line = "Statistical tie. " + top_pair_tie_clause(top, median_src)
+        else:
+            pair_line = f"Top pair: {leader} leads {trailer} by {homes(top['gap'])} homes."
+        lines += [
+            "",
+            f"Handbook ranking: {ranking_phrase(sw['benchmark_ranking'], top)}.",
+            pair_line,
+            f"The {threshold} is 10 percent of assumption draws.",
+        ]
+        se_bits = []
+        for sid in ["baseline"] + list(compared_scenarios()):
+            env = locked["statewide"]["results"][sid]
+            if "p50_se" in env:
+                label = SCENARIO_SHORT.get(sid) or next(s["short"] for s in locked["scenarios"] if s["id"] == sid)
+                se_bits.append(f"{label} ±{homes(env['p50_se'])}")
+        if se_bits:
+            lines.append(
+                f"Envelope sampling error (bootstrap SE of P50, {locked['draws']:,} draws, seed {locked['seed']}): "
+                + "; ".join(se_bits) + "."
+            )
+        if is_draw_tie(top):
+            lines.append(
+                f"**Statistical tie.** The central estimate favors {leader}; "
+                f"{trailer} is ahead in {float(top['flip_share']):.0%} of assumption draws."
+            )
+        elif top["close_call"]:
+            lines.append("**Ranking is close.** " + "; ".join(top["reasons"]) + ".")
     decomp = sw["package_decomposition"]
     lines += [
         "",
@@ -602,7 +839,17 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
         right = SCENARIO_SHORT.get(wwc["pair"][1], wwc["pair"][1])
         lines.append("## What would change the statewide conclusion")
         lines.append("")
-        lines.append(f"Central ranking of {left} over {right} flips if:")
+        if live:
+            live_order = " > ".join(
+                SCENARIO_SHORT.get(sid, sid) for sid in sw.get("benchmark_ranking", [])
+            )
+            lines.append(
+                f"With this assumption, the central order is {live_order}. "
+                "The switches below describe the default-settings ranking, not this order."
+            )
+            lines.append(f"At default settings, the central ranking of {left} over {right} flips if:")
+        else:
+            lines.append(f"Central ranking of {left} over {right} flips if:")
         for row in wwc["switches"]:
             lines.append(
                 f"- {row['label']} moves to {format_assumption(row['unit'], row['switch_at'])} "
@@ -610,7 +857,10 @@ def brief_markdown(code: str, county_key: str | None = None, live: dict[str, Any
             )
         lines.append("")
     if county_key:
-        county = load_state(code).county(county_key)
+        try:
+            county = load_state(code).county(county_key)
+        except KeyError:
+            raise AssumptionError("Unknown county.") from None
         source = None
         if live and live.get("county") and live["county"]["fips"] == county.fips:
             source = live["county"]
@@ -672,20 +922,67 @@ def brief_html(markdown: str) -> str:
     )
 
 
-def county_csv(code: str, live: dict[str, Any] | None = None) -> str:
+def county_csv(code: str, live: dict[str, Any] | None = None, reforms: list[str] | None = None) -> str:
     locked = locked_results(check_state(code))
     counties = live["counties"] if live and live.get("counties") else locked["counties"]
     locked_map = {row["fips"]: row for row in locked["counties"]}
     buf = io.StringIO()
     writer = csv.writer(buf)
+    range_role = "reference_at_default_settings" if live else "conditional_on_published_assumptions"
+    selected = _selected_reforms(reforms) if reforms is not None else None
+    custom = selected is not None and len(selected) != 1 and not _is_full_package(selected)
+    sids = ["baseline"] + list(compared_scenarios())
+    if custom:
+        writer.writerow(
+            [
+                "fips", "county", "scenario", "central", "central_basis",
+                "envelope_p10", "envelope_p90", "range_role",
+                "zoning_low", "zoning_high", "acs_moe",
+                "eligible_sum_of_reforms", "feasible_sum_of_reforms", "basis",
+                "close_call_top_benchmark",
+            ]
+        )
+        for row in counties:
+            if not selected:
+                central, eligible, feasible = 0.0, None, None
+                central_basis, count_basis = "no reforms selected", ""
+            else:
+                parts = [row["results"][sid] for sid in selected if sid in row["results"]]
+                central = sum(float(part.get("central", 0.0)) for part in parts)
+                eligible = sum(float(part.get("eligible", 0.0)) for part in parts)
+                feasible = sum(float(part.get("feasible", 0.0)) for part in parts)
+                central_basis, count_basis = _CENTRAL_BASIS, _COUNT_BASIS
+            writer.writerow(
+                [
+                    csv_cell(value)
+                    for value in (
+                        row["fips"],
+                        row["name"],
+                        "selection" if selected else "none",
+                        f"{central:.1f}",
+                        central_basis,
+                        "",
+                        "",
+                        "Reference range (defaults) not computed for this mix",
+                        "",
+                        "",
+                        "",
+                        "" if eligible is None else f"{eligible:.1f}",
+                        "" if feasible is None else f"{feasible:.1f}",
+                        count_basis,
+                        _CLOSE_MIX,
+                    )
+                ]
+            )
+        return buf.getvalue()
     writer.writerow(
         [
             "fips", "county", "scenario", "central", "envelope_p10", "envelope_p90",
+            "range_role",
             "zoning_low", "zoning_high", "acs_moe", "eligible", "feasible",
             "close_call_top_benchmark",
         ]
     )
-    sids = ["baseline"] + list(compared_scenarios())
     for row in counties:
         locked_row = locked_map[row["fips"]]
         close = False
@@ -698,12 +995,16 @@ def county_csv(code: str, live: dict[str, Any] | None = None) -> str:
             env = locked_row["results"][sid]
             writer.writerow(
                 [
-                    row["fips"], row["name"], sid, f"{cell['central']:.1f}",
-                    f"{env['p10']:.1f}", f"{env['p90']:.1f}",
-                    f"{cell['zoning_low']:.1f}", f"{cell['zoning_high']:.1f}",
-                    f"{cell['acs_moe']:.1f}",
-                    f"{cell.get('eligible', 0):.1f}", f"{cell.get('feasible', 0):.1f}",
-                    "yes" if close else "no",
+                    csv_cell(value)
+                    for value in (
+                        row["fips"], row["name"], sid, f"{cell['central']:.1f}",
+                        f"{env['p10']:.1f}", f"{env['p90']:.1f}",
+                        range_role,
+                        f"{cell['zoning_low']:.1f}", f"{cell['zoning_high']:.1f}",
+                        f"{cell['acs_moe']:.1f}",
+                        f"{cell.get('eligible', 0):.1f}", f"{cell.get('feasible', 0):.1f}",
+                        "yes" if close else "no",
+                    )
                 ]
             )
     return buf.getvalue()
@@ -714,14 +1015,15 @@ def export_brief(
     fmt: str,
     county_key: str | None = None,
     overrides: dict[str, float] | None = None,
+    reforms: list[str] | None = None,
 ) -> tuple[bytes, str, str]:
     if fmt not in {"md", "html", "csv"}:
         raise AssumptionError("format must be md, html, or csv")
     live = recompute(code, overrides, county_key) if overrides else None
     stem = f"lab-{check_state(code).lower()}"
     if fmt == "csv":
-        return county_csv(code, live).encode("utf-8"), "text/csv; charset=utf-8", f"{stem}-counties.csv"
-    markdown = brief_markdown(code, county_key, live)
+        return county_csv(code, live, reforms).encode("utf-8"), "text/csv; charset=utf-8", f"{stem}-counties.csv"
+    markdown = brief_markdown(code, county_key, live, reforms)
     if fmt == "html":
         return brief_html(markdown).encode("utf-8"), "text/html; charset=utf-8", f"{stem}-brief.html"
     return markdown.encode("utf-8"), "text/markdown; charset=utf-8", f"{stem}-brief.md"

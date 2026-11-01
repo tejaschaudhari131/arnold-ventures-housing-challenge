@@ -1,10 +1,13 @@
 .sf-top {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 16px;
+  row-gap: 8px;
   padding: 12px 28px;
   background: var(--navy);
   color: #fff;
+  max-width: 100%;
 }
 .sf-brand {
   font: 700 22px var(--serif);
@@ -41,9 +44,9 @@
   color: var(--navy);
 }
 .btn.ghost, .sf-top .btn.ghost {
-  background: transparent;
+  background: var(--navy);
   color: #fff;
-  border-color: currentColor;
+  border-color: #fff;
 }
 .sr, .visually-hidden {
   position: absolute;
@@ -64,7 +67,10 @@
   background: var(--green-soft);
   color: var(--tag-calculated-fg);
   font-weight: 600;
+  flex: 1 0 100%;
+  overflow-wrap: anywhere;
 }
+.sf-top .state-notice { flex: 1 0 100%; overflow-wrap: anywhere; }
 
 .hero {
   background: linear-gradient(135deg, #1d3557 0%, #0e6e5c 100%);
@@ -452,15 +458,44 @@
 
 .tour {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
-  width: 340px;
+  top: 88px;
+  left: 16px;
+  bottom: auto;
+  width: 300px;
+  max-height: min(420px, calc(100vh - 120px));
+  overflow: auto;
   background: #fff;
   border-radius: var(--radius);
   box-shadow: 0 12px 40px #0004;
   padding: 18px;
   border-top: 6px solid var(--sun);
-  z-index: 20;
+  z-index: 12;
+}
+button.tip {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-bottom: 1px dotted currentColor;
+  padding: 0;
+  cursor: pointer;
+  text-align: inherit;
+}
+.tip-pop {
+  display: block;
+  max-width: min(36ch, 100%);
+  margin: 4px 0;
+  padding: 6px 8px;
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.tip-pop[hidden] { display: none; }
+.mapcard .legend {
+  position: relative;
+  z-index: 30;
+  background: rgba(251, 246, 236, 0.96);
 }
 .tour[hidden] { display: none; }
 .dots { display: flex; gap: 6px; }
@@ -504,13 +539,27 @@
   min-height: 24px;
 }
 
+.lab-body .skip:focus,
+.lab-body .skip:focus-visible {
+  top: 48px;
+}
+
+@media (max-width: 360px) {
+  .start-here, .help, .state-notice, .legend, .countyline, .hero, .panel, .lab-body main {
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+  .start-here, .hero, .lab-body main, .panel { padding-left: 12px; padding-right: 12px; }
+  .sf-top button, .sf-top select, .btn { max-width: 100%; white-space: normal; }
+}
+
 @media (max-width: 700px) {
   .hero { padding: 22px 16px; }
   .hero h1 { font-size: 24px; }
   .count { font-size: clamp(32px, 12vw, 52px); }
   .sf-top { padding: 10px 16px; gap: 8px; flex-wrap: wrap; }
   .sf-top nav { display: none; }
-  .tour { left: 12px; right: 12px; width: auto; bottom: 12px; }
+  .tour { left: 12px; right: auto; width: min(340px, calc(100% - 24px)); bottom: 12px; }
   .county-pick { display: block; }
   .mini-total:not([hidden]) { display: block; }
 }

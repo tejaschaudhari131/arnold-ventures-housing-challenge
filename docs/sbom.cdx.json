@@ -3,11 +3,11 @@
   "specVersion": "1.5",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-10-31T06:30:00Z",
+    "timestamp": "2026-11-01T08:00:00Z",
     "tools": [
       {
         "vendor": "Stateframe",
-        "name": "hand-maintained CycloneDX for the direct pins in requirements.txt",
+        "name": "resolved from the installed requirements.txt tree",
         "version": "1.0.0"
       }
     ],
@@ -15,38 +15,148 @@
       "type": "application",
       "name": "stateframe",
       "version": "1.0.0",
-      "licenses": [{ "license": { "id": "Apache-2.0" } }],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
       "authors": [
-        { "name": "Tejas Chaudhari", "email": "tchaudha@andrew.cmu.edu" },
-        { "name": "Yoon Yik Ng", "email": "yoonyikn@andrew.cmu.edu" },
-        { "name": "Christopher Severns", "email": "cseverns@andrew.cmu.edu" }
+        {
+          "name": "Tejas Chaudhari",
+          "email": "tchaudha@andrew.cmu.edu"
+        },
+        {
+          "name": "Yoon Yik Ng",
+          "email": "yoonyikn@andrew.cmu.edu"
+        },
+        {
+          "name": "Christopher Severns",
+          "email": "cseverns@andrew.cmu.edu"
+        }
       ]
     }
   },
   "components": [
     {
       "type": "library",
-      "name": "PyYAML",
-      "version": "6.0.2",
-      "licenses": [{ "license": { "id": "MIT" } }],
-      "purl": "pkg:pypi/pyyaml@6.0.2",
-      "scope": "required"
+      "name": "iniconfig",
+      "version": "2.3.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/iniconfig@2.3.1",
+      "scope": "optional"
+    },
+    {
+      "type": "library",
+      "name": "packaging",
+      "version": "26.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        },
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/packaging@26.3",
+      "scope": "optional"
+    },
+    {
+      "type": "library",
+      "name": "pluggy",
+      "version": "1.7.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pluggy@1.7.0",
+      "scope": "optional"
     },
     {
       "type": "library",
       "name": "pytest",
       "version": "8.3.5",
-      "licenses": [{ "license": { "id": "MIT" } }],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
       "purl": "pkg:pypi/pytest@8.3.5",
       "scope": "optional"
     },
     {
       "type": "library",
+      "name": "PyYAML",
+      "version": "6.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pyyaml@6.0.2",
+      "scope": "required"
+    },
+    {
+      "type": "library",
       "name": "ruff",
       "version": "0.14.2",
-      "licenses": [{ "license": { "id": "MIT" } }],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
       "purl": "pkg:pypi/ruff@0.14.2",
       "scope": "optional"
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:pypi/iniconfig@2.3.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/packaging@26.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/pluggy@1.7.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/pytest@8.3.5",
+      "dependsOn": [
+        "pkg:pypi/iniconfig@2.3.1",
+        "pkg:pypi/packaging@26.3",
+        "pkg:pypi/pluggy@1.7.0"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/pyyaml@6.0.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/ruff@0.14.2",
+      "dependsOn": []
     }
   ]
 }

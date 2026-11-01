@@ -213,6 +213,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--write-sample", action="store_true", help="Refresh data/sample/lab/results_*.json")
     args = parser.parse_args(argv)
     for code in [c.strip().upper() for c in args.states.split(",") if c.strip()]:
+        if code not in LAB_STATES:
+            raise SystemExit("Unknown Lab state.")
         started = time.time()
         doc = compute(code, args.draws)
         target = sample_path(code) if args.write_sample else CACHE_DIR / f"results_{code}.json"

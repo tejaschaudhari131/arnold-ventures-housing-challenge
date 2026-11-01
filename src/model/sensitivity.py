@@ -30,24 +30,53 @@ def tornado(
     scenario: str = "combined",
     parcel_mode: str = "observed",
     resolution: str = "county",
+    overrides: dict[str, Any] | None = None,
+    reform_weights: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Swing in the chosen outcome when each slider is set to Low, then High."""
+    """Swing in the chosen outcome when each slider is set to Low, then High.
+
+    ``overrides`` and ``reform_weights`` are the scenario on screen. Each swing
+    replaces one parameter and keeps the rest of that scenario.
+    """
+    base = dict(overrides or {})
     central_result = simulate_state(
-        fixtures, assumptions, state, parcel_mode=parcel_mode, resolution=resolution
+        fixtures,
+        assumptions,
+        state,
+        base or None,
+        parcel_mode=parcel_mode,
+        resolution=resolution,
+        reform_weights=reform_weights,
     )
     central = metric(central_result, scenario)
     rows = []
     for name in assumptions.sensitive_names(state):
         low, _mode, high = assumptions.band(name, state)
+        low_over = dict(base)
+        high_over = dict(base)
+        low_over[name] = low
+        high_over[name] = high
         low_value = metric(
             simulate_state(
-                fixtures, assumptions, state, {name: low}, parcel_mode=parcel_mode, resolution=resolution
+                fixtures,
+                assumptions,
+                state,
+                low_over,
+                parcel_mode=parcel_mode,
+                resolution=resolution,
+                reform_weights=reform_weights,
             ),
             scenario,
         )
         high_value = metric(
             simulate_state(
-                fixtures, assumptions, state, {name: high}, parcel_mode=parcel_mode, resolution=resolution
+                fixtures,
+                assumptions,
+                state,
+                high_over,
+                parcel_mode=parcel_mode,
+                resolution=resolution,
+                reform_weights=reform_weights,
             ),
             scenario,
         )
@@ -79,29 +108,35 @@ def monte_carlo(
     resolution: str = "county",
     sigma_scale: float = 1.0,
     seed: int | None = None,
+    overrides: dict[str, Any] | None = None,
+    reform_weights: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Seeded triangular Monte Carlo. Returns p10, p50, and p90 of the outcome."""
     count = draws if draws is not None else assumptions.monte_carlo_draws
     rng = random.Random(assumptions.monte_carlo_seed if seed is None else seed)
     names = assumptions.sensitive_names(state)
+    held = dict(overrides or {})
     samples = []
     for _ in range(count):
-        overrides = {}
+        draw = dict(held)
         for name in names:
             low, mode, high = assumptions.band(name, state)
+            if name in held:
+                mode = min(high, max(low, float(held[name])))
             if high <= low:
-                overrides[name] = mode
+                draw[name] = mode
             else:
-                overrides[name] = rng.triangular(low, high, mode)
+                draw[name] = rng.triangular(low, high, mode)
         outcome = metric(
             simulate_state(
                 fixtures,
                 assumptions,
                 state,
-                overrides,
+                draw,
                 parcel_mode=parcel_mode,
                 resolution=resolution,
                 sigma_scale=sigma_scale,
+                reform_weights=reform_weights,
             ),
             scenario,
         )

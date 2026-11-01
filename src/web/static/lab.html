@@ -26,10 +26,9 @@
     </select>
     <button type="button" class="btn pri" id="try-pa">Try Pennsylvania 2027–31</button>
     <button type="button" class="btn ghost" id="tour-btn">Take the 1-minute tour</button>
+    <p class="start-here" id="start-here">Start here: compare the reforms below, ranked by homes added. Then see where they land by county, open Why on any number, and print a one-page brief.</p>
+    <p id="state-notice" class="callout state-notice" role="status" hidden></p>
   </header>
-
-  <p class="start-here" id="start-here">Start here: compare the reforms below, ranked by homes added. Then see where they land by county, open Why on any number, and print a one-page brief.</p>
-  <p id="state-notice" class="callout state-notice" role="status" hidden></p>
 
   <section class="hero" id="hero" aria-labelledby="hero-title">
     <div>
@@ -41,7 +40,7 @@
       <div class="bandwrap" aria-hidden="true"><div class="band" id="band"></div><div class="tick" id="tick"></div></div>
       <p class="rangeline" id="rangeline"></p>
       <p class="sub" id="relate"></p>
-      <div class="recon" id="recon" role="note"><!-- ENGINE_GAP --></div>
+      <div class="recon" id="recon"><!-- ENGINE_GAP --></div>
     </div>
     <div class="mapcard">
       <div id="map-stage"></div>
@@ -129,7 +128,7 @@
           <div class="exports">
             <button type="button" id="export-png">Download PNG</button>
             <button type="button" id="export-csv">Download CSV</button>
-            <button type="button" id="export-pdf">One-page PDF</button>
+            <button type="button" id="export-pdf">Print / save as PDF (one page)</button>
             <button type="button" id="export-md">Brief (Markdown)</button>
             <button type="button" id="export-html">Brief (HTML)</button>
             <button type="button" id="copy-view-where">Copy link to this view</button>
@@ -170,7 +169,7 @@
 
       <section class="panel" id="methods" aria-labelledby="methods-title">
         <h2 id="methods-title">Methods, tags, and downloads</h2>
-        <p class="help">The Lab sits beside the eleven-state screening view. Equations live in <code>src/lab/engine.py</code>. Locked defaults live in <code>config/lab/assumptions.yaml</code>. Full write-up: <a href="https://github.com/tejaschaudhari131/arnold-ventures-housing-challenge/blob/main/docs/SMALL_HOMES_LAB.md">docs/SMALL_HOMES_LAB.md</a>.</p>
+        <p class="help">The Lab sits beside the eleven-state screening view. Equations live in <code>src/lab/engine.py</code>. Locked defaults live in <code>config/lab/assumptions.yaml</code>. Full write-up: <a href="/docs/SMALL_HOMES_LAB.md">docs/SMALL_HOMES_LAB.md</a>.</p>
         <div id="methods-recon"><!-- ENGINE_GAP --></div>
         <p>County shapes are U.S. Census Bureau cartographic boundary file <code>cb_2024_us_county_5m</code>, public domain, Douglas–Peucker simplified. See <code>docs/DATA_PROVENANCE.md</code>.</p>
       </section>
@@ -208,7 +207,7 @@
   </aside>
 
   <footer>
-    <p>The Lab sits beside Stateframe. Equations live in <code>src/lab/engine.py</code>. Locked defaults live in <code>config/lab/assumptions.yaml</code>. Method: <a href="https://github.com/tejaschaudhari131/arnold-ventures-housing-challenge/blob/main/docs/SMALL_HOMES_LAB.md">docs/SMALL_HOMES_LAB.md</a>. Apache License 2.0.</p>
+    <p>The Lab sits beside Stateframe. Equations live in <code>src/lab/engine.py</code>. Locked defaults live in <code>config/lab/assumptions.yaml</code>. Method: <a href="/docs/SMALL_HOMES_LAB.md">docs/SMALL_HOMES_LAB.md</a>. Apache License 2.0.</p>
     <p>Tejas Chaudhari (tchaudha@andrew.cmu.edu), Yoon Yik Ng (yoonyikn@andrew.cmu.edu), Christopher Severns (cseverns@andrew.cmu.edu), Carnegie Mellon University.</p>
     <p class="build-stamp">Build <!-- BUILD_STAMP --></p>
   </footer>

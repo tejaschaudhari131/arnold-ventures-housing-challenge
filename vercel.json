@@ -2,7 +2,7 @@
   "buildCommand": "python3 scripts/write_build_stamp.py",
   "functions": {
     "api/index.py": {
-      "includeFiles": "{src,config,data/sample}/**"
+      "includeFiles": "{src,config,data/sample,docs}/**"
     }
   },
   "rewrites": [{ "source": "/(.*)", "destination": "/api/index?__path=$1" }]

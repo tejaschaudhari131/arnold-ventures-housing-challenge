@@ -81,5 +81,11 @@ def test_sbom_matches_requirements_pins():
     generated = document(committed["metadata"]["timestamp"])
     assert generated["components"] == committed["components"]
     assert generated["metadata"]["component"]["licenses"] == [{"license": {"id": "Apache-2.0"}}]
-    names = {row["name"] for row in committed["components"]}
-    assert names == {"PyYAML", "pytest", "ruff"}
+    assert generated["dependencies"] == committed["dependencies"]
+    by_name = {row["name"]: row for row in committed["components"]}
+    assert by_name["PyYAML"]["scope"] == "required"
+    assert by_name["pytest"]["scope"] == "optional"
+    assert by_name["ruff"]["scope"] == "optional"
+    for dev_name in ("pluggy", "iniconfig", "packaging"):
+        assert by_name[dev_name]["scope"] == "optional"
+        assert by_name[dev_name]["licenses"]

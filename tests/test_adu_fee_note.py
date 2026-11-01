@@ -89,8 +89,11 @@ def test_both_pages_render_adu_fee_note():
         assert "Handbook scenarios" in lab_text
         assert 'href="/lab"' in home_text
         assert 'href="/"' in lab_text
-        assert "github.com/tejaschaudhari131/arnold-ventures-housing-challenge/blob/main/docs/SMALL_HOMES_LAB.md" in lab_text
-        assert 'href="/docs/SMALL_HOMES_LAB.md"' not in lab_text
+        assert 'href="/docs/SMALL_HOMES_LAB.md"' in lab_text
+        doc_status, doc_body, _ = _get(base, "/docs/SMALL_HOMES_LAB.md")
+        assert doc_status == 200
+        assert b"Small Homes" in doc_body
+        assert not doc_body.lstrip().startswith(b"{")
         assert stamp_text() in home_text
         assert stamp_text() in lab_text
         assert 'display:inline-block;min-height:24px' in note_html("lab")

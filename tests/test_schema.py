@@ -8,7 +8,8 @@ import copy
 
 import pytest
 
-from src.data.acquire import _request
+from src.data.acquire import ALLOWED_HOSTS
+from src.data.safe_url import FetchDenied, assert_allowed
 from src.data.adapters import assert_no_pii
 from src.data.schema import CHALLENGE_STATES, TIER1_STATES, TIER2_STATES, load_fixtures, validate_state
 
@@ -52,5 +53,7 @@ def test_owner_and_mailing_fields_are_refused():
 
 
 def test_acquisition_rejects_hosts_outside_the_allowlist():
-    with pytest.raises(Exception, match="allowlist"):
-        _request("https://example.invalid/housing.csv")
+    with pytest.raises(FetchDenied):
+        assert_allowed("https://example.invalid/housing.csv", ALLOWED_HOSTS)
+    with pytest.raises(FetchDenied):
+        assert_allowed("http://www2.census.gov/housing.csv", ALLOWED_HOSTS)

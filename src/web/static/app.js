@@ -107,10 +107,14 @@
 
   function formatSetting(spec, value) {
     var n = Number(value);
+    if (!isFinite(n)) return "—";
     var step = Number(stepFor(spec));
     var digits = 0;
     if (step > 0 && step < 1) {
-      digits = Math.min(4, Math.ceil(-Math.log10(step)));
+      digits = Math.min(3, Math.ceil(-Math.log10(step)));
+    }
+    if (Math.abs(n) < 10 && Math.abs(n - Math.round(n)) > 1e-8) {
+      digits = Math.min(3, Math.max(digits, 2));
     }
     var body = n.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
     return body + unitSuffix(spec.unit);
@@ -506,7 +510,7 @@
     if (scenarioId === "combined" && chosen.cap_binding) {
       extra += "<p>Uncapped potential is " + tagged(chosen.uncapped_potential, "calculated", integer) +
         " completions, before the absorption cap and the ADU stock ceiling.";
-      if (chosen.absorption_cap_binding) {
+      if (chosen.absorption_cap_binding && capRoundsAboveZero(chosen.absorption_cap)) {
         extra += " The binding absorption cap is " + tagged(chosen.absorption_cap, "calculated", integer) + ".";
       }
       extra += "</p>";
@@ -522,6 +526,11 @@
     renderPackageNote();
   }
 
+  function capRoundsAboveZero(value) {
+    var n = Number(value);
+    return isFinite(n) && Math.round(n) !== 0;
+  }
+
   function renderPackageNote() {
     var note = document.getElementById("package-note");
     if (!note || !result || !result.components) return;
@@ -529,7 +538,7 @@
     var mm = result.components.combined_mm;
     var standaloneCap = result.scenarios.missing_middle.capacity_completions;
     var html = "Uncapped potential for the package is " + tagged(pack.uncapped_potential, "calculated", integer) + ".";
-    if (pack.absorption_cap_binding) {
+    if (pack.absorption_cap_binding && capRoundsAboveZero(pack.absorption_cap)) {
       html += " Where the absorption cap binds, that cap is " + tagged(pack.absorption_cap, "calculated", integer) + ".";
     }
     if (mm > standaloneCap) {
@@ -1036,8 +1045,9 @@
       "p10 " + tagged(mc.p10, "calculated", integer) +
       " · p50 " + tagged(mc.p50, "calculated", integer) +
       " · p90 " + tagged(mc.p90, "calculated", integer) +
-      ". The central point, with sliders at their published values, is " + tagged(central, "calculated", integer) +
-      ". Each draw samples every slider from a triangle on its low / central / high band." + flag;
+      ". The central point, with sliders at their current values, is " + tagged(central, "calculated", integer) +
+      ". Each draw samples every slider from a triangle on its published low-to-high band. " +
+      "An override becomes that slider's mode and the draw still varies." + flag;
     renderCards();
     renderCompare();
     renderBrief();
@@ -1251,8 +1261,16 @@
 
   document.getElementById("run-sensitivity").addEventListener("click", function () {
     setStatus("Running the tornado and the seeded band…");
-    post("/api/sensitivity", { state: stateCode, scenario: scenarioId, draws: 80 })
+    post("/api/sensitivity", {
+      state: stateCode,
+      scenario: scenarioId,
+      draws: 80,
+      overrides: overrides,
+      reforms: reformsPayload()
+    })
       .then(function (payload) {
+        var scope = document.getElementById("sensitivity-scope");
+        if (scope) scope.textContent = payload.scenario_label || "";
         renderTornado(payload.tornado);
         renderBand(payload.monte_carlo);
         setStatus("");
@@ -1272,7 +1290,16 @@
 
   async function download(fmt) {
     setStatus("Preparing the " + fmt.toUpperCase() + " export…");
-    var response = await fetch("/api/export?state=" + encodeURIComponent(stateCode) + "&format=" + fmt);
+    var response = await fetch("/api/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        state: stateCode,
+        format: fmt,
+        overrides: overrides,
+        reforms: reformsPayload()
+      })
+    });
     if (!response.ok) {
       setStatus("Export failed.");
       return;

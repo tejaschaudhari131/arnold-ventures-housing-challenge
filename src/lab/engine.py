@@ -394,6 +394,8 @@ def pipeline_effect(
     on the share of the pipeline that goes through discretionary review;
     the sooner-finished homes are reported separately as ``timing``.
     """
+    if horizon <= 0:
+        return {"baseline": 0.0, "cap_adjustment": 0.0, "delta": 0.0, "timing": 0.0, "by_type": {}}
     avg = county.bps_avg
     trend = p["permit_trend"]
     window = sum((1.0 + trend) ** t for t in range(1, int(horizon) + 1))
