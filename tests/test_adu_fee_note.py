@@ -36,18 +36,25 @@ def test_comparison_reads_both_engines_and_both_fees():
     doc = comparison("PA")
     lab = load_results("PA", allow_compute=False)
     catalog = load_assumptions()
-    assert doc["lab_adu"] == lab["statewide"]["results"]["adu"]["central"]
-    assert doc["lab_fee"] == central_params()["fee_per_unit"]
-    assert doc["core_fee"] == catalog.spec("adu_fee_per_unit")["central"]
+    assert doc["lab_adu"] == int(round(lab["statewide"]["results"]["adu"]["central"]))
+    assert doc["lab_fee"] == int(round(central_params()["fee_per_unit"]))
+    assert doc["core_fee"] == int(round(catalog.spec("adu_fee_per_unit")["central"]))
     assert doc["core_adu"] > doc["lab_adu"]
     assert doc["after_fee"] > doc["lab_adu"]
     assert doc["after_yield"] > doc["after_fee"]
+    assert doc["lab_baseline"] == 111016
+    assert doc["core_baseline"] == 108950
+    assert "2023-2025" in doc["baseline_note"]
+    assert doc["provenance"]["lab_adu"]["tag"] == "calculated"
+    assert doc["provenance"]["lab_fee"]["tag"] == "assumed"
+    assert "config/lab/assumptions.yaml" in doc["provenance"]["lab_fee"]["source"]
     note = note_text("docs")
     assert f"{doc['lab_fee']:,.0f}" in note
     assert f"{doc['core_fee']:,.0f}" in note
     assert "+6,048" in note
     assert "+46,261" in note
     assert "/lab" in note
+    assert "111,016" in note
 
 
 def test_both_pages_render_adu_fee_note():

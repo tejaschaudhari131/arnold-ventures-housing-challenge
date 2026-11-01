@@ -44,6 +44,7 @@ Every series below is public and is on the challenge data list, except the team-
 | ------- | ---------------- | ---------------- |
 | ACS 2019–2023 5-year summary file (Census) | Public domain, U.S. government work | `data/sample/fixtures.json` |
 | Building Permits Survey, 2022–2024 state and county files (Census) | Public domain, U.S. government work | `data/sample/fixtures.json` |
+| Building Permits Survey 2023-2025 county files (Lab) | Public domain | `data/sample/lab/{PA,NH}.json` |
 | Population estimates NST-EST2024 (Census) | Public domain, U.S. government work | `data/sample/fixtures.json` |
 | County gazetteer, 2024, land area and interior points (Census) | Public domain, U.S. government work | `data/sample/fixtures.json` and `data/sample/county_points.json` |
 | FHFA All-Transactions state house-price index | Public FHFA statistical release | `data/sample/fixtures.json` |

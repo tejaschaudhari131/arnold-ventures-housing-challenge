@@ -59,7 +59,7 @@ National Transit Database SODA endpoints returned HTTP 404 during this build. Th
 
 # Small Homes Policy Lab inputs
 
-The Lab (`src/lab/`, `/lab` in the simulator) has its own acquisition script, `python -m src.lab.acquire` (or `make lab-data`). It writes `data/cache/lab/` and, with `--write-sample`, refreshes the committed extracts in `data/sample/lab/` (about 220 KB in total). No raw national file is committed. Every dataset below is public domain or CC0, so the terms place no restriction on anyone who reuses the code, the extracts, or the results.
+The Lab (`src/lab/`, https://stateframe-housing.vercel.app/lab in the simulator) has its own acquisition script, `python -m src.lab.acquire` (or `make lab-data`). It writes `data/cache/lab/` and, with `--write-sample`, refreshes the committed extracts in `data/sample/lab/` (about 220 KB in total). No raw national file is committed. Every dataset below is public domain or CC0, so the terms place no restriction on anyone who reuses the code, the extracts, or the results.
 
 | Dataset | Source | Version / vintage | Access date | License / terms | Used for |
 | ------- | ------ | ----------------- | ----------- | --------------- | -------- |

@@ -31,7 +31,8 @@ def test_allegheny_case_separates_observed_assumed_and_calculated(bundle):
     assert study["calculated"]["allegheny_package"] > 0
     assert study["calculated"]["allegheny_share_of_package"] < 1
     tags = {field["tag"] for field in study["fields"]}
-    assert tags == set(TAGS)
+    assert {"observed", "assumed", "calculated"} <= tags
+    assert tags <= set(TAGS)
     assert untagged_numbers(study) == []
     text = render_markdown(study)
     assert "Allegheny County" in text

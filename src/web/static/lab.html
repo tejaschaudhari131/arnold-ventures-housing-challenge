@@ -51,14 +51,19 @@
         <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr>
       </p>
 
-      <section class="headline" id="headline"></section>
+      <p class="start-here" id="start-here">Start here: the answer is above the map. Then pick a reform, open a county — Allegheny is the walkthrough — and open Why this result?</p>
+      <section class="headline" id="headline" aria-label="Statewide answer"></section>
 
       <section class="no-print" aria-label="Scenario cards">
         <div class="panel-head">
           <h2>Scenarios</h2>
-          <p class="help">Handbook benchmarks 1, 2, 4, and 5. The package and approval reform are extra state-specific scenarios. Transit-oriented density is not modeled here.</p>
+          <p class="help">Handbook benchmarks: ADUs, missing middle, parking, and a 50% fee cut. The package and approval reform are extra state-specific scenarios. Transit-oriented density is not modeled here.</p>
         </div>
         <div class="cards" id="cards"></div>
+        <section id="extra-scenarios" aria-label="Also modeled, not a Handbook benchmark">
+          <h3>Also modeled, not a Handbook benchmark</h3>
+          <div class="cards" id="extra-cards"></div>
+        </section>
         <p id="adu-fee-note" class="adu-fee-note callout"><!-- ADU_FEE_NOTE --></p>
       </section>
 
@@ -67,16 +72,20 @@
           <h2 id="map-title">Counties</h2>
           <p class="help" id="map-help">Census cartographic boundaries, simplified. Color is the selected scenario's increment versus Baseline.</p>
         </div>
+        <a class="skip-map" href="#county-table">Skip map</a>
+        <label class="county-pick" for="county-select">Choose a county
+          <select id="county-select"></select>
+        </label>
         <div id="map-stage"></div>
         <div id="county-detail" class="callout" hidden></div>
       </section>
 
       <section class="panel-head">
         <h2>Why this result?</h2>
-        <button type="button" id="why-toggle">Open the Why drawer</button>
+        <button type="button" id="why-toggle" aria-expanded="false" aria-controls="why">Open the Why drawer</button>
       </section>
-      <aside class="why-drawer" id="why" hidden>
-        <p class="help">Each input is labeled observed, assumed, or calculated. The ADU pro forma is illustrative — not a construction bid.</p>
+      <aside class="why-drawer" id="why" hidden tabindex="-1">
+        <p class="help">Each input is labeled observed, assumed, or calculated. The ADU <abbr title="A simple cost-and-value worksheet for one building type.">pro forma</abbr> is illustrative — not a construction bid.</p>
         <div id="why-body"></div>
       </aside>
 
@@ -89,17 +98,18 @@
             <button type="button" id="export-csv">County CSV</button>
           </div>
         </div>
-        <div class="table-wrap tall">
+        <div class="table-wrap tall" id="county-table" role="region" tabindex="0" aria-label="County results table">
           <table>
+            <caption class="visually-hidden">County delivery, eligibility, feasibility, and uncertainty for the selected scenario</caption>
             <thead>
               <tr>
                 <th>County</th>
-                <th>Delivery</th>
-                <th>Eligible</th>
-                <th>Feasible</th>
-                <th>Envelope</th>
-                <th>Zoning</th>
-                <th>ACS MOE</th>
+                <th>Delivery <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
+                <th>Eligible <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
+                <th>Feasible <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
+                <th><abbr title="The likely range from 200 test runs of the published assumptions.">Envelope</abbr> <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
+                <th><abbr title="How the answer moves if unknown local rules are more or less strict.">Zoning</abbr> <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
+                <th><abbr title="Census survey error on the counts and prices that feed the model.">ACS MOE</abbr> <abbr class="tag observed" title="Measured in a public dataset and stored for this place.">observed</abbr></th>
               </tr>
             </thead>
             <tbody id="county-body"></tbody>

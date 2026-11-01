@@ -74,8 +74,14 @@ def test_lab_page_and_locked_results_leave_home_intact():
         assert any(row["tag"] == "observed" for row in why["inputs"])
         assert any(row["tag"] == "assumed" for row in why["assumptions"])
         assert why["result"]["tag"] == "calculated"
+        assert why["coverage"]["tag"] == "calculated"
+        assert why["package_decomposition"]["tag"] == "calculated"
+        assert "2023-2025" in why["inputs"][-1]["source"] or any(
+            "2023-2025" in row.get("source", "") for row in why["inputs"]
+        )
         assert "illustrative" in why["option_note"].lower()
         assert why["lots_note"] and "2012" in why["lots_note"]
+        assert results["close_call_flip_share_label"] == "close-call threshold"
 
         export_status, export_body, headers = _get(base, "/api/lab/export?state=PA&format=md&county=Allegheny")
         brief = export_body.decode("utf-8")

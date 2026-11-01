@@ -26,9 +26,10 @@ def simulate_many(fixtures: dict[str, Any], assumptions: Any, states: list[str] 
 
 
 _EXPORT_TAGS = {
-    "tier": "observed",
-    "completeness": "assumed",
+    "tier": "classification",
+    "completeness": "calculated",
 }
+COMPLETENESS_SOURCE = "docs/DATA_PROVENANCE.md"
 
 
 def _is_number(value: Any) -> bool:
@@ -52,9 +53,12 @@ def comparison_rows(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "incremental_permits": round(scenario["incremental_permits"], 1),
                 "incremental_completions": round(scenario["incremental_completions"], 1),
                 "annualized_completions": round(scenario["annualized_completions"], 1),
+                "annualized_level": round(scenario["annualized_level"], 1),
+                "annualized_increment": round(scenario["annualized_increment"], 1),
                 "lift_pct": round(scenario["lift_pct"], 2),
                 "cap_binding": scenario["cap_binding"],
                 "capacity_completions": round(scenario["capacity_completions"], 1),
+                "completeness_source": COMPLETENESS_SOURCE,
             }
             for key, value in list(row.items()):
                 if _is_number(value):
@@ -100,10 +104,18 @@ def to_markdown(results: list[dict[str, Any]]) -> str:
         )
     lines.append("")
     lines.append("Figures are 5-year net completions added by the reform, except the baseline column, which is total completions under current rules. The package is not the sum of the five reforms.")
+    lines.append(
+        "The missing-middle cap_binding flag applies to merchant completions only "
+        "(teardown and conversion). The CSV exports that capacity as capacity_completions "
+        "and splits the old annualized_completions column into annualized_level "
+        "(five-year completions / 5) and annualized_increment (net new / 5). "
+        "Tier is a classification. Completeness is a calculated score; see "
+        "docs/DATA_PROVENANCE.md."
+    )
     from src.adu_fee_note import note_text
 
     lines.append(note_text("docs"))
-    lines.append("Tags: observed = public measurement; assumed = published assumption or imputation; calculated = equation output. Tier is observed. Every completion figure in this table is calculated.")
+    lines.append("Tags: observed = public measurement; assumed = published assumption or imputation; calculated = equation output; classification = documented grouping. Every completion figure in this table is calculated.")
     lines.append("Allowed tags: " + ", ".join(TAGS) + ".")
     return "\n".join(lines) + "\n"
 

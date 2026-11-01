@@ -35,8 +35,22 @@ def test_policy_comparison_stays_within_four_pages():
     assert "+6,048" in text
     assert "+12,916" in text
     from src.adu_fee_note import note_text
+    from src.lab.policy_tables import allegheny_table, nh_table, pa_statewide_table
 
     assert note_text("docs") in text
+    assert pa_statewide_table() in text
+    assert allegheny_table() in text
+    assert nh_table() in text
+    assert "ADU vs parking flips in 20 percent" in text
+    assert "core baseline (108,950)" in text
+    method = (ROOT / "docs" / "SMALL_HOMES_LAB.md").read_text(encoding="utf-8")
+    assert "fees come out ahead in 19% of the 200 assumption draws (38 of 200)" in method
+    assert "This 10% is the flag threshold" in method
+    model = (ROOT / "docs" / "MODEL_AND_ASSUMPTIONS.md").read_text(encoding="utf-8")
+    assert "250 draws" in model and "defaults to 60" in model
+    assert "the Lab uses 2,000" in model
+    disclosures = (ROOT / "docs" / "DISCLOSURES.md").read_text(encoding="utf-8")
+    assert "Building Permits Survey 2023-2025 county files (Lab)" in disclosures
 
 
 def test_sbom_matches_requirements_pins():

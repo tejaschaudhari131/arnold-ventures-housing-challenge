@@ -62,7 +62,7 @@ Integer units use largest-remainder rounding. Tags on this table are calculated.
 
 | Pathway | Allegheny County | Pennsylvania |
 | ------- | ---------------: | -----------: |
-| Baseline completions, 5 years | 11,457 | 108,950 |
+| Core baseline completions, 5 years | 11,457 | 108,950 |
 | ADUs, net | 4,435 | 46,261 |
 | Missing middle, net | 394 | 14,111 |
 | Transit-oriented density, net | 55 | 1,038 |
@@ -70,7 +70,7 @@ Integer units use largest-remainder rounding. Tags on this table are calculated.
 | Fee reduction, net | 748 | 6,490 |
 | Package, net | 6,574 | 74,114 |
 
-The Lab's Pennsylvania ADU increment (+6,048) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +46,261. That fee gap is why the two numbers differ. Walking the Lab toward the core, one step at a time: use the $6,000 fee (+12,505); then value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+31,489); then drop adoption and build lags (+48,192), within about 4 percent of the core. See the Lab at /lab and the core engine at /.
+ADU results depend heavily on local ADU fees. At the Handbook's $50,000 fee: +6,048. At a $6,000 fee: +12,505. Our headline uses the Handbook fee. The Lab's Pennsylvania ADU increment (+6,048) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +46,261. That fee gap is why the two numbers differ. Walking the Lab toward the core: value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+31,489); then drop adoption and build lags (+48,192), within about 4 percent of the core. See the Lab at https://stateframe-housing.vercel.app/lab and the core engine at https://stateframe-housing.vercel.app/. The Lab baseline (111,016) and the core baseline (108,950) use the same completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 permit average and the core uses 2022-2024. That moves Pennsylvania by +1,988, mostly from 5+ unit permits (+2,170). The Lab also adds a +78 host adjustment for already-legal homes.
 
 Plain language for the state package:
 

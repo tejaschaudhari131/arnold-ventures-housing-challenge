@@ -40,6 +40,9 @@
         <abbr class="tag calculated" title="Arithmetic in src/model/equations.py, using observed inputs and published assumptions.">calculated</abbr>
       </p>
 
+      <p class="start-here" id="start-here">Start here: the statewide answer is above the map. Then pick a county, or open Compare for the table.</p>
+      <section class="headline no-print" id="headline" aria-label="Statewide answer"></section>
+
       <section class="map-wrap no-print" aria-label="State and county map">
         <div class="panel-head">
           <h2 id="map-title">Counties</h2>
@@ -48,11 +51,13 @@
           </div>
         </div>
         <p class="help" id="map-help">Click a state, then a county. Circles sit on Census interior points. The outline is the convex hull of those points, not a legal boundary.</p>
+        <a class="skip-map" href="#county-table">Skip map</a>
+        <label class="county-pick" for="county-select">Choose a county
+          <select id="county-select"></select>
+        </label>
         <div id="map-stage"></div>
         <div id="county-detail" class="callout" hidden></div>
       </section>
-
-      <section class="headline no-print" id="headline"></section>
 
       <section class="no-print" aria-label="Scenario cards">
         <div class="panel-head">
@@ -63,18 +68,23 @@
         <p id="adu-fee-note" class="adu-fee-note callout"><!-- ADU_FEE_NOTE --></p>
       </section>
 
-      <nav class="tabs no-print" aria-label="Result views">
-        <button type="button" class="tab active" data-tab="compare">Compare</button>
-        <button type="button" class="tab" data-tab="math">Show the math</button>
-        <button type="button" class="tab" data-tab="sensitivity">Sensitivity</button>
-        <button type="button" class="tab" data-tab="counties">Counties</button>
-        <button type="button" class="tab" data-tab="cross">Cross-check</button>
-        <button type="button" class="tab" data-tab="case">Pennsylvania case study</button>
-        <button type="button" class="tab" data-tab="brief">One-page brief</button>
-        <button type="button" class="tab" data-tab="limits">What this cannot tell you</button>
+      <nav class="tabs no-print" role="tablist" aria-label="Result views">
+        <button type="button" class="tab active" role="tab" id="tab-compare" data-tab="compare" aria-selected="true" aria-controls="panel-compare">Compare</button>
+        <button type="button" class="tab" role="tab" id="tab-math" data-tab="math" aria-selected="false" aria-controls="panel-math">Show the math</button>
+        <button type="button" class="tab" role="tab" id="tab-counties" data-tab="counties" aria-selected="false" aria-controls="panel-counties">Counties</button>
+        <button type="button" class="tab" role="tab" id="tab-brief" data-tab="brief" aria-selected="false" aria-controls="panel-brief">One-page brief</button>
+        <div class="tabs-more">
+          <button type="button" id="more-tabs" aria-expanded="false" aria-controls="more-tab-list">For analysts</button>
+          <div id="more-tab-list" hidden>
+            <button type="button" class="tab" role="tab" id="tab-sensitivity" data-tab="sensitivity" aria-selected="false" aria-controls="panel-sensitivity">Sensitivity</button>
+            <button type="button" class="tab" role="tab" id="tab-cross" data-tab="cross" aria-selected="false" aria-controls="panel-cross">Cross-check</button>
+            <button type="button" class="tab" role="tab" id="tab-case" data-tab="case" aria-selected="false" aria-controls="panel-case">Pennsylvania case study</button>
+            <button type="button" class="tab" role="tab" id="tab-limits" data-tab="limits" aria-selected="false" aria-controls="panel-limits">What this cannot tell you</button>
+          </div>
+        </div>
       </nav>
 
-      <section class="panel active" id="panel-compare">
+      <section class="panel active" id="panel-compare" role="tabpanel" aria-labelledby="tab-compare">
         <div class="panel-head">
           <h2>Baseline and five reforms</h2>
           <div class="exports">
@@ -84,8 +94,9 @@
           </div>
         </div>
         <p class="help">Select a row to inspect its equation trace. Incremental figures are net completions added over five years, on top of the baseline. The package does not add the five reforms together. Exported CSV and JSON repeat the observed, assumed, or calculated tag on every number.</p>
-        <div class="table-wrap">
+        <div class="table-wrap" role="region" tabindex="0" aria-label="Scenario comparison table">
           <table id="compare-table">
+            <caption class="visually-hidden">Baseline and reform completions</caption>
             <thead>
               <tr>
                 <th>Scenario</th>
@@ -102,7 +113,7 @@
         <div id="drivers" class="callout"></div>
       </section>
 
-      <section class="panel" id="panel-math" hidden>
+      <section class="panel" id="panel-math" role="tabpanel" aria-labelledby="tab-math" hidden>
         <div class="panel-head">
           <h2>Show the math</h2>
           <p id="math-focus" class="help"></p>
@@ -110,23 +121,24 @@
         <div id="math-steps"></div>
       </section>
 
-      <section class="panel" id="panel-sensitivity" hidden>
+      <section class="panel" id="panel-sensitivity" role="tabpanel" aria-labelledby="tab-sensitivity" hidden>
         <div class="panel-head">
           <h2>What moves the result</h2>
           <button type="button" id="run-sensitivity">Run tornado and confidence band</button>
         </div>
-        <p class="help">Each bar sets one published assumption to its low value and its high value, holding the others at central. The band is a seeded Monte Carlo draw from those same ranges. A close-call badge appears when the p10–p90 band crosses zero.</p>
+        <p class="help">Each bar sets one published assumption to its low value and its high value, holding the others at central. The band is a seeded Monte Carlo draw from those same ranges. An outcome-uncertain badge appears when the p10–p90 band crosses zero.</p>
         <div id="band" class="callout"></div>
         <div id="tornado"></div>
       </section>
 
-      <section class="panel" id="panel-counties" hidden>
+      <section class="panel" id="panel-counties" role="tabpanel" aria-labelledby="tab-counties" hidden>
         <div class="panel-head">
           <h2>County and planning-region breakdown</h2>
         </div>
         <p class="help">Integer units use largest-remainder rounding, so the column adds up to the rounded state total. Connecticut is shown as the nine Census planning regions used in the 2019–2023 ACS. A star marks an imputed median value.</p>
-        <div class="table-wrap tall">
-          <table id="county-table">
+        <div class="table-wrap tall" id="county-table" role="region" tabindex="0" aria-label="County results table">
+          <table id="county-table-grid">
+            <caption class="visually-hidden">County completions by scenario</caption>
             <thead>
               <tr>
                 <th>County</th>
@@ -145,7 +157,7 @@
         </div>
       </section>
 
-      <section class="panel" id="panel-cross" hidden>
+      <section class="panel" id="panel-cross" role="tabpanel" aria-labelledby="tab-cross" hidden>
         <div class="panel-head">
           <h2>Tier-1 versus tier-2 cross-check</h2>
           <button type="button" id="run-cross">Run on CT, WI, UT, and HI</button>
@@ -154,7 +166,7 @@
         <div id="cross-out"></div>
       </section>
 
-      <section class="panel" id="panel-case" hidden>
+      <section class="panel" id="panel-case" role="tabpanel" aria-labelledby="tab-case" hidden>
         <div class="panel-head">
           <h2>Pennsylvania incomplete-data case study</h2>
           <div class="exports">
@@ -166,7 +178,7 @@
         <div id="case-body"></div>
       </section>
 
-      <section class="panel" id="panel-brief" hidden>
+      <section class="panel" id="panel-brief" role="tabpanel" aria-labelledby="tab-brief" hidden>
         <div class="panel-head no-print">
           <h2>One-page brief</h2>
           <button type="button" id="print-brief">Print brief</button>
@@ -174,7 +186,7 @@
         <article id="brief"></article>
       </section>
 
-      <section class="panel" id="panel-limits" hidden>
+      <section class="panel" id="panel-limits" role="tabpanel" aria-labelledby="tab-limits" hidden>
         <h2>What this model cannot tell you</h2>
         <div id="limits"></div>
       </section>
