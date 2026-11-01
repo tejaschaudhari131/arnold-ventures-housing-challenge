@@ -173,6 +173,26 @@ def test_sensitivity_follows_the_open_view():
         httpd.server_close()
 
 
+def test_draws_reject_unicode_digits_and_non_integers():
+    httpd = _server()
+    base = f"http://127.0.0.1:{httpd.server_address[1]}"
+    bad = ("²", "٢٠", "", " 20", "1e2", True, None)
+    try:
+        for value in bad:
+            for path, message in (
+                ("/api/sensitivity", "draws must be an integer from 20 to 400."),
+                ("/api/crossval", "draws must be an integer from 20 to 200."),
+            ):
+                code, body, _ = _post(base, path, {"state": "PA", "scenario": "combined", "draws": value})
+                assert code == 400, (path, value, body)
+                assert body["error"] == message
+                assert "²" not in body["error"]
+                assert "٢٠" not in body["error"]
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
 def test_out_of_range_draws_are_rejected():
     httpd = _server()
     base = f"http://127.0.0.1:{httpd.server_address[1]}"

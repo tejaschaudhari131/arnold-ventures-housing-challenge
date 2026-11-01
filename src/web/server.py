@@ -66,29 +66,32 @@ def public_error(message: str) -> str:
     return text or "Bad request"
 
 
-def finite_draws(raw: Any, default: int, low: int, high: int) -> int:
-    """Accept an integer in [low, high]. Reject anything else. Do not clamp or echo it."""
-    message = f"draws must be an integer from {low} to {high}."
-    if raw is None:
-        raw = default
-    if isinstance(raw, bool):
+def parse_request_int(raw: Any, low: int, high: int, label: str) -> int:
+    """Accept a JSON int or an ASCII digit string inside [low, high].
+
+    Unicode digits such as superscript ² and Arabic-Indic ٢٠ are not integers
+    here. ``str.isdigit`` is true for both, and ``int`` then raises or would
+    misread them. The message names the range and does not repeat the input.
+    """
+    message = f"{label} must be an integer from {low} to {high}."
+    if isinstance(raw, bool) or not isinstance(raw, (int, str)):
         raise AssumptionError(message)
     if isinstance(raw, str):
-        text = raw.strip()
-        if not text.lstrip("+-").isdigit():
+        if not (raw.isascii() and raw.isdigit()):
             raise AssumptionError(message)
-        number = int(text)
-    elif isinstance(raw, int):
-        number = raw
-    elif isinstance(raw, float):
-        if not math.isfinite(raw) or not raw.is_integer():
-            raise AssumptionError(message)
-        number = int(raw)
+        try:
+            number = int(raw)
+        except ValueError:
+            raise AssumptionError(message) from None
     else:
-        raise AssumptionError(message)
+        number = raw
     if number < low or number > high:
         raise AssumptionError(message)
     return number
+
+
+def finite_draws(raw: Any, low: int, high: int) -> int:
+    return parse_request_int(raw, low, high, "draws")
 
 
 _VIEW_LABELS = {
@@ -207,7 +210,7 @@ class App:
         state = self._check_state(str(payload.get("state", "PA")))
         scenario = str(payload.get("scenario", "combined"))
         self._check_scenario(scenario)
-        draws = finite_draws(payload.get("draws", 80), 80, 20, 400)
+        draws = finite_draws(payload["draws"], 20, 400) if "draws" in payload else 80
         overrides = payload.get("overrides") or {}
         if not isinstance(overrides, dict):
             raise AssumptionError("overrides must be an object.")
@@ -236,7 +239,7 @@ class App:
 
     def crossval(self, payload: dict[str, Any]) -> dict[str, Any]:
         scope = str(payload.get("scope", "tier1"))
-        draws = finite_draws(payload.get("draws", 40), 40, 20, 200)
+        draws = finite_draws(payload["draws"], 20, 200) if "draws" in payload else 40
         if scope == "tier1":
             return cross_validate_tier1(self.fixtures, self.assumptions, draws=draws)
         state = self._check_state(str(payload.get("state", "CT")))
@@ -428,10 +431,7 @@ def make_handler(app: App):
 
         def _read_json(self) -> dict[str, Any]:
             raw_length = self.headers.get("Content-Length", "0")
-            try:
-                length = int(raw_length)
-            except (TypeError, ValueError) as exc:
-                raise AssumptionError("Content-Length must be an integer.") from exc
+            length = parse_request_int(raw_length, 0, MAX_BODY, "Content-Length")
             if length < 0 or length > MAX_BODY:
                 raise AssumptionError("Request body is too large")
             raw = self.rfile.read(length) if length else b"{}"
