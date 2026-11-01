@@ -63,6 +63,7 @@
   var timer = null;
   var requestId = 0;
   var aduCompare = null;
+  var aduCache = {};
   var shown = 0;
   var animToken = 0;
   var lastFocus = null;
@@ -279,6 +280,14 @@
     history.replaceState(null, "", "?" + q.toString() + location.hash);
   }
 
+  function loadAduCompare(code) {
+    if (aduCache[code]) return Promise.resolve(aduCache[code]);
+    return get("/api/adu-compare?state=" + code).then(function (doc) {
+      aduCache[code] = doc;
+      return doc;
+    });
+  }
+
   function fillAduFeeNote() {
     var el = document.getElementById("adu-fee-note");
     if (!el || !aduCompare) return;
@@ -311,7 +320,7 @@
       get("/api/lab/results?state=" + stateCode),
       get("/api/lab/geo?state=" + stateCode),
       catalog ? Promise.resolve(catalog) : get("/api/lab/assumptions"),
-      aduCompare ? Promise.resolve(aduCompare) : get("/api/adu-compare?state=PA")
+      loadAduCompare(stateCode)
     ]).then(function (parts) {
       if (id !== requestId) return;
       locked = parts[0];
@@ -374,7 +383,7 @@
     var pair = sw.top_benchmark_pair;
     var trail = sw.results[pair.trailer];
     var lead = sw.results[pair.leader];
-    return scenarioLabel(pair.leader) + " ≈ " + scenarioLabel(pair.trailer) +
+    return "Central estimate favors " + scenarioLabel(pair.leader) +
       "; " + scenarioLabel(pair.trailer) + " ahead in " + Math.round(pair.flip_share * 100) +
       "% of draws (draw medians " + medianShort(pair.trailer) + " " + integer(trail.p50) +
       " vs " + medianShort(pair.leader) + " " + integer(lead.p50) + ")";
@@ -383,7 +392,7 @@
   function rankingLine(sw) {
     var rank = sw.benchmark_ranking || [];
     if (isDrawTie(sw.top_benchmark_pair) && rank.length >= 2) {
-      return scenarioLabel(rank[0]) + " ≈ " + scenarioLabel(rank[1]) +
+      return "Statistical tie (" + scenarioLabel(rank[0]) + " and " + scenarioLabel(rank[1]) + ")" +
         (rank.length > 2 ? " > " + rank.slice(2).map(scenarioLabel).join(" > ") : "");
     }
     return rank.map(scenarioLabel).join(" > ");
@@ -397,8 +406,9 @@
     if (isDrawTie(pair) && sw) {
       var trail = sw.results[pair.trailer];
       var lead = sw.results[pair.leader];
-      return '<span class="badge-close" title="The envelope median ranking disagrees with the central ranking. The ' +
-        escapeHtml(threshold) + ' is 10 percent of draws.">Ranking is a tie: ' +
+      return '<span class="badge-close" title="The central estimate and the median draw disagree, so this is a statistical tie. The ' +
+        escapeHtml(threshold) + ' is 10 percent of draws.">Statistical tie: central estimate favors ' +
+        escapeHtml(scenarioLabel(pair.leader)) + "; " +
         escapeHtml(scenarioLabel(pair.trailer)) + " comes out ahead in " +
         Math.round(pair.flip_share * 100) + " of 100 test runs (typical result " +
         integer(trail.p50) + " vs " + integer(lead.p50) + ").</span>";
@@ -519,17 +529,28 @@
   }
 
   function renderRecon() {
-    var note = catalog && catalog.reconciliation_note;
+    var yaml = catalog && catalog.reconciliation_note;
+    var note = aduCompare && aduCompare.notes && aduCompare.notes.engine_gap_lab_html;
     var box = document.getElementById("recon");
     var methods = document.getElementById("methods-recon");
-    if (!note) {
-      box.hidden = true;
-      if (methods) methods.hidden = true;
-      return;
+    var html = yaml || note || "";
+    if (!html) return;
+    if (box) {
+      box.hidden = false;
+      if (yaml) box.textContent = yaml;
+      else box.innerHTML = note;
     }
-    box.hidden = false;
-    box.textContent = note;
-    if (methods) methods.hidden = true;
+    if (methods) {
+      methods.hidden = false;
+      if (yaml) methods.textContent = yaml;
+      else methods.innerHTML = note;
+    }
+  }
+
+  function placeLabel(index, key, sw) {
+    var pair = sw.top_benchmark_pair;
+    if (isDrawTie(pair) && (key === pair.leader || key === pair.trailer)) return "Statistical tie";
+    return "#" + (index + 1) + " on its own";
   }
 
   function closeBadgeHtml(k, sw) {
@@ -537,8 +558,14 @@
     if (!pair || !pair.close_call) return "";
     if (k !== pair.leader && k !== pair.trailer) return "";
     var flip = Math.round(pair.flip_share * 100);
+    if (isDrawTie(pair)) {
+      return '<button type="button" class="badge" aria-expanded="false" data-badge="close">Statistical tie</button>' +
+        '<span class="sr">' + escapeHtml(scenarioLabel(pair.trailer)) + " ahead in " + flip +
+        "% of test runs. The central estimate favors " + escapeHtml(scenarioLabel(pair.leader)) + ".</span>";
+    }
     return '<button type="button" class="badge" aria-expanded="false" data-badge="close">Ranking is close</button>' +
-      '<span class="sr">order flips in ' + flip + "% of test runs. Both are strong options.</span>";
+      '<span class="sr">' + escapeHtml(scenarioLabel(pair.trailer)) + " ahead in " + flip +
+      "% of test runs. Both are strong options.</span>";
   }
 
   function outcomeBadgeHtml(row) {
@@ -555,7 +582,7 @@
       var pressed = on.has(k);
       return '<article class="card" role="listitem">' +
         '<button type="button" class="tog" aria-pressed="' + pressed + '" data-k="' + k + '">' +
-        "<span><span class='help'>#" + (i + 1) + " on its own</span><span class='card-title'>" +
+        "<span><span class='help'>" + escapeHtml(placeLabel(i, k, sw)) + "</span><span class='card-title'>" +
         escapeHtml(PLAIN[k]) + "</span></span><span class='sw' aria-hidden='true'></span></button>" +
         '<div class="n">' + signed(row.central) + tag("calculated") + "</div>" +
         '<div class="mini" aria-hidden="true"><i style="left:' + (row.p10 / mx * 100) +
@@ -590,9 +617,13 @@
         btn.setAttribute("aria-expanded", open ? "false" : "true");
         if (btn.getAttribute("data-badge") === "close") {
           var pair = docStatewide().top_benchmark_pair;
-          btn.textContent = open ? "Ranking is close" :
-            "Ranking is close: order flips in " + Math.round(pair.flip_share * 100) +
-            "% of test runs. Both are strong options.";
+          var ahead = scenarioLabel(pair.trailer) + " ahead in " + Math.round(pair.flip_share * 100) + "% of test runs.";
+          if (isDrawTie(pair)) {
+            btn.textContent = open ? "Statistical tie" :
+              "Statistical tie: central estimate favors " + scenarioLabel(pair.leader) + "; " + ahead;
+          } else {
+            btn.textContent = open ? "Ranking is close" : "Ranking is close: " + ahead + " Both are strong options.";
+          }
         } else {
           btn.textContent = open ? "Outcome uncertain" : "Outcome uncertain: under some assumptions this reform adds no homes.";
         }

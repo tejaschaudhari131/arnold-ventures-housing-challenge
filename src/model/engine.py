@@ -701,6 +701,8 @@ def _combined_row(
     tod_homes = packaged["tod_homes_removed"] * tod_factor
     raw_mm = mm_completions
     raw_tod = tod_completions
+    raw_mm_homes = mm_homes
+    raw_tod_homes = tod_homes
     mm_completions, tod_completions, merchant_binding = _cap_pair(
         mm_completions, tod_completions, packaged["merchant_cap"]
     )
@@ -713,6 +715,9 @@ def _combined_row(
     consumed = mm_homes + tod_homes
     sf_stock = max(packaged["sf_stock"], 1.0)
     adu_scale = max(0.0, 1.0 - consumed / sf_stock)
+    # Capacity uses the pre-ceiling stock, so an absorption cap that frees
+    # ADU hosts does not push the reported total above capacity.
+    open_scale = max(0.0, 1.0 - (raw_mm_homes + raw_tod_homes) / sf_stock)
     adu_completions = packaged["adu_completions"] * adu_scale * mix["adu"]
     adu_permits = packaged["adu_permits"] * adu_scale * mix["adu"]
     parking_completions = standalone["parking_completions"] * (1.0 - shed_share) * mix["parking"]
@@ -723,6 +728,14 @@ def _combined_row(
     completions = adu_completions + mm_completions + tod_completions + parking_completions + fee_completions
     permits = adu_permits + mm_permits + tod_permits + parking_permits + fee_permits
     adu_binding = mix["adu"] > 0 and packaged["adu_capped"]
+    # Overlap is already applied. Capacity is that package before the
+    # absorption cap and the ADU stock ceiling. Parking and fees have no
+    # separate ceiling, so they sit in both figures. Package missing middle
+    # can exceed the standalone missing-middle total because this pro forma
+    # includes the fee cut and market parking; the county absorption cap
+    # still applies to that larger pipeline.
+    open_adu = float(packaged.get("adu_capacity", packaged["adu_completions"])) * open_scale * mix["adu"]
+    capacity = open_adu + raw_mm + raw_tod + parking_completions + fee_completions
     return {
         "completions": completions,
         "permits": permits,
@@ -732,7 +745,7 @@ def _combined_row(
         "parking": parking_completions,
         "fees": fee_completions,
         "binding": merchant_binding or adu_binding,
-        "capacity": packaged["adu_completions"] + packaged["mm_completions"] + packaged["tod_completions"],
+        "capacity": capacity,
     }
 
 

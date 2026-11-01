@@ -168,8 +168,9 @@ def test_pa_top_pair_tie_clause_reads_draw_medians():
     clause = top_pair_tie_clause(pair, sw["results"])
     assert homes(sw["results"]["adu"]["p50"]) in clause
     assert homes(sw["results"]["missing_middle"]["p50"]) in clause
-    assert "≈" in clause
-    assert ranking_phrase(sw["benchmark_ranking"], pair).startswith("Missing middle ≈ ADUs")
+    assert "Central estimate favors" in clause
+    assert "ahead in" in clause
+    assert ranking_phrase(sw["benchmark_ranking"], pair).startswith("Statistical tie (Missing middle and ADUs)")
 
 
 def test_envelope_params_exclude_zoning_priors_and_locked_constants():

@@ -127,7 +127,7 @@ A comparison between two scenarios is flagged as a **close call** if any of the 
 
 **Auckland ceiling.** Greenaway-McGrevy & Phillips 2023 (JUE 136:103555; https://doi.org/10.1016/j.jue.2023.103555) report 21,808 extra dwellings permitted over five years, about 4.11% of Auckland's regional dwelling stock. Five-year Missing Middle, ADU + Missing Middle, and package net completions divided by ACS B25001 housing stock must stay at or under 4.1% for every state and county output (`tests/test_lab_engine.py`). Any result above that needs explicit justification.
 
-In Pennsylvania, Missing middle ≈ ADUs; ADUs ahead in 63% of draws (draw medians ADU 6,390 vs MM 5,063) (1258 of 2,000). It would flip at any of these values:
+In Pennsylvania, Central estimate favors Missing middle; ADUs ahead in 63% of draws (draw medians ADU 6,390 vs MM 5,063) (1258 of 2,000). It would flip at any of these values:
 
 - homeowner uptake hazard (feasible lots) 0.27% a year (central 0.30% a year)
 - conversion / addition hard cost per added home $167,311 (central $160,000)
@@ -165,7 +165,7 @@ Resolution removes 3,477 double-counted homes. The fee cut adds more inside the 
 
 ## 9. Why the Lab's ADU total differs from the core engine's
 
-ADU results depend heavily on local ADU fees. At the Handbook's $50,000 fee: +5,617. At a $6,000 fee: +13,130. Our headline uses the Handbook fee. The Lab's Pennsylvania ADU increment (+5,617) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +46,261. That fee gap is why the two numbers differ. Walking the Lab toward the core: value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+12,463); then drop adoption and build lags (+19,761), within about 57 percent of the core. See the Lab at https://stateframe-housing.vercel.app/lab and the core engine at https://stateframe-housing.vercel.app/. The Lab baseline (111,061) and the core baseline (108,950) use the same completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 permit average and the core uses 2022-2024. That moves Pennsylvania by +1,988, mostly from 5+ unit permits (+2,170). The Lab also adds a +123 host adjustment for already-legal homes.
+Lab at the Handbook's $50,000 fee: +5,617. Lab at a $6,000 fee: +13,130. Core at a $6,000 fee: +46,261. The same $6,000 fee does not match because the Lab is a county-level model and the core uses a different adoption and valuation model. The Lab's Pennsylvania ADU increment (+5,617) applies the Handbook's $50,000 per-home fee to ADUs. The core Stateframe engine uses its own $6,000 ADU fee and reports +46,261. Walking the Lab toward the core: value the ADU the way a homeowner does — 4.5 percent cap rate, no operating share, rent × 0.85 (+12,463); then drop adoption and build lags (+19,761), within about 57 percent of the core. The Lab numbers answer the Handbook scenarios (Handbook $50,000 per-home fees, county-level model). The core numbers are an eleven-state screening model with a $6,000 ADU fee. Pennsylvania package: Lab +18,023, core +74,114. See the Lab at https://stateframe-housing.vercel.app/lab and the core engine at https://stateframe-housing.vercel.app/. The Lab baseline (111,061) and the core baseline (108,950) differ by +2,111. They use the same completion shares (0.93/0.90/0.84) and the same 5-year window. The Lab uses the 2023-2025 permit average and the core uses 2022-2024 (+1,988). The Lab also adds a +123 host adjustment for already-legal homes.
 
 
 The two engines also answer different questions. The table below moves the Lab's assumptions toward the core engine's one at a time, cumulatively.
@@ -173,7 +173,7 @@ The two engines also answer different questions. The table below moves the Lab's
 | Step | PA ADU homes |
 | ---- | ------------ |
 | Lab central (Handbook $50,000 fee per home, investor yield, adoption and build lags) | 5,617 |
-| Core engine's ADU fee of $6,000 instead of the Handbook's $50,000 | 13,130 |
+| Lab with a $6,000 fee instead of the Handbook's $50,000 | 13,130 |
 | Homeowner yield: cap rate 4.5%, no operating share, rent × 0.85 | 12,463 |
 | No adoption lag and no build lag | 19,761 |
 

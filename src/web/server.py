@@ -39,6 +39,9 @@ STATIC_FILES = {
     "/lab.js": ("lab.js", "text/javascript; charset=utf-8"),
 }
 MAX_BODY = 64_000
+# Static files and the fingerprinted Lab results/geo payloads. HTML is
+# included because the injected notes change only when the build changes.
+PUBLIC_CACHE = "public, max-age=300, s-maxage=86400"
 
 
 def _state_catalog(fixtures: dict[str, Any]) -> list[dict[str, Any]]:
@@ -235,21 +238,33 @@ def make_handler(app: App):
             # Quiet by default. Tests and local runs do not need access-line noise.
             return
 
-        def _send(self, status: int, body: bytes, content_type: str, filename: str | None = None) -> None:
+        def _send(
+            self,
+            status: int,
+            body: bytes,
+            content_type: str,
+            filename: str | None = None,
+            cache_control: str | None = None,
+        ) -> None:
             self.send_response(status)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("X-Frame-Options", "DENY")
             self.send_header("Referrer-Policy", "no-referrer")
-            self.send_header("Cache-Control", "no-store")
+            self.send_header("Cache-Control", cache_control or "no-store")
             if filename:
                 self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
             self.end_headers()
             self.wfile.write(body)
 
-        def _json(self, status: int, payload: Any) -> None:
-            self._send(status, json.dumps(payload).encode("utf-8"), "application/json; charset=utf-8")
+        def _json(self, status: int, payload: Any, cache_control: str | None = None) -> None:
+            self._send(
+                status,
+                json.dumps(payload).encode("utf-8"),
+                "application/json; charset=utf-8",
+                cache_control=cache_control,
+            )
 
         def _read_json(self) -> dict[str, Any]:
             length = int(self.headers.get("Content-Length", "0"))
@@ -271,13 +286,15 @@ def make_handler(app: App):
                 name, content_type = STATIC_FILES[path]
                 body = (STATIC_DIR / name).read_bytes()
                 if path in {"/", "/index.html", "/lab", "/lab.html"}:
-                    body = _with_adu_fee_note(body, path)
-                self._send(200, body, content_type)
+                    body = _with_page_notes(body, path)
+                self._send(200, body, content_type, cache_control=PUBLIC_CACHE)
                 return
             query = parse_qs(parsed.query)
             try:
                 if path == "/api/health":
-                    self._json(200, {"ok": True})
+                    from src.version import build_info
+
+                    self._json(200, {"ok": True, **build_info()})
                 elif path == "/api/states":
                     self._json(200, app.states())
                 elif path == "/api/assumptions":
@@ -293,9 +310,9 @@ def make_handler(app: App):
                 elif path == "/api/case-study":
                     self._json(200, app.case_study())
                 elif path == "/api/lab/results":
-                    self._json(200, app.lab_results(query.get("state", ["PA"])[0]))
+                    self._json(200, app.lab_results(query.get("state", ["PA"])[0]), cache_control=PUBLIC_CACHE)
                 elif path == "/api/lab/geo":
-                    self._json(200, app.lab_geo(query.get("state", ["PA"])[0]))
+                    self._json(200, app.lab_geo(query.get("state", ["PA"])[0]), cache_control=PUBLIC_CACHE)
                 elif path == "/api/lab/assumptions":
                     self._json(200, app.lab_assumptions())
                 elif path == "/api/lab/why":
@@ -360,16 +377,24 @@ def make_handler(app: App):
 
 
 ADU_NOTE_MARKER = b"<!-- ADU_FEE_NOTE -->"
+ENGINE_GAP_MARKER = b"<!-- ENGINE_GAP -->"
+BUILD_STAMP_MARKER = b"<!-- BUILD_STAMP -->"
 
 
-def _with_adu_fee_note(body: bytes, path: str) -> bytes:
-    """Fill the ADU fee note from the engines so / and /lab render it without JS."""
-    if ADU_NOTE_MARKER not in body:
-        return body
-    from src.adu_fee_note import note_html
+def _with_page_notes(body: bytes, path: str) -> bytes:
+    """Fill the fee note, the engine-gap callout, and the build stamp."""
+    from src.adu_fee_note import engine_gap_html, note_html
+    from src.version import stamp_html
 
     audience = "lab" if "lab" in path else "core"
-    return body.replace(ADU_NOTE_MARKER, note_html(audience).encode("utf-8"), 1)
+    if ADU_NOTE_MARKER in body:
+        body = body.replace(ADU_NOTE_MARKER, note_html(audience).encode("utf-8"), 1)
+    if ENGINE_GAP_MARKER in body:
+        gap = engine_gap_html(audience).encode("utf-8")
+        body = body.replace(ENGINE_GAP_MARKER, gap)
+    if BUILD_STAMP_MARKER in body:
+        body = body.replace(BUILD_STAMP_MARKER, stamp_html().encode("utf-8"))
+    return body
 
 
 def serve(host: str = "127.0.0.1", port: int = 8080) -> None:

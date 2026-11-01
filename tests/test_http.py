@@ -53,8 +53,21 @@ def test_pages_name_the_team_and_simulate_pennsylvania():
         assert "Pennsylvania case study" in text
         assert "One-page brief" in text
         assert 'id="map-stage"' in text
-        health, _body, _ = _get(base, "/api/health")
+        health, health_body, health_headers = _get(base, "/api/health")
         assert health == 200
+        health_doc = json.loads(health_body.decode("utf-8"))
+        assert health_doc["ok"] is True
+        assert health_doc["sha"] and health_doc["short_sha"]
+        assert health_doc["date"]
+        assert health_doc["fingerprints"]["PA"] == "18b20e94b790213c"
+        assert health_doc["fingerprints"]["NH"] == "f0a85db0ee26fda1"
+        assert health_headers["Cache-Control"] == "no-store"
+        _status, _css, css_headers = _get(base, "/styles.css")
+        assert css_headers["Cache-Control"] == "public, max-age=300, s-maxage=86400"
+        _status, _lab, lab_headers = _get(base, "/api/lab/results?state=PA")
+        assert lab_headers["Cache-Control"] == "public, max-age=300, s-maxage=86400"
+        _status, _geo, geo_headers = _get(base, "/api/lab/geo?state=PA")
+        assert geo_headers["Cache-Control"] == "public, max-age=300, s-maxage=86400"
         catalog_status, catalog_body, _ = _get(base, "/api/assumptions?state=PA")
         catalog = json.loads(catalog_body.decode("utf-8"))
         assert catalog_status == 200

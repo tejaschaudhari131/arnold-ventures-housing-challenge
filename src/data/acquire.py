@@ -16,9 +16,10 @@ No API key is required. ``CENSUS_API_KEY`` is accepted and ignored by this
 path because the summary files are public HTTPS downloads. Owner names and
 mailing addresses are never requested.
 
-If a download fails, the command leaves ``data/sample/fixtures.json`` in place
-and exits with status 2. ``scripts/get_data.sh`` treats that as a graceful
-fallback so a clean checkout still runs.
+If a download fails, or any other error interrupts the build, the command
+leaves ``data/sample/fixtures.json`` in place and exits with status 2.
+``scripts/get_data.sh`` treats every non-zero exit as a graceful fallback so
+a clean checkout still runs.
 """
 
 from __future__ import annotations
@@ -574,28 +575,49 @@ def _county_name(fips: str, land: dict[str, float]) -> str:
     return names.get(fips, f"County {fips}")
 
 
-def load_land_with_names() -> dict[str, float]:
-    """Wrapper that also stashes names for ``_county_name`` without a second download."""
+def load_land_with_names() -> tuple[dict[str, float], list[dict[str, Any]]]:
+    """Gazetteer land area, interior points, and county names from one download.
+
+    ``build_states`` unpacks ``land, points = load_land()``. This function is
+    bound to that name, so it has to return the same pair as ``load_land``.
+    """
     print("  gazetteer", flush=True)
     blob = fetch_bytes(GAZETTEER_URL)
     with zipfile.ZipFile(io.BytesIO(blob)) as archive:
-        name = [item for item in archive.namelist() if item.lower().endswith(".txt")][0]
+        names_in_zip = [item for item in archive.namelist() if item.lower().endswith(".txt")]
+        name = names_in_zip[0] if names_in_zip else archive.namelist()[0]
         text = archive.read(name).decode("latin1")
     reader = csv.DictReader(io.StringIO(text), delimiter="\t")
     land: dict[str, float] = {}
     names: dict[str, str] = {}
+    points: list[dict[str, Any]] = []
     for row in reader:
-        geoid = (row.get("GEOID") or "").strip()
+        cleaned = {str(key).strip(): (value.strip() if isinstance(value, str) else value) for key, value in row.items()}
+        geoid = (cleaned.get("GEOID") or "").strip()
         if len(geoid) != 5 or geoid[:2] not in TARGET_FIPS:
             continue
-        sqmi = _to_float(row.get("ALAND_SQMI"))
+        sqmi = _to_float(cleaned.get("ALAND_SQMI"))
         if sqmi is None:
-            aland = _to_float(row.get("ALAND")) or 0.0
+            aland = _to_float(cleaned.get("ALAND")) or 0.0
             sqmi = aland / 2_589_988.11
+        county_name = (cleaned.get("NAME") or f"County {geoid}").strip()
         land[geoid] = sqmi
-        names[geoid] = (row.get("NAME") or f"County {geoid}").strip()
+        names[geoid] = county_name
+        lat = _to_float(cleaned.get("INTPTLAT"))
+        lon = _to_float(cleaned.get("INTPTLONG"))
+        if lat is None or lon is None:
+            continue
+        points.append(
+            {
+                "fips": geoid,
+                "state": FIPS_TO_CODE[geoid[:2]],
+                "name": county_name,
+                "lat": lat,
+                "lon": lon,
+            }
+        )
     load_land_with_names._names = names  # type: ignore[attr-defined]
-    return land
+    return land, points
 
 
 # The builder calls load_land. Point it at the name-aware implementation and
@@ -676,6 +698,12 @@ def main(argv: list[str] | None = None) -> int:
         payload = build_payload(states, national)
     except AcquireError as exc:
         print(f"Acquisition failed: {exc}", file=sys.stderr)
+        print(f"Falling back to committed benchmark at {SAMPLE_FIXTURES}", file=sys.stderr)
+        return 2
+    except Exception as exc:
+        # A crash such as a bad unpack used to exit 1. The wrapper only keeps
+        # the committed sample when this process exits 2.
+        print(f"Acquisition failed: {type(exc).__name__}: {exc}", file=sys.stderr)
         print(f"Falling back to committed benchmark at {SAMPLE_FIXTURES}", file=sys.stderr)
         return 2
     write_fixtures(payload, output)

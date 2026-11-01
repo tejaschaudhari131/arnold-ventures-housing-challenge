@@ -53,7 +53,7 @@ def test_policy_comparison_stays_within_four_pages():
     assert nh_table() in text
     assert sampling_error_sentence("PA") in text
     assert pa_ranking_sentence() in text
-    assert "≈" in text
+    assert "Statistical tie" in text
     method = (ROOT / "docs" / "SMALL_HOMES_LAB.md").read_text(encoding="utf-8")
     clause = top_pair_tie_clause(pa["statewide"]["top_benchmark_pair"], pa["statewide"]["results"])
     assert clause in text

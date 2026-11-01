@@ -46,6 +46,7 @@
 
       <p class="start-here" id="start-here">Start here: the statewide answer is above the map. Then pick a county, or open Compare for the table.</p>
       <section class="headline no-print" id="headline" aria-label="Statewide answer"></section>
+      <div id="engine-gap" class="engine-gap callout" role="note"><!-- ENGINE_GAP --></div>
 
       <section class="map-wrap no-print" aria-label="State and county map">
         <div class="panel-head">
@@ -69,7 +70,7 @@
           <p class="help">Before is five-year completions under current rules. After adds the reform. Switches and weights change the package only.</p>
         </div>
         <div class="cards" id="cards"></div>
-        <p id="adu-fee-note" class="adu-fee-note callout"><!-- ADU_FEE_NOTE --></p>
+        <div id="adu-fee-note" class="adu-fee-note callout"><!-- ADU_FEE_NOTE --></div>
       </section>
 
       <nav class="tabs no-print" aria-label="Result views">
@@ -212,6 +213,7 @@
   <footer>
     <p>Stateframe is open source under the Apache License 2.0. Structural equations live in <code>src/model/equations.py</code>. Default values live in <code>config/assumptions.yaml</code>. No machine-learning model is used. Map points are Census gazetteer interior points, not a copied basemap.</p>
     <p>Tejas Chaudhari (tchaudha@andrew.cmu.edu), Yoon Yik Ng (yoonyikn@andrew.cmu.edu), Christopher Severns (cseverns@andrew.cmu.edu), Carnegie Mellon University.</p>
+    <p class="build-stamp">Build <!-- BUILD_STAMP --></p>
   </footer>
   <script src="/app.js"></script>
 </body>

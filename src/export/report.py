@@ -109,6 +109,9 @@ def to_markdown(results: list[dict[str, Any]]) -> str:
         "(teardown and conversion). The CSV exports that capacity as capacity_completions "
         "and splits the old annualized_completions column into annualized_level "
         "(five-year completions / 5) and annualized_increment (net new / 5). "
+        "For the combined package, capacity_completions is the overlap-adjusted total "
+        "before the absorption cap and the ADU stock ceiling, and it includes parking "
+        "and fees. A capped package is therefore not larger than its capacity. "
         "Tier is a classification. Completeness is a calculated score; see "
         "docs/DATA_PROVENANCE.md."
     )

@@ -53,8 +53,15 @@ def test_comparison_reads_both_engines_and_both_fees():
     assert f"{doc['core_fee']:,.0f}" in note
     assert homes(doc["lab_adu"], signed=True) in note
     assert homes(doc["core_adu"], signed=True) in note
+    assert homes(doc["after_fee"], signed=True) in note
+    assert f"Lab at a ${doc['core_fee']:,} fee: {homes(doc['after_fee'], signed=True)}" in note
+    assert f"Core at a ${doc['core_fee']:,} fee: {homes(doc['core_adu'], signed=True)}" in note
+    assert "Our headline uses the Handbook fee" not in note
     assert "/lab" in note
     assert homes(doc["lab_baseline"]) in note
+    assert homes(doc["lab_package"], signed=True) in note
+    assert homes(doc["core_package"], signed=True) in note
+    assert "Handbook scenarios" in note
 
 
 def test_both_pages_render_adu_fee_note():
@@ -68,10 +75,24 @@ def test_both_pages_render_adu_fee_note():
         assert home_status == 200 and lab_status == 200
         assert 'id="adu-fee-note"' in home_text
         assert 'id="adu-fee-note"' in lab_text
+        assert "<div id=\"adu-fee-note\"" in home_text
         assert note_html("core") in home_text
         assert note_html("lab") in lab_text
+        assert 'id="engine-gap"' in home_text
+        assert 'id="recon"' in lab_text
+        from src.adu_fee_note import engine_gap_html
+        from src.version import stamp_text
+
+        assert engine_gap_html("core") in home_text
+        assert engine_gap_html("lab") in lab_text
+        assert "Handbook scenarios" in home_text
+        assert "Handbook scenarios" in lab_text
         assert 'href="/lab"' in home_text
         assert 'href="/"' in lab_text
+        assert "github.com/tejaschaudhari131/arnold-ventures-housing-challenge/blob/main/docs/SMALL_HOMES_LAB.md" in lab_text
+        assert 'href="/docs/SMALL_HOMES_LAB.md"' not in lab_text
+        assert stamp_text() in home_text
+        assert stamp_text() in lab_text
         assert 'display:inline-block;min-height:24px' in note_html("lab")
         assert 'display:inline-block;min-height:24px' in lab_text
 
