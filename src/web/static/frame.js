@@ -157,7 +157,7 @@
       " under the stated assumptions. That is on top of " +
       bind(paths.baseline, homes(opts.baseline)) +
       " expected without these reforms (" +
-      derived("lift", pctText, (paths.middle || "") + " " + (paths.baseline || "")) +
+      bind("derived.lift." + (opts.sid || ""), pctText) +
       " more).</p>";
     var live = (reference ? "Reference range, not recomputed. " : "Likely range. ") +
       (unavailable ? "Likely range unavailable. " : Fmt.rangeText(opts.low, opts.high) + " extra homes. ") +
@@ -174,7 +174,7 @@
     opts = opts || {};
     if (opts.unmodeled) {
       return esc(opts.label || "Your package") +
-        ': not computed for this combination · <span class="model-badge county">County model</span>';
+        ' · <span class="model-badge county">County model</span>';
     }
     if (!opts.sid) return "";
     var paths = opts.paths || {};
@@ -228,7 +228,7 @@
     }
     var funnel = opts.funnel;
     if (!funnel) {
-      return '<section class="funnel" data-funnel="empty"><p>Pick a reform to see how many legal lots turn into built homes.</p></section>';
+      return '<section class="funnel" data-funnel="empty"><p>Turn on one reform to see how many legal lots become built homes.</p></section>';
     }
     var prefix = opts.prefix || ("statewide.results." + sid + ".funnel");
     var gross = funnel.gross || {};
@@ -397,8 +397,7 @@
           : esc(row.bandLow + "–" + row.bandHigh)) + "</td>" +
         "<td>" + bind(prefix + row.key + ".low." + sid, signed(row.low)) + "</td>" +
         "<td>" + bind(prefix + row.key + ".high." + sid, signed(row.high)) + "</td>" +
-        "<td>" + derived("swing", homes(row.swing), prefix + row.key + ".low." + sid + " " + prefix + row.key + ".high." + sid) +
-        " homes</td>" +
+        "<td>" + bind("derived.swing." + row.key + "." + sid, homes(row.swing)) + " homes</td>" +
         "<td>" + esc(row.tag) + "</td>" +
         '<td><button type="button" class="driver-adjust" data-driver="' + esc(row.key) + '">Adjust</button></td></tr>';
     }).join("");
@@ -488,8 +487,7 @@
     var mmItems = [
       top ? ("How many owners actually build is the biggest unknown. At default settings, changing \"" +
         esc(top.label) + "\" alone moves the answer by about " +
-        derived("swing", homes(top.swing), "statewide.one_at_a_time." + top.key + ".low." + (opts.driverSid || sid) +
-          " statewide.one_at_a_time." + top.key + ".high." + (opts.driverSid || sid)) +
+        bind("derived.swing." + top.key + "." + (opts.driverSid || sid), homes(top.swing)) +
         " homes (" + bind("statewide.one_at_a_time." + top.key + ".low." + (opts.driverSid || sid), signed(top.low)) +
         " to " + bind("statewide.one_at_a_time." + top.key + ".high." + (opts.driverSid || sid), signed(top.high)) + ").")
         : "How many owners actually build is the biggest unknown.",

@@ -24,6 +24,42 @@ def test_frame_dom_bindings_match_results_json():
     assert "frame ux ok" in proc.stdout
 
 
+def test_derived_figures_and_tier1_shares_bind_at_display_precision():
+    from src.lab.explain import assumption_catalog, locked_results
+
+    doc = locked_results("PA")
+    base = doc["statewide"]["results"]["baseline"]["central"]
+    middle = doc["statewide"]["results"]["missing_middle"]["central"]
+    lift = doc["derived"]["lift"]["missing_middle"]
+    assert abs(lift - (middle / base)) < 1e-12
+    assert f"{lift * 100:.1f}%" == "5.1%"
+    ends = doc["statewide"]["one_at_a_time"]["hazard_homeowner_feasible"]
+    swing = abs(ends["high"]["missing_middle"] - ends["low"]["missing_middle"])
+    shown = doc["derived"]["swing"]["hazard_homeowner_feasible"]["missing_middle"]
+    assert abs(shown - swing) < 1e-9
+    assert f"{round(shown):,}" == "9,721"
+
+    from src.bundle import load_bundle
+    from src.model.crossval import _error
+    from src.model.engine import simulate_state
+
+    tier = assumption_catalog()["crossval_tier1"]
+    assert set(tier) == {"CT", "WI", "UT", "HI"}
+    fixtures, assumptions = load_bundle()
+    for code in ("CT", "WI", "UT", "HI"):
+        full = simulate_state(fixtures, assumptions, code, parcel_mode="observed", resolution="county")
+        imputed = simulate_state(fixtures, assumptions, code, parcel_mode="imputed", resolution="county")
+        percent = _error(
+            float(full["scenarios"]["adu"]["incremental_completions"]),
+            float(imputed["scenarios"]["adu"]["incremental_completions"]),
+        )["percent_error"]
+        share = tier[code]["percent_error"]
+        assert percent is not None and share is not None
+        assert abs(share - (percent / 100.0)) < 1e-12
+        assert f"{share * 100:+.1f}%" == f"{percent:+.1f}%"
+        assert tier[code]["scenario"] == "adu"
+
+
 def test_parking_anchors_come_from_the_catalog():
     from src.web.server import App
 

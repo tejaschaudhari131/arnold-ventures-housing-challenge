@@ -570,6 +570,14 @@ button.tip {
   .mini-total:not([hidden]) { display: block; }
 }
 html { scroll-padding-top: 120px; }
+@media (max-width: 700px) {
+  /* 106px sticky mini-total. Keep focused controls, including Adjust, below it. */
+  html { scroll-padding-top: 106px; }
+  .lab-body :focus {
+    scroll-margin-top: 106px;
+    scroll-margin-bottom: 12px;
+  }
+}
 .lab-body .skip:focus,
 .lab-body .skip:focus-visible { z-index: 100; }
 .model-badge {

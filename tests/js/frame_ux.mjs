@@ -166,9 +166,11 @@ if (emptyHead.indexOf("+0") >= 0) throw new Error("empty headline shows +0");
 if ((emptyHead.match(/pick a reform/gi) || []).length !== 1) throw new Error("pick a reform repeated: " + emptyHead);
 const mix = Frame.miniTotal({ unmodeled: true, label: "Your package", low: null, high: null, middle: 8517 });
 if (mix.indexOf("0 to 0") >= 0 || mix.indexOf("8,517") >= 0) throw new Error("mix total invented a sum: " + mix);
-if (mix.indexOf("not computed for this combination") < 0) throw new Error("mix total missing the explicit state");
+if (/not computed/i.test(mix)) throw new Error("mix sticky bar repeats Not computed: " + mix);
 const mixHead = Frame.headlineParts({ unmodeled: true, sid: "selection", low: null, high: null, middle: 8517, paths: { middle: "statewide.results.selection.central" } });
 if (mixHead.html.indexOf("selection") >= 0 || mixHead.html.indexOf("8,517") >= 0) throw new Error("mix headline bound a fake path");
+if ((mixHead.html.match(/not computed/gi) || []).length !== 1) throw new Error("mix headline should say Not computed once: " + mixHead.html);
+if (mixHead.live) throw new Error("mix live region repeats the headline");
 const rankedSwing = Frame.rankDrivers(load("PA").statewide.one_at_a_time, "package", Object.keys(load("PA").statewide.one_at_a_time).map(function (name) {
   return { name: name, label: name, low: 0, high: 1, unit: "", tag: "assumed" };
 }));
@@ -183,8 +185,24 @@ const lift = Frame.headlineParts({
   low: 10, high: 20, middle: 5, baseline: 100, draws: 10,
   paths: { low: "statewide.results.adu.p10", high: "statewide.results.adu.p90", middle: "statewide.results.adu.central", baseline: "statewide.results.baseline.central" }
 });
-if (!/data-derived="lift"/.test(lift.html)) throw new Error("lift is not marked derived");
-if (/data-bind="[^"]*lift"/.test(lift.html)) throw new Error("lift uses a fake bind path");
+if (!/data-bind="derived\.lift\.adu"/.test(lift.html)) throw new Error("lift is not bound to derived.lift");
+if (/data-derived=/.test(lift.html)) throw new Error("lift still uses an unbound derived marker");
+const mmDrivers = Frame.driversHtml({
+  sid: "missing_middle",
+  label: "Allow 2–6 homes on single-family lots",
+  oat: load("PA").statewide.one_at_a_time,
+  params: Object.keys(load("PA").statewide.one_at_a_time).map(function (name) {
+    return { name: name, label: name, low: 0, high: 1, unit: "", tag: "assumed" };
+  }),
+  showAll: false
+});
+if (mmDrivers.indexOf("Share of owners who add 2–6 homes each year on lots where it pays off") < 0) {
+  throw new Error("missing-middle driver kept ADU wording");
+}
+if (mmDrivers.indexOf("add an ADU") >= 0) throw new Error("missing-middle table uses ADU copy");
+if (!/data-bind="derived\.swing\.hazard_homeowner_feasible\.missing_middle">9,721</.test(mmDrivers)) {
+  throw new Error("9,721 is not bound to the missing-middle swing");
+}
 if (Frame.FUNNEL_UNAVAILABLE.indexOf("Funnel not available") < 0) throw new Error("screening funnel");
 const screening = Frame.funnelHtml({ screening: true });
 if (screening.indexOf(Frame.FUNNEL_UNAVAILABLE) < 0) throw new Error("screening funnel html");

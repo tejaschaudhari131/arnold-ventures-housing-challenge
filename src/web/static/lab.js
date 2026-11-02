@@ -29,7 +29,7 @@
   ];
   var WALK = [
     { title: "Pennsylvania is loaded", text: "All 67 counties and four Handbook scenarios are already computed. Unknown zoning is a prior, never zero." },
-    { title: "Pick a reform", text: "Start with a Handbook reform. The cards show the increment versus Baseline." },
+    { title: "Choose a Handbook reform", text: "Start with a Handbook reform. The cards show the increment versus Baseline." },
     { title: "Open Allegheny County", text: "Allegheny is the walkthrough. Pittsburgh's October 2026 ADU ordinance is observed; the rest of the county is unknown." },
     { title: "Why this result?", text: "Every input is tagged observed, assumed, or calculated. The ADU pro forma is illustrative." },
     { title: "Change one assumption", text: "Move the homeowner uptake hazard. Central, zoning, and ACS MOE recompute. The p10–p90 envelope does not." },
@@ -813,7 +813,7 @@
     var mid = document.getElementById("middle-est");
     if (mid) mid.innerHTML = parts.middleHtml || "";
     var liveEl = document.getElementById("count-live");
-    if (liveEl) liveEl.textContent = parts.live || answerLine();
+    if (liveEl) liveEl.textContent = parts && Object.prototype.hasOwnProperty.call(parts, "live") ? parts.live : answerLine();
   }
 
   function anim(to) {
@@ -863,8 +863,7 @@
         var share = (t.c / baseline * 100).toFixed(1) + "%";
         var sid = headlineSid();
         relate.innerHTML = "That's about " +
-          '<span data-derived="lift" data-from="statewide.results.' + (sid || "package") +
-          '.central statewide.results.baseline.central">' + share + "</span> more homes than " +
+          bound("derived.lift." + (sid || "package"), share) + " more homes than " +
           bound("statewide.results.baseline.central", integer(baseline)) +
           " expected anyway over five years.";
       }
@@ -1104,7 +1103,7 @@
         return escapeHtml(PLAIN[k]) + " " + bound("statewide.results." + k + ".central", signed(sw.results[k].central));
       }).join(", ");
       line.innerHTML = "Adding the cards: " + parts + ". " + escapeHtml(HONESTY);
-      box.textContent = "Not computed for this combination. " + HONESTY_LONG;
+      box.textContent = HONESTY_LONG;
     }
   }
 
@@ -1328,7 +1327,7 @@
     if (sid === "selection") {
       countyDetail.hidden = false;
       countyDetail.innerHTML =
-        "<p>" + escapeHtml(countyPhrase(row)) + " Not computed for this combination. " +
+        "<p>" + escapeHtml(countyPhrase(row)) + " " +
         escapeHtml(HONESTY) + ". Baseline " +
         bound("counties." + row.fips + ".results.baseline.central", integer(cell(row, "baseline").central)) +
         " expected.</p>";
@@ -1864,7 +1863,7 @@
     if (!sid || sid === "selection") {
       list.innerHTML = "<li>" + (!sid
         ? "No reforms selected."
-        : "This mix is the sum of the selected reforms. Eligible and feasible in the Why drawer are that sum, not a joint count. A likely range is not computed for the mix.") + "</li>";
+        : "This mix is the sum of the selected reforms. Eligible and feasible in the Why drawer are that sum, not a joint count. A likely range is available for one reform or all four.") + "</li>";
       return;
     }
     var row = selectedFips ? countyRow(selectedFips) : null;
@@ -1921,8 +1920,8 @@
         var err = first.imputed_parcels && first.imputed_parcels.percent_error;
         if (err == null) return escapeHtml(code);
         var text = (err > 0 ? "+" : "") + Number(err).toFixed(1) + "%";
-        var path = "states." + code + ".scenarios." + scenario + ".imputed_parcels.percent_error";
-        return escapeHtml(code) + ' <span data-bind="' + path + '" data-api="/api/crossval">' + text + "</span>";
+        var path = "crossval_tier1." + code + ".percent_error";
+        return escapeHtml(code) + ' <span data-bind="' + path + '">' + text + "</span>";
       });
       el.innerHTML = "Error vs. parcel data on the states that have extracts: " +
         (parts.join(" · ") || "see Cross-check on the screening view") +
@@ -1975,7 +1974,7 @@
       "</td><td>" + integer(sw.results.package.p10) + "–" + integer(sw.results.package.p90) +
       "</td></tr></tbody></table>" +
       "<p>" + (mixUnranked()
-        ? "Close call: not computed for mix."
+        ? "Close call applies to one reform or all four."
         : escapeHtml(rankingLine(sw)) + ". " +
           (sw.top_benchmark_pair.close_call ? "Too close to call." : "Ranking holds.")) + "</p>" +
       "<p>Also modeled, not a Handbook benchmark: by-right approval with a shot clock, " +
@@ -2268,6 +2267,21 @@
   });
   document.getElementById("why-adjust").addEventListener("click", function () {
     document.getElementById("adjust").scrollIntoView({ behavior: RM ? "auto" : "smooth" });
+  });
+  document.addEventListener("focusin", function (event) {
+    var bar = document.getElementById("mini-total");
+    var node = event.target;
+    if (!bar || bar.hidden || !node || typeof node.getBoundingClientRect !== "function") return;
+    if (bar.contains(node)) return;
+    var barBox = bar.getBoundingClientRect();
+    if (barBox.height < 8) return;
+    var box = node.getBoundingClientRect();
+    var gap = 12;
+    if (box.top >= barBox.bottom + gap) return;
+    window.scrollTo({
+      top: window.scrollY + box.top - barBox.bottom - gap,
+      behavior: "instant"
+    });
   });
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
