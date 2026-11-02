@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -76,10 +77,32 @@ def test_parking_anchors_come_from_the_catalog():
     assert "completion_ratio_small" in ratios
 
 
+class _BriefText(HTMLParser):
+    """Visible text from brief.html. Script elements are omitted, in any case."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self._skip = 0
+        self.parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "script":
+            self._skip += 1
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "script" and self._skip:
+            self._skip -= 1
+
+    def handle_data(self, data: str) -> None:
+        if not self._skip:
+            self.parts.append(data)
+
+
 def _brief_copy() -> str:
-    html = (STATIC / "brief.html").read_text(encoding="utf-8")
-    html = re.sub(r"(?i)<script[\s\S]*?</script>", " ", html)
-    html = re.sub(r"<[^>]+>", " ", html)
+    parser = _BriefText()
+    parser.feed((STATIC / "brief.html").read_text(encoding="utf-8"))
+    parser.close()
+    html = " ".join("".join(parser.parts).split())
     js = (STATIC / "brief.js").read_text(encoding="utf-8")
     sentences = [
         item for item in re.findall(r'"([^"]*)"', js)
