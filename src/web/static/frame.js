@@ -66,7 +66,7 @@
 
   var NOT_MODELLED = "Not modelled for this reform: this reform changes costs for projects, not what is legal.";
   var FUNNEL_UNAVAILABLE = "Funnel not available in the screening model: it estimates the effect directly from state-level response rates.";
-  var NOT_FORECAST = "not a forecast";
+  var NOT_FORECAST = "an estimate";
   var CHANGE_NOTE = "The Change column is the difference the reform makes at each step. It can look out of order, because lots that were already legal can switch to a better-paying option. The bars show the full totals with and without the reform, which always narrow step by step.";
   var NEGATIVE_TIP = "Fewer lots take this path because a better option replaced it.";
   var MIDDLE_TIP = "The result with every assumption at its middle value. The range comes from the test runs that vary the assumptions.";
@@ -95,9 +95,29 @@
     return m / b;
   }
 
+  function knownNumber(value) {
+    return value !== null && value !== undefined && value !== "" && isFinite(Number(value));
+  }
+
+  function derived(name, text, sources) {
+    var from = sources ? ' data-from="' + esc(sources) + '"' : "";
+    return '<span data-derived="' + esc(name) + '"' + from + ">" + text + "</span>";
+  }
+
   function headlineParts(opts) {
     opts = opts || {};
     var paths = opts.paths || {};
+    if (opts.unmodeled) {
+      var unmodeledHtml = '<p class="range-kicker">Likely range unavailable</p>' +
+        '<p class="range-hero">Not computed for this combination</p>' +
+        "<p>Added together, not modeled as a package. Pick one reform, or all four, for a modeled total.</p>";
+      return {
+        rangeHtml: "Not computed for this combination",
+        middleHtml: "",
+        html: unmodeledHtml,
+        live: "Not computed for this combination."
+      };
+    }
     var empty = !opts.sid;
     if (empty) {
       var emptyHtml = '<p class="range-kicker">Likely range</p>' +
@@ -111,23 +131,8 @@
         live: "No reforms selected. +0 extra homes. Pick a reform above."
       };
     }
-    if (opts.unmodeled) {
-      var mid = bind(paths.middle, signed(opts.middle));
-      var mix = '<p class="range-kicker">Likely range unavailable</p>' +
-        '<p class="range-hero">Likely range unavailable</p>' +
-        '<p class="middle-est">Middle estimate ' + mid + ".</p>" +
-        "<p>Added together, not modeled as a package. " +
-        "That is on top of " + bind(paths.baseline, homes(opts.baseline)) +
-        " expected without these reforms.</p>";
-      return {
-        rangeHtml: "Likely range unavailable",
-        middleHtml: "Middle estimate " + mid,
-        html: mix,
-        live: "Added together, not modeled as a package. Middle estimate " + signed(opts.middle) + "."
-      };
-    }
     var reference = opts.status === "reference";
-    var unavailable = opts.status === "unavailable" || !isFinite(Number(opts.low)) || !isFinite(Number(opts.high));
+    var unavailable = opts.status === "unavailable" || !knownNumber(opts.low) || !knownNumber(opts.high);
     var kicker = reference
       ? "Reference range — from default assumptions, not recomputed"
       : "Likely range (10th–90th percentile, model-conditional)";
@@ -148,7 +153,9 @@
       " in " + esc(opts.stateName || "") +
       " under the stated assumptions. That is on top of " +
       bind(paths.baseline, homes(opts.baseline)) +
-      " expected without these reforms (" + bind(paths.pct, pctText) + " more).</p>";
+      " expected without these reforms (" +
+      derived("lift", pctText, (paths.middle || "") + " " + (paths.baseline || "")) +
+      " more).</p>";
     var live = (reference ? "Reference range, not recomputed. " : "Likely range. ") +
       (unavailable ? "Likely range unavailable. " : Fmt.rangeText(opts.low, opts.high) + " extra homes. ") +
       "Middle estimate " + signed(opts.middle) + ".";
@@ -162,10 +169,14 @@
 
   function miniTotal(opts) {
     opts = opts || {};
+    if (opts.unmodeled) {
+      return esc(opts.label || "Your package") +
+        ': not computed for this combination · <span class="model-badge county">County model</span>';
+    }
     if (!opts.sid) return "";
     var paths = opts.paths || {};
     var rangeWord = opts.status === "reference" ? "Reference range, not recomputed, " : "likely ";
-    var range = isFinite(Number(opts.low)) && isFinite(Number(opts.high))
+    var range = knownNumber(opts.low) && knownNumber(opts.high)
       ? rangeSpans(paths.low, paths.high, opts.low, opts.high)
       : "Likely range unavailable";
     return esc(opts.label || "Package") + ": " + rangeWord + range +
@@ -231,13 +242,11 @@
     stages.forEach(function (stage) {
       maxGross = Math.max(maxGross, Number(gross[stage[0]]) || 0, Number(base[stage[0]]) || 0);
     });
-    function bar(kind, value, unit) {
+    function bar(kind, value) {
       var n = numOrNull(value);
       var width = n === null || n <= 0 ? 0 : (Math.log10(n + 1) / Math.log10(maxGross + 1) * 100);
-      var label = n === null ? "No data" : (homes(n) + " " + unit);
       return '<span class="funnel-bar ' + kind + '" style="width:' + width.toFixed(1) +
-        '%" aria-hidden="true"><span class="funnel-bar-label">' + (kind === "with" ? "with" : "without") +
-        " " + esc(label) + "</span></span>";
+        '%" aria-hidden="true"></span>';
     }
     function changeCell(name, unit) {
       var value = funnel[name];
@@ -259,9 +268,9 @@
       var tag = index < 4 ? ' <span class="tag-note">' + NOT_FORECAST + "</span>" : "";
       return "<tr class=\"" + (index < 4 ? "lot-step" : "funnel-result") + "\">" +
         "<th scope=\"row\">" + esc(stage[1]) + tag + "</th>" +
-        "<td>" + bar("with", gross[name], unit) +
+        "<td>" + bar("with", gross[name]) +
         '<span class="funnel-text">with ' + withText + "</span></td>" +
-        "<td>" + bar("without", base[name], unit) +
+        "<td>" + bar("without", base[name]) +
         '<span class="funnel-text">without ' + withoutText + "</span></td>" +
         "<td>" + changeCell(name, unit) + "</td></tr>";
     }).join("");
@@ -280,13 +289,16 @@
     if (timing == null && go != null && go >= 1 && finishing != null) timing = finishing / go;
     if (go != null && go < 1) timing = null;
     var ratios = ratioLine(payShare == null ? "" :
-      shareText(payShare) + " of legal lots would pay (" + lotSpan(prefix + ".gross.pays", gross.pays) +
+      derived("pays/legal_fits", shareText(payShare), prefix + ".gross.pays " + prefix + ".gross.legal_fits") +
+      " of legal lots would pay (" + lotSpan(prefix + ".gross.pays", gross.pays) +
       " of " + lotSpan(prefix + ".gross.legal_fits", gross.legal_fits) + ").") +
       ratioLine(goShare == null ? "" :
-        shareText(goShare) + " of lots whose project pays go ahead (" +
+        bind(prefix + ".gross.go_ahead_share", shareText(goShare)) +
+        " of lots whose project pays go ahead (" +
         lotSpan(prefix + ".gross.go_ahead", gross.go_ahead) + ").") +
       ratioLine(timing == null ? "" :
-        shareText(timing) + " of started lots start early enough to finish by " + esc(endYear) +
+        bind(prefix + ".gross.timing", shareText(timing)) +
+        " of started lots start early enough to finish by " + esc(endYear) +
         " (" + lotSpan(prefix + ".gross.finishing", gross.finishing) + ").");
     var completion = numOrNull(funnel.completion);
     var completionLine = "";
@@ -318,9 +330,10 @@
     return '<section class="funnel" data-funnel="shown">' +
       "<h3>How we got here</h3>" + scopeNote +
       '<p class="help">Bar lengths use a log scale. ' + esc(CHANGE_NOTE) + "</p>" +
-      "<details class=\"lot-steps\"" + open + "><summary>Show the lot steps (not forecasts)</summary>" +
+      "<details class=\"lot-steps\"" + open + "><summary>Show the lot steps (estimates)</summary>" +
       ratios + completionLine + perLotLine + "</details>" +
-      '<div class="table-region" role="region" tabindex="0" aria-label="Delivery funnel, scrolls sideways">' +
+      '<div class="table-region" role="region" tabindex="0" aria-label="Delivery funnel for ' +
+      esc(opts.label || sid) + ', scrolls sideways">' +
       "<table class=\"funnel-table\"><caption>" + esc(caption) + "</caption>" +
       "<thead><tr><th scope=\"col\">Stage</th><th scope=\"col\">With the reform</th>" +
       "<th scope=\"col\">Without it</th><th scope=\"col\">Change</th></tr></thead><tbody>" +
@@ -375,10 +388,14 @@
       return "<tr" + (changed ? ' class="driver-changed"' : "") + ">" +
         "<td>" + (index + 1) + "</td>" +
         "<th scope=\"row\">" + esc(row.label) + (changed ? " <span class=\"you-changed\">you changed this</span>" : "") + "</th>" +
-        "<td>" + esc(opts.formatBand ? opts.formatBand(row) : (row.bandLow + "–" + row.bandHigh)) + "</td>" +
+        "<td>" + (opts.formatFigure
+          ? bind("by_name." + row.key + ".low", opts.formatFigure(row.unit, row.bandLow)) + "–" +
+            bind("by_name." + row.key + ".high", opts.formatFigure(row.unit, row.bandHigh))
+          : esc(row.bandLow + "–" + row.bandHigh)) + "</td>" +
         "<td>" + bind(prefix + row.key + ".low." + sid, signed(row.low)) + "</td>" +
         "<td>" + bind(prefix + row.key + ".high." + sid, signed(row.high)) + "</td>" +
-        "<td>" + bind(prefix + row.key + ".swing." + sid, homes(row.swing)) + " homes</td>" +
+        "<td>" + derived("swing", homes(row.swing), prefix + row.key + ".low." + sid + " " + prefix + row.key + ".high." + sid) +
+        " homes</td>" +
         "<td>" + esc(row.tag) + "</td>" +
         '<td><button type="button" class="driver-adjust" data-driver="' + esc(row.key) + '">Adjust</button></td></tr>';
     }).join("");
@@ -387,18 +404,24 @@
         (opts.showAll ? "Show top 5" : "Show all " + ranked.length) + "</button>"
       : "";
     var overrideNote = opts.hasOverrides ? "<p>Your changes are not reflected in this ranking.</p>" : "";
-    var switches = (opts.switches || []).map(function (row) {
+    var switches = (opts.switches || []).map(function (row, index) {
       var way = row.direction === "low" ? "below" : "above";
-      var at = opts.formatSwitch ? opts.formatSwitch(row) : String(row.switch_at);
-      var band = row.band ? (row.band[0] + "–" + row.band[1]) : "";
+      var at = opts.formatFigure ? opts.formatFigure(row.unit, row.switch_at) : String(row.switch_at);
+      var base = "statewide.what_would_change.switches." + index + ".";
+      var band = "";
+      if (row.band) {
+        var lo = opts.formatFigure ? opts.formatFigure(row.unit, row.band[0]) : String(row.band[0]);
+        var hi = opts.formatFigure ? opts.formatFigure(row.unit, row.band[1]) : String(row.band[1]);
+        band = " (tested range " + bind(base + "band.0", lo) + "–" + bind(base + "band.1", hi) + ")";
+      }
       return "<li>" + esc(plainLabel(row.param, row.label)) + " would have to be " + way + " " +
-        esc(at) + " " + esc(row.unit || "") + (band ? " (tested range " + esc(band) + ")." : ".") + "</li>";
+        bind(base + "switch_at", at) + band + ".</li>";
     }).join("");
     return '<section id="driver-table" class="drivers" aria-labelledby="drivers-title">' +
       '<h2 id="drivers-title">Assumptions that matter most</h2>' +
       '<p class="drivers-caption">Ranked at default settings. ' + esc(opts.label || "") + ".</p>" +
       overrideNote + more +
-      '<div class="table-region" role="region" tabindex="0" aria-label="Assumptions that matter most, scrolls sideways">' +
+      '<div class="driver-fit">' +
       '<table><caption>Ranked at default settings</caption><thead><tr>' +
       "<th scope=\"col\">Rank</th><th scope=\"col\">Assumption</th><th scope=\"col\">Tested from–to</th>" +
       "<th scope=\"col\">Result at low end</th><th scope=\"col\">Result at high end</th>" +
@@ -411,7 +434,7 @@
   function parkingHtml(opts) {
     opts = opts || {};
     if (!opts.show) return "";
-    var urban = bind(opts.urbanPath || "parameters.parking_market_urban", opts.urbanText || "");
+    var urban = bind(opts.urbanPath || "by_name.parking_market_urban.central", opts.urbanText || "");
     var rule = bind(opts.minPath || "anchors.parking_min_urban", opts.minText || "");
     return '<p class="parking-line">Assumes builders still provide about ' + urban +
       " spaces per home in cities (old rule: " + rule +
@@ -453,6 +476,9 @@
         }).join("") + "</ul>" + modelDiffHtml(opts.ratios) + "</section>");
     }
     var top = (opts.drivers || [])[0];
+    if (top && opts.sid && opts.sid !== "adu" && /ADU/i.test(top.label)) {
+      top = Object.assign({}, top, { label: "How many owners build each year on lots where it pays off" });
+    }
     var aduItems = [
       "It can't tell you which streets or owners will build, only county and state totals.",
       "The yearly build rate comes from California after its ADU laws. Other states may move faster or slower.",
@@ -471,7 +497,7 @@
     ];
     var parkItems = [
       "Builders often keep building parking anyway. We assume about " +
-        bind(opts.parkingPath || "parameters.parking_market_urban", opts.parkingText || "") +
+        bind(opts.parkingPath || "by_name.parking_market_urban.central", opts.parkingText || "") +
         " spaces per home in cities, and how far that moves the answer is shown in What matters most.",
       "It doesn't estimate effects on traffic, street parking, or transit use.",
       "The likely range is " + rangeSpans(opts.lowPath, opts.highPath, opts.low, opts.high) + " homes."

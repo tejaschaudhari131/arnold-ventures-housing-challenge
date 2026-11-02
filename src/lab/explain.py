@@ -171,6 +171,35 @@ def _anchor_params(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return rows
 
 
+_DISPLAY_KEYS = (
+    "lab_adu",
+    "core_adu",
+    "lab_package",
+    "core_package",
+    "lab_baseline",
+    "core_baseline",
+    "lab_fee",
+    "core_fee",
+    "core_cap_rate",
+    "core_rent_ratio",
+    "after_fee",
+    "after_yield",
+    "after_lags",
+    "close_share",
+    "host_adjustment",
+)
+
+
+def _display_numbers() -> dict[str, dict[str, Any]]:
+    """Rounded comparison figures the fee note binds. Not a new model result."""
+    from src.adu_fee_note import comparison
+
+    return {
+        code: {key: comparison(code)[key] for key in _DISPLAY_KEYS}
+        for code in ("PA", "NH")
+    }
+
+
 def assumption_catalog() -> dict[str, Any]:
     doc = load_assumptions()
     params = []
@@ -199,7 +228,9 @@ def assumption_catalog() -> dict[str, Any]:
         "seed": doc["monte_carlo_seed"],
         "reconciliation_note": load_ui()["reconciliation_note"],
         "parameters": params,
+        "by_name": {row["name"]: row for row in params},
         "anchors": _anchor_params(doc),
+        "display_numbers": _display_numbers(),
         "completion_ratios": _screening_completion_block()[0],
         "lab_completion_lot": _screening_completion_block()[1],
         "scenarios": [

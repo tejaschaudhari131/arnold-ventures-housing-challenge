@@ -108,12 +108,14 @@
     "envelope_p10", "envelope_p90", "range_role",
     "zoning_low", "zoning_high", "acs_moe",
     "eligible_sum_of_reforms", "feasible_sum_of_reforms", "basis",
-    "close_call_top_benchmark"
+    "close_call_top_benchmark",
+    "model", "seed", "fingerprint", "build_sha", "overrides"
   ];
   var SCENARIO_CSV_COLUMNS = [
     "fips", "county", "scenario", "central", "envelope_p10", "envelope_p90",
     "range_role", "zoning_low", "zoning_high", "acs_moe", "eligible", "feasible",
-    "close_call_top_benchmark"
+    "close_call_top_benchmark",
+    "model", "seed", "fingerprint", "build_sha", "overrides"
   ];
   var CENTRAL_BASIS = "simple sum of standalone results, not modelled jointly";
   var COUNT_BASIS = "sum of per-reform counts; lots may overlap; not a joint count";
@@ -135,6 +137,16 @@
     var n = Number(value);
     if (!isFinite(n)) return "";
     return (Math.round(n * 10) / 10).toFixed(1);
+  }
+
+  function csvMeta(opts) {
+    return [
+      opts.model || "county",
+      opts.seed == null ? "" : String(opts.seed),
+      opts.fingerprint || "",
+      opts.sha || "",
+      opts.overrides || ""
+    ];
   }
 
   function customSelection(ids) {
@@ -177,7 +189,7 @@
           empty ? "" : oneDecimal(feasible),
           empty ? "" : COUNT_BASIS,
           "not computed for mix"
-        ]));
+        ].concat(csvMeta(opts))));
         return;
       }
       var sid = ids.length === 4 ? "package" : ids[0];
@@ -203,7 +215,7 @@
         oneDecimal(current.eligible || 0),
         oneDecimal(current.feasible || 0),
         close ? "yes" : "no"
-      ]));
+      ].concat(csvMeta(opts))));
     });
     return lines.join("\n");
   }
@@ -659,21 +671,24 @@
     if (!pair || !pair.close_call) {
       return '<span class="badge-holds">Ranking holds</span>';
     }
+    var flip = bound("statewide.top_benchmark_pair.flip_share", Math.round(pair.flip_share * 100) + "%");
+    var gate = bound("close_call_flip_share", Math.round((locked && locked.close_call_flip_share ? locked.close_call_flip_share : 0.1) * 100) + "%");
     if (isDrawTie(pair) && sw) {
       var trail = sw.results[pair.trailer];
       var lead = sw.results[pair.leader];
-      return tipControl("Too close to call", "The order flips in at least " +
-        Math.round((locked && locked.close_call_flip_share ? locked.close_call_flip_share : 0.1) * 100) +
-        " percent of test runs. Central estimate favors " + scenarioLabel(pair.leader) +
-        "; " + scenarioLabel(pair.trailer) + " comes out ahead in " +
-        Math.round(pair.flip_share * 100) + " of 100 test runs (typical result " +
-        integer(trail.p50) + " vs " + integer(lead.p50) + "). " + threshold + ".");
+      return tipControl("Too close to call", "The order flips often enough to call the ranking a tie. " + threshold + ".") +
+        '<span class="sr">Central estimate favors ' + escapeHtml(scenarioLabel(pair.leader)) +
+        "; " + escapeHtml(scenarioLabel(pair.trailer)) + " comes out ahead in " + flip +
+        " of test runs (typical result " +
+        bound("statewide.results." + pair.trailer + ".p50", integer(trail.p50)) + " vs " +
+        bound("statewide.results." + pair.leader + ".p50", integer(lead.p50)) +
+        "). The threshold is " + gate + ".</span>";
     }
     var keep = pair.flip_share != null ? Math.max(1, Math.round((1 - pair.flip_share) * 5)) : 4;
-    return tipControl("Too close to call", "The order flips in at least " +
-      Math.round((locked && locked.close_call_flip_share ? locked.close_call_flip_share : 0.1) * 100) +
-      " percent of test runs. " + scenarioLabel(pair.leader) + " beat " +
-      scenarioLabel(pair.trailer) + " in about " + keep + " of 5 test runs. " + threshold + ".");
+    return tipControl("Too close to call", "The order flips often enough that a different published assumption can swap the top two. " + threshold + ".") +
+      '<span class="sr">' + escapeHtml(scenarioLabel(pair.leader)) + " beat " +
+      escapeHtml(scenarioLabel(pair.trailer)) + " in about " + keep + " of 5 test runs (" +
+      flip + "). The threshold is " + gate + ".</span>";
   }
 
   function frameApi() {
@@ -702,31 +717,31 @@
 
   function headlineOpts() {
     var sid = headlineSid();
+    var unmodeled = on.size > 1 && !sid;
     var sw = docStatewide();
     var row = sid ? sw.results[sid] : null;
     var t = packageTotal();
     var base = sw.results.baseline;
     return {
-      sid: on.size ? (sid || "selection") : "",
-      unmodeled: on.size > 0 && !t.exact,
-      status: t.status,
+      sid: unmodeled ? "" : sid,
+      unmodeled: unmodeled,
+      status: row ? (row.interval_status || t.status) : t.status,
       stateName: locked.name,
       endYear: endYearText(),
       label: sid ? scenarioLabel(sid) : "Your package",
-      low: row ? row.p10 : t.lo,
-      high: row ? row.p90 : t.hi,
-      middle: t.c,
+      low: row ? row.p10 : null,
+      high: row ? row.p90 : null,
+      middle: row ? row.central : null,
       baseline: base.central,
       draws: locked.draws,
-      paths: {
-        low: "statewide.results." + (sid || "selection") + ".p10",
-        high: "statewide.results." + (sid || "selection") + ".p90",
-        middle: "statewide.results." + (sid || "selection") + ".central",
+      paths: sid ? {
+        low: "statewide.results." + sid + ".p10",
+        high: "statewide.results." + sid + ".p90",
+        middle: "statewide.results." + sid + ".central",
         baseline: "statewide.results.baseline.central",
-        pct: "statewide.results." + (sid || "selection") + ".lift",
         endYear: "assumptions.end_year",
         draws: "draws"
-      }
+      } : {}
     };
   }
 
@@ -815,14 +830,20 @@
     if (range) {
       if (!on.size) range.textContent = "Pick one or more reforms to see the extra homes.";
       else if (!t.exact) range.textContent = HONESTY_LONG;
-      else range.textContent = "Range from " + integer(locked.draws) + " runs of the published assumptions; it describes the model, not the odds of success.";
+      else range.innerHTML = "Range from " + bound("draws", integer(locked.draws)) + " runs of the published assumptions; it describes the model, not the odds of success.";
     }
     var relate = document.getElementById("relate");
     if (relate) {
-      relate.textContent = on.size && baseline
-        ? "That's about " + (t.c / baseline * 100).toFixed(1) + "% more homes than " +
-          locked.name + " is expected to finish anyway over five years."
-        : "";
+      if (!on.size || !baseline || !t.exact) relate.textContent = "";
+      else {
+        var share = (t.c / baseline * 100).toFixed(1) + "%";
+        var sid = headlineSid();
+        relate.innerHTML = "That's about " +
+          '<span data-derived="lift" data-from="statewide.results.' + (sid || "package") +
+          '.central statewide.results.baseline.central">' + share + "</span> more homes than " +
+          bound("statewide.results.baseline.central", integer(baseline)) +
+          " expected anyway over five years.";
+      }
     }
     var mini = document.getElementById("mini-total");
     var api = frameApi();
@@ -864,15 +885,15 @@
     if (mixUnranked()) return "";
     if (!pair || !pair.close_call) return "";
     if (k !== pair.leader && k !== pair.trailer) return "";
-    var flip = Math.round(pair.flip_share * 100);
+    var flip = bound("statewide.top_benchmark_pair.flip_share", Math.round(pair.flip_share * 100) + "%");
     if (isDrawTie(pair)) {
       return '<button type="button" class="badge" aria-expanded="false" data-badge="close">Too close to call</button>' +
         '<span class="sr">' + escapeHtml(scenarioLabel(pair.trailer)) + " ahead in " + flip +
-        "% of test runs. The central estimate favors " + escapeHtml(scenarioLabel(pair.leader)) + ".</span>";
+        " of test runs. The central estimate favors " + escapeHtml(scenarioLabel(pair.leader)) + ".</span>";
     }
     return '<button type="button" class="badge" aria-expanded="false" data-badge="close">Too close to call</button>' +
       '<span class="sr">' + escapeHtml(scenarioLabel(pair.trailer)) + " ahead in " + flip +
-      "% of test runs. Both are strong options.</span>";
+      " of test runs. Both are strong options.</span>";
   }
 
   function outcomeBadgeHtml(row) {
@@ -930,7 +951,7 @@
     var parking = k === "parking" ? api.parkingHtml({
       show: true,
       urbanText: paramText("parking_market_urban"),
-      urbanPath: "parameters.parking_market_urban.central",
+      urbanPath: "by_name.parking_market_urban.central",
       minText: paramText("parking_min_urban"),
       minPath: "anchors.parking_min_urban.central"
     }) : "";
@@ -945,7 +966,7 @@
       lowPath: prefix + ".p10",
       highPath: prefix + ".p90",
       parkingText: paramText("parking_market_urban"),
-      parkingPath: "parameters.parking_market_urban.central"
+      parkingPath: "by_name.parking_market_urban.central"
     });
     return funnel + parking + limits + '<p class="model-badge county">County model</p>';
   }
@@ -964,7 +985,7 @@
             ? "Reference range — from default assumptions, not recomputed "
             : "Likely ") + api.rangeSpans(prefix + ".p10", prefix + ".p90", row.p10, row.p90) + " extra homes")
         : describeRange(row);
-      return '<article class="card" role="listitem">' +
+      return '<div class="card" role="listitem">' +
         '<button type="button" class="tog" aria-pressed="' + pressed + '" data-k="' + k + '">' +
         "<span><span class='help'>" + escapeHtml(placeLabel(i, k, sw)) + "</span><span class='card-title'>" +
         escapeHtml(PLAIN[k]) + "</span></span><span class='sw' aria-hidden='true'></span></button>" +
@@ -973,8 +994,9 @@
         '<div class="mini" aria-hidden="true"><i style="left:' + (Math.max(0, row.p10) / mx * 100) +
         "%;width:" + (Math.max(0, row.p90 - row.p10) / mx * 100) + '%"></i><b style="left:' +
         (Math.max(0, row.central) / mx * 100) + '%"></b></div>' +
-        '<div class="r">' + describeRange(row) + "</div>" +
-        closeBadgeHtml(k, sw) + outcomeBadgeHtml(row) + cardExtras(k, row) + "</article>";
+        '<div class="r">' + (row.interval_status === "reference"
+          ? "Reference range (defaults)" : "Likely range (10th–90th percentile, model-conditional)") + "</div>" +
+        closeBadgeHtml(k, sw) + outcomeBadgeHtml(row) + cardExtras(k, row) + "</div>";
     }).join("");
     extraCards.innerHTML = (locked.scenarios || []).filter(function (s) {
       return s.id === "approval";
@@ -1042,16 +1064,23 @@
     }
     if (ids.length === 4) {
       var d = sw.package_decomposition || locked.statewide.package_decomposition;
-      line.innerHTML = "Adding the cards: <b>" + integer(d.sum_of_separate) + "</b>. Modeled together: <b>" +
-        integer(d.package) + "</b>." + tag("calculated");
+      var root = "statewide.package_decomposition.";
+      line.innerHTML = "Adding the cards: <b>" + bound(root + "sum_of_separate", integer(d.sum_of_separate)) +
+        "</b>. Modeled together: <b>" + bound(root + "package", integer(d.package)) + "</b>." + tag("calculated");
       box.innerHTML = "<b>Don't add the bills up.</b> ADUs and 2–6 homes compete for the same lots (" +
-        integer(Math.abs(d.competition_loss)) + " fewer homes than adding them), but a fee cut is worth more when paired with them (fee step " +
-        signed(d.fee_cut_step) + ", parking step " + signed(d.parking_step) + "). Net: " +
-        integer(d.package) + " vs " + integer(d.sum_of_separate) + " if added. Interaction " +
-        signed(d.interaction) + ". Package is not a sum." + tag("calculated");
+        bound(root + "competition_loss", integer(Math.abs(d.competition_loss))) +
+        " fewer homes than adding them), but a fee cut is worth more when paired with them (fee step " +
+        bound(root + "fee_cut_step", signed(d.fee_cut_step)) + ", parking step " +
+        bound(root + "parking_step", signed(d.parking_step)) + "). Net: " +
+        bound(root + "package", integer(d.package)) + " vs " +
+        bound(root + "sum_of_separate", integer(d.sum_of_separate)) + " if added. Interaction " +
+        bound(root + "interaction", signed(d.interaction)) + ". Package is not a sum." + tag("calculated");
     } else {
-      line.innerHTML = "Adding the cards: <b>" + integer(sum) + "</b>. " + escapeHtml(HONESTY);
-      box.textContent = HONESTY_LONG + " The engine has been run for each reform alone and for all four together.";
+      var parts = ids.map(function (k) {
+        return escapeHtml(PLAIN[k]) + " " + bound("statewide.results." + k + ".central", signed(sw.results[k].central));
+      }).join(", ");
+      line.innerHTML = "Adding the cards: " + parts + ". " + escapeHtml(HONESTY);
+      box.textContent = "Not computed for this combination. " + HONESTY_LONG;
     }
   }
 
@@ -1275,10 +1304,10 @@
     if (sid === "selection") {
       countyDetail.hidden = false;
       countyDetail.innerHTML =
-        "<p>" + escapeHtml(countyPhrase(row)) + " " + escapeHtml(selectionLabel()) + " " +
-        signed(countyMapValue(row)) + tag("calculated") +
-        " (" + HONESTY + ") on top of " + integer(cell(row, "baseline").central) +
-        " expected " + tag("calculated") + ".</p>";
+        "<p>" + escapeHtml(countyPhrase(row)) + " Not computed for this combination. " +
+        escapeHtml(HONESTY) + ". Baseline " +
+        bound("counties." + row.fips + ".results.baseline.central", integer(cell(row, "baseline").central)) +
+        " expected.</p>";
       return;
     }
     var current = cell(row, sid);
@@ -1286,16 +1315,22 @@
     var pair = row.top_benchmark_pair;
     var cover = row.coverage || {};
     countyDetail.hidden = false;
+    var prefix = "counties." + row.fips + ".results." + sid;
     countyDetail.innerHTML =
       "<p>" + escapeHtml(countyPhrase(row)) + " " +
-      scenarioLabel(sid) + " " + signed(countyMapValue(row)) + tag("calculated") +
-      " (" + describeRange(env) + tag("assumed") +
-      ") on top of " + integer(cell(row, "baseline").central) + " expected " + tag("calculated") +
-      ". Eligible " + integer(current.eligible) + tag("calculated") +
-      ", feasible " + integer(current.feasible) + tag("calculated") +
-      ". " + jargon("Zoning") + " " + integer(current.zoning_low) + "–" + integer(current.zoning_high) + tag("calculated") +
-      ". " + jargon("ACS MOE") + " ±" + integer(current.acs_moe) + tag("observed") +
-      ". Local zoning known for " + pct(cover.adu || 0) + " of ADU lots " + tag("observed") +
+      scenarioLabel(sid) + " " + bound(prefix + ".central", signed(countyMapValue(row))) + tag("calculated") +
+      " (" + (env && env.interval_status === "reference" ? "Reference range (defaults) " : "Likely range ") +
+      bound(prefix + ".p10", integer(env.p10)) + "–" + bound(prefix + ".p90", integer(env.p90)) +
+      tag("assumed") + ") on top of " +
+      bound("counties." + row.fips + ".results.baseline.central", integer(cell(row, "baseline").central)) +
+      " expected " + tag("calculated") +
+      ". Eligible " + bound(prefix + ".eligible", integer(current.eligible)) + tag("calculated") +
+      ", feasible " + bound(prefix + ".feasible", integer(current.feasible)) + tag("calculated") +
+      ". Local-rules range " + bound(prefix + ".zoning_low", integer(current.zoning_low)) + "–" +
+      bound(prefix + ".zoning_high", integer(current.zoning_high)) + tag("calculated") +
+      ". Census survey error ±" + bound(prefix + ".acs_moe", integer(current.acs_moe)) + tag("observed") +
+      ". Local zoning known for " + bound("counties." + row.fips + ".coverage.adu", pct(cover.adu || 0)) +
+      " of ADU lots " + tag("observed") +
       ". " + rankingBadge(pair) + ".</p>";
   }
 
@@ -1487,6 +1522,16 @@
     return sliderValueText(spec, value);
   }
 
+  function assumptionFigure(unit, value) {
+    var text = sliderValueText({ unit: unit || "" }, value);
+    if (!unit || text.indexOf("a year") >= 0 || text.indexOf(unit) >= 0) return text;
+    if (unit.charAt(0) === "$") {
+      var tail = unit.replace(/^\$\s*/, "");
+      return tail ? text + " " + tail : text;
+    }
+    return text + " " + unit;
+  }
+
   function renderSliders() {
     if (!catalog) return;
     var groups = {};
@@ -1546,6 +1591,7 @@
           }
         });
         if (walkStep === 4) walkStep = 5;
+        writeUrl();
         scheduleRecompute();
       });
     });
@@ -1778,7 +1824,7 @@
         lowPath: "statewide.results." + whyDoc.scenario + ".p10",
         highPath: "statewide.results." + whyDoc.scenario + ".p90",
         parkingText: paramText("parking_market_urban"),
-        parkingPath: "parameters.parking_market_urban.central"
+        parkingPath: "by_name.parking_market_urban.central"
       }) : "");
     var head = document.getElementById("why-heading");
     if (head) head.focus();
@@ -1824,7 +1870,8 @@
       "<li>Census Building Permits Survey 2023–2025 county files " + tag("observed") + "</li>" +
       "<li>Census cartographic boundary file cb_2024_us_county_5m, simplified " + tag("observed") + "</li>" +
       "<li>Published assumption bands in config/lab/assumptions.yaml " + tag("assumed") + "</li>" +
-      "<li>ADU evidence coverage " + pct(cover.adu) + " · 2–6-home evidence " + pct(cover.mm) + " " + tag("calculated") + "</li>" +
+      "<li>ADU evidence coverage " + bound("coverage.adu", pct(cover.adu)) +
+      " · 2–6-home evidence " + bound("coverage.mm", pct(cover.mm)) + " " + tag("calculated") + "</li>" +
       "</ul>" +
       "<p class='help'>Full vintages: docs/DATA_PROVENANCE.md. The Why drawer lists the source on each row.</p>";
   }
@@ -1877,8 +1924,8 @@
       lowPath: opts.paths.low,
       highPath: opts.paths.high,
       parkingText: paramText("parking_market_urban"),
-      parkingPath: "parameters.parking_market_urban.central"
-    }) : "<p>What this can't tell you: it is not a forecast of which lots will build.</p>";
+      parkingPath: "by_name.parking_market_urban.central"
+    }) : "<p>What this can't tell you: it does not say which lots will build.</p>";
     el.innerHTML =
       '<p class="model-badge county">County model · county by county · PA, NH</p>' +
       "<p>Stateframe brief — " + escapeHtml(locked.name) + ", " +
@@ -1922,12 +1969,8 @@
       hasOverrides: Object.keys(overrides).length > 0,
       changed: overrides,
       switches: (locked.statewide.what_would_change && locked.statewide.what_would_change.switches) || [],
-      formatBand: function (row) {
-        var spec = paramSpec(row.key) || { unit: row.unit };
-        return sliderValueText(spec, row.bandLow) + "–" + sliderValueText(spec, row.bandHigh);
-      },
-      formatSwitch: function (row) {
-        return sliderValueText({ unit: row.unit }, row.switch_at);
+      formatFigure: function (unit, value) {
+        return assumptionFigure(unit, value);
       }
     });
     var limitIds = sid ? [sid] : selectedIds();
@@ -1946,7 +1989,7 @@
         lowPath: prefix + ".p10",
         highPath: prefix + ".p90",
         parkingText: paramText("parking_market_urban"),
-        parkingPath: "parameters.parking_market_urban.central"
+        parkingPath: "by_name.parking_market_urban.central"
       }));
     });
   }
@@ -2044,9 +2087,16 @@
   }
 
   function exportCsv() {
+    var stamp = document.querySelector(".build-stamp");
+    var sha = stamp ? String(stamp.textContent || "").replace(/^Build\s*/, "").split("·")[0].trim() : "";
     var text = buildCountyCsv(docCounties(), selectedIds(), {
       live: !!live,
-      lockedCounties: locked ? locked.counties : []
+      lockedCounties: locked ? locked.counties : [],
+      model: "county",
+      seed: locked && locked.seed,
+      fingerprint: locked && locked.fingerprint,
+      sha: sha,
+      overrides: encodeOverrides(overrides)
     });
     downloadBlob(new Blob([text], { type: "text/csv" }), "stateframe-" + stateCode + "-counties.csv");
   }

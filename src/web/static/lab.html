@@ -10,7 +10,7 @@
 </head>
 <body class="lab-body">
   <a class="skip" href="#main">Skip to results</a>
-  <div class="mini-total" id="mini-total" hidden></div>
+  <div class="mini-total" id="mini-total" role="region" aria-label="Running total" hidden></div>
   <header class="sf-top">
     <a class="sf-brand" href="/lab">Stateframe</a>
     <nav aria-label="Main">
@@ -62,7 +62,7 @@
   </section>
 
   <div class="layout lab-layout">
-    <main id="main">
+    <main id="main" tabindex="-1">
       <section class="status" id="status" aria-live="polite"></section>
 
       <p class="legend-bar no-print">

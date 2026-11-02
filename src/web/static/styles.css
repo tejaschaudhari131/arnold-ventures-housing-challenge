@@ -83,6 +83,11 @@ h1 {
   max-height: 100vh;
   overflow: auto;
 }
+.lab-body .assumptions {
+  position: static;
+  max-height: none;
+  overflow: visible;
+}
 .states { border-right: 1px solid var(--line); }
 .assumptions { border-left: 1px solid var(--line); background: #efeae0; }
 main { padding: 18px 22px 48px; min-width: 0; }

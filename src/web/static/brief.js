@@ -130,7 +130,7 @@
       lowPath: opts.paths.low,
       highPath: opts.paths.high,
       parkingText: parkingText(),
-      parkingPath: "parameters.parking_market_urban.central"
+      parkingPath: "by_name.parking_market_urban.central"
     }) : Frame.limitsHtml({ sid: "", ratios: catalog.completion_ratios });
   }
 

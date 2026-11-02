@@ -36,6 +36,15 @@ def _pct(value: float) -> str:
     return f"{value:.1%}".replace("%", " percent")
 
 
+def _bind(path: str, text: str) -> str:
+    """HTML-only. Plain-text notes and exports stay free of markup."""
+    return f'<span data-bind="{escape(path, quote=True)}">{escape(text)}</span>'
+
+
+def _display_path(doc: dict[str, Any], key: str) -> str:
+    return f"display_numbers.{doc['state']}.{key}"
+
+
 def _round_homes(value: float) -> int:
     return int(round(float(value)))
 
@@ -132,6 +141,7 @@ def comparison(state: str = "PA") -> dict[str, Any]:
         "core_baseline": _round_homes(core_base),
         "lab_fee": _round_homes(lab_fee),
         "core_fee": _round_homes(core_fee),
+        "host_adjustment": host_adj,
         "core_cap_rate": snap(core_cap),
         "core_rent_ratio": snap(core_rent),
         "waterfall": steps,
@@ -266,7 +276,7 @@ def engine_gap_text(doc: dict[str, Any], audience: str, html: bool = False) -> s
         href, label = LAB_URL, "Open the Lab"
         plain = f" See the Lab at {LAB_URL} and the core engine at {CORE_URL}."
     if html:
-        return f"{escape(text)} {_link(href, label)}."
+        return _engine_gap_html(doc, audience, href, label)
     return text + plain
 
 
@@ -322,13 +332,129 @@ def _compose(doc: dict[str, Any], audience: str, html: bool = False) -> str:
     handbook = "The Lab numbers answer the Handbook scenarios."
     if html and audience in {"core", "lab"}:
         other = f"See the {_link(href, label)}."
-        # The bridge stays outside <details> so the two $6,000 figures are explained on screen.
-        gap = f"<p class='baseline-gap'>{doc['baseline_note']}</p>"
-        return f"{fees} {lead} {handbook} {walk} {other} {gap}"
+        # The bridge stays outside <details> so the two fee figures are explained on screen.
+        gap = f"<p class='baseline-gap'>{_baseline_note_html(doc)}</p>"
+        return f"{_fees_html(doc)} {_lead_html(doc, audience)} {handbook} {_walk_html(doc)} {other} {gap}"
     if audience == "docs":
         # engine_gap_text already names the Handbook scenarios and links both pages.
         return f"{fees} {lead} {walk} {engine_gap_text(doc, 'docs')} {doc['baseline_note']}"
     return f"{fees} {lead} {handbook} {walk} {other}"
+
+
+def _num(doc: dict[str, Any], key: str, text: str) -> str:
+    return _bind(_display_path(doc, key), text)
+
+
+def _fees_html(doc: dict[str, Any]) -> str:
+    lab_fee = _num(doc, "lab_fee", _money(doc["lab_fee"]))
+    core_fee = _num(doc, "core_fee", _money(doc["core_fee"]))
+    lab = _num(doc, "lab_adu", _homes(doc["lab_adu"]))
+    core = _num(doc, "core_adu", _homes(doc["core_adu"]))
+    fee_step = _num(doc, "after_fee", _homes(doc["after_fee"]))
+    return (
+        f"Lab at the Handbook's {lab_fee} fee: {lab}. "
+        f"Lab at a {core_fee} fee: {fee_step}. "
+        f"Core at a {core_fee} fee: {core}. "
+        f"The same {core_fee} fee does not match because the Lab is a county-level model "
+        "and the core uses a different adoption and valuation model."
+    )
+
+
+def _lead_html(doc: dict[str, Any], audience: str) -> str:
+    place = doc.get("state_name") or "Pennsylvania"
+    lab = _num(doc, "lab_adu", _homes(doc["lab_adu"]))
+    core = _num(doc, "core_adu", _homes(doc["core_adu"]))
+    lab_fee = _num(doc, "lab_fee", _money(doc["lab_fee"]))
+    core_fee = _num(doc, "core_fee", _money(doc["core_fee"]))
+    if audience == "core":
+        return (
+            f"This page's ADU number ({core} in {place}) uses the core engine's "
+            f"{core_fee} per-home ADU fee. The Small Homes Policy Lab applies the "
+            f"Handbook's {lab_fee} fee to ADUs and reports {lab}."
+        )
+    return (
+        f"This page's ADU number ({lab} in {place}) applies the Handbook's "
+        f"{lab_fee} per-home fee to ADUs. The core Stateframe engine uses its own "
+        f"{core_fee} ADU fee and reports {core}."
+    )
+
+
+def _walk_html(doc: dict[str, Any]) -> str:
+    cap = _num(doc, "core_cap_rate", f"{float(doc['core_cap_rate']) * 100:.1f}%")
+    rent = _num(doc, "core_rent_ratio", f"{doc['core_rent_ratio']:g}")
+    yield_step = _num(doc, "after_yield", _homes(doc["after_yield"]))
+    lag_step = _num(doc, "after_lags", _homes(doc["after_lags"]))
+    close = _num(doc, "close_share", f"{float(doc['close_share']) * 100:.0f}%")
+    return (
+        "Walking the Lab toward the core: value the ADU the way a homeowner does — "
+        f"{cap} cap rate, no operating share, rent × {rent} ({yield_step}); then drop "
+        f"adoption and build lags ({lag_step}), within about {close} of the core."
+    )
+
+
+def _baseline_note_html(doc: dict[str, Any]) -> str:
+    code = str(doc["state"])
+    lab = _num(doc, "lab_baseline", homes(doc["lab_baseline"]))
+    core = _num(doc, "core_baseline", homes(doc["core_baseline"]))
+    gap = int(doc["lab_baseline"]) - int(doc["core_baseline"])
+    host_raw = float(doc.get("host_adjustment") or 0.0)
+    host_n = int(round(host_raw))
+    window = homes(gap - host_n, signed=True)
+    host = _bind(
+        "statewide.results.baseline.host_adjustment",
+        homes(host_raw, signed=True),
+    )
+    catalog = load_assumptions()
+
+    def ratio(name: str) -> str:
+        value = float(catalog.spec(name)["central"])
+        return _bind(f"completion_ratios.{name}.central", f"{value:.2f}")
+
+    shares = "/".join(
+        ratio(name)
+        for name in ("completion_ratio_sf", "completion_ratio_small", "completion_ratio_mf")
+    )
+    gap_text = (
+        f'<span data-derived="baseline-gap" data-from="display_numbers.{code}.lab_baseline '
+        f'display_numbers.{code}.core_baseline">{escape(homes(gap, signed=True))}</span>'
+    )
+    window_text = (
+        f'<span data-derived="permit-window" data-from="display_numbers.{code}.lab_baseline '
+        f'display_numbers.{code}.core_baseline statewide.results.baseline.host_adjustment">'
+        f"{escape(window)}</span>"
+    )
+    return (
+        f"The Lab baseline ({lab}) and the core baseline ({core}) differ by "
+        f"{gap_text}. Pennsylvania's core permits are the same "
+        "2023-2025 county files as the Lab. The Lab pipeline uses the same "
+        f"never-complete shares as the core ({shares}), including "
+        "completion_ratio_mf for 5+ homes, so the pipeline baselines match. "
+        f"The residual after the host term is {window_text}. The Lab also adds a {host} "
+        "host adjustment for already-legal homes the permit window cannot contain yet."
+    )
+
+
+def _engine_gap_html(doc: dict[str, Any], audience: str, href: str, label: str) -> str:
+    place = doc.get("state_name") or doc["state"]
+    lab_fee = _num(doc, "lab_fee", _money(doc["lab_fee"]))
+    core_fee = _num(doc, "core_fee", _money(doc["core_fee"]))
+    lab_pkg = _num(doc, "lab_package", _homes(doc["lab_package"]))
+    core_pkg = _num(doc, "core_package", _homes(doc["core_package"]))
+    if audience == "core":
+        text = (
+            f"These headline numbers are the core screening model. It uses a {core_fee} ADU fee. "
+            f"The Handbook scenarios are answered on the Small Homes Policy Lab, which uses the "
+            f"Handbook's {lab_fee} per-home fees and a county-level model. For {place} the Lab "
+            f"package is {lab_pkg}, not the {core_pkg} shown here."
+        )
+    else:
+        text = (
+            f"These headline numbers answer the Handbook scenarios. The Lab uses the Handbook's "
+            f"{lab_fee} per-home fees and a county-level model. The core Stateframe page uses a "
+            f"{core_fee} ADU fee and a statewide screening model. For {place} that core package "
+            f"is {core_pkg}, against {lab_pkg} here."
+        )
+    return f"{text} {_link(href, label)}."
 
 
 def note_text(audience: str = "docs") -> str:

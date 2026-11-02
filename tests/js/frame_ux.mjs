@@ -162,6 +162,27 @@ const ref = Frame.headlineParts({
 if (ref.html.indexOf("Reference range — from default assumptions, not recomputed") < 0) throw new Error("reference kicker");
 if (ref.html.indexOf("not recomputed") < 0) throw new Error("not recomputed");
 if (Frame.headlineParts({ sid: "" }).html.indexOf("+0 extra homes") < 0) throw new Error("empty headline");
+const mix = Frame.miniTotal({ unmodeled: true, label: "Your package", low: null, high: null, middle: 8517 });
+if (mix.indexOf("0 to 0") >= 0 || mix.indexOf("8,517") >= 0) throw new Error("mix total invented a sum: " + mix);
+if (mix.indexOf("not computed for this combination") < 0) throw new Error("mix total missing the explicit state");
+const mixHead = Frame.headlineParts({ unmodeled: true, sid: "selection", low: null, high: null, middle: 8517, paths: { middle: "statewide.results.selection.central" } });
+if (mixHead.html.indexOf("selection") >= 0 || mixHead.html.indexOf("8,517") >= 0) throw new Error("mix headline bound a fake path");
+const rankedSwing = Frame.rankDrivers(load("PA").statewide.one_at_a_time, "package", Object.keys(load("PA").statewide.one_at_a_time).map(function (name) {
+  return { name: name, label: name, low: 0, high: 1, unit: "", tag: "assumed" };
+}));
+rankedSwing.slice(0, 5).forEach(function (row) {
+  const ends = load("PA").statewide.one_at_a_time[row.key];
+  if (Math.abs(row.swing - Math.abs(ends.high.package - ends.low.package)) > 0.01) {
+    throw new Error("swing derivation " + row.key);
+  }
+});
+const lift = Frame.headlineParts({
+  sid: "adu", status: "conditional", stateName: "Pennsylvania", endYear: "2031",
+  low: 10, high: 20, middle: 5, baseline: 100, draws: 10,
+  paths: { low: "statewide.results.adu.p10", high: "statewide.results.adu.p90", middle: "statewide.results.adu.central", baseline: "statewide.results.baseline.central" }
+});
+if (!/data-derived="lift"/.test(lift.html)) throw new Error("lift is not marked derived");
+if (/data-bind="[^"]*lift"/.test(lift.html)) throw new Error("lift uses a fake bind path");
 if (Frame.FUNNEL_UNAVAILABLE.indexOf("Funnel not available") < 0) throw new Error("screening funnel");
 const screening = Frame.funnelHtml({ screening: true });
 if (screening.indexOf(Frame.FUNNEL_UNAVAILABLE) < 0) throw new Error("screening funnel html");

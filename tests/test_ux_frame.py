@@ -30,6 +30,10 @@ def test_parking_anchors_come_from_the_catalog():
     catalog = App().lab_assumptions()
     anchors = catalog["anchors"]
     assert set(anchors) == {"parking_min_urban", "parking_min_suburban", "parking_min_rural"}
+    assert "parking_market_urban" in catalog["by_name"]
+    assert catalog["by_name"]["parking_market_urban"]["low"] < catalog["by_name"]["parking_market_urban"]["central"]
+    assert set(catalog["display_numbers"]) == {"PA", "NH"}
+    assert "lab_adu" in catalog["display_numbers"]["PA"]
     assert anchors["parking_min_urban"]["central"] == anchors["parking_min_urban"]["low"]
     ratios = catalog["completion_ratios"]
     assert "completion_ratio_adu" in ratios
