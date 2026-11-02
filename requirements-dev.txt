@@ -1,0 +1,4 @@
+# Test runner pins. CI installs this file. The app SBOM stays on requirements.txt.
+# pandas is test-only: NumPy's license expression includes CC0, so it is not shipped.
+-r requirements.txt
+pandas==2.2.3

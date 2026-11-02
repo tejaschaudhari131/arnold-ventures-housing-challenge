@@ -38,9 +38,9 @@ def test_lab_why_drawer_and_table_headers_are_labeled():
     assert "whyEl.focus" in LAB_JS
     assert "close-call threshold" in LAB_JS
     assert 'tag("calculated")' in LAB_JS
-    for header in ("Delivery", "Eligible", "Feasible", "Envelope", "Zoning", "ACS MOE"):
+    for header in ("Extra homes", "Eligible lots", "Lots where it pays off", "Local-rules range", "Census survey error"):
         assert header in LAB
-    assert LAB.index("Delivery") < LAB.index("county-body")
+    assert LAB.index("Extra homes") < LAB.index("county-body")
 
 
 def test_core_tabs_and_card_buttons():
@@ -55,7 +55,7 @@ def test_core_tabs_and_card_buttons():
     assert 'role="group"' in APP_JS
     assert "badge-uncertain" in APP_JS
     assert "Outcome uncertain" in APP_JS
-    assert "Ranking is close" in LAB_JS
+    assert "Too close to call" in LAB_JS
     assert "completeness" in APP_JS and 'badge("calculated")' in APP_JS
 
 
@@ -77,7 +77,7 @@ def test_reduced_motion_and_print_and_slider_size():
 
 
 def test_lab_js_tags_envelope_as_calculated():
-    assert "Envelope" in LAB_JS
+    assert "Likely range" in LAB_JS
     assert LAB_JS.count('tag("calculated")') >= 4
     assert 'tag("assumed")' in LAB_JS
     assert "rationale" in LAB_JS

@@ -14,6 +14,7 @@ import csv
 import io
 import json
 import math
+from functools import lru_cache
 from typing import Any
 
 import yaml
@@ -144,6 +145,86 @@ def _screening_completion_block() -> tuple[dict[str, Any], dict[str, Any]]:
     return assumptions.completion_ratios(), assumptions.lab_completion_lot()
 
 
+_ANCHOR_KEYS = (
+    "parking_min_urban",
+    "parking_min_suburban",
+    "parking_min_rural",
+)
+
+
+def _anchor_params(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Fixed assumptions the UI quotes but does not offer as sliders."""
+    rows: dict[str, dict[str, Any]] = {}
+    for name in _ANCHOR_KEYS:
+        spec = doc["params"].get(name)
+        if not spec:
+            continue
+        rows[name] = {
+            "name": name,
+            "label": spec["label"],
+            "group": spec.get("group", ""),
+            "unit": spec.get("unit", ""),
+            "low": spec["low"],
+            "central": spec["central"],
+            "high": spec["high"],
+            "tag": "assumed",
+        }
+    return rows
+
+
+_DISPLAY_KEYS = (
+    "lab_adu",
+    "core_adu",
+    "lab_package",
+    "core_package",
+    "lab_baseline",
+    "core_baseline",
+    "lab_fee",
+    "core_fee",
+    "core_cap_rate",
+    "core_rent_ratio",
+    "after_fee",
+    "after_yield",
+    "after_lags",
+    "close_share",
+    "host_adjustment",
+)
+
+
+@lru_cache(maxsize=1)
+def _tier1_adu_errors() -> dict[str, dict[str, Any]]:
+    """Parcel-screen error for CT, WI, UT, and HI. Same formula as cross-validation."""
+    from src.bundle import load_bundle
+    from src.model.crossval import _error
+    from src.model.engine import simulate_state
+
+    fixtures, assumptions = load_bundle()
+    out: dict[str, dict[str, Any]] = {}
+    for code in ("CT", "WI", "UT", "HI"):
+        full = simulate_state(fixtures, assumptions, code, parcel_mode="observed", resolution="county")
+        imputed = simulate_state(fixtures, assumptions, code, parcel_mode="imputed", resolution="county")
+        full_value = float(full["scenarios"]["adu"]["incremental_completions"])
+        other = float(imputed["scenarios"]["adu"]["incremental_completions"])
+        # Share, not percentage points. The page prints "-7.2%", and other
+        # percent binds (flip share, lift) are ratios the formatter scales by 100.
+        percent = _error(full_value, other)["percent_error"]
+        out[code] = {
+            "scenario": "adu",
+            "percent_error": None if percent is None else float(percent) / 100.0,
+        }
+    return out
+
+
+def _display_numbers() -> dict[str, dict[str, Any]]:
+    """Rounded comparison figures the fee note binds. Not a new model result."""
+    from src.adu_fee_note import comparison
+
+    return {
+        code: {key: comparison(code)[key] for key in _DISPLAY_KEYS}
+        for code in ("PA", "NH")
+    }
+
+
 def assumption_catalog() -> dict[str, Any]:
     doc = load_assumptions()
     params = []
@@ -172,6 +253,10 @@ def assumption_catalog() -> dict[str, Any]:
         "seed": doc["monte_carlo_seed"],
         "reconciliation_note": load_ui()["reconciliation_note"],
         "parameters": params,
+        "by_name": {row["name"]: row for row in params},
+        "anchors": _anchor_params(doc),
+        "display_numbers": _display_numbers(),
+        "crossval_tier1": _tier1_adu_errors(),
         "completion_ratios": _screening_completion_block()[0],
         "lab_completion_lot": _screening_completion_block()[1],
         "scenarios": [
@@ -187,11 +272,34 @@ def assumption_catalog() -> dict[str, Any]:
     }
 
 
+def _derived_display(doc: dict[str, Any]) -> dict[str, Any]:
+    """Ratios and swings the UI already shows. No new model run."""
+    statewide = doc["statewide"]
+    baseline = float(statewide["results"]["baseline"]["central"])
+    lift: dict[str, float | None] = {}
+    for sid, row in statewide["results"].items():
+        if sid == "baseline":
+            continue
+        central = float(row.get("central") or 0.0)
+        lift[sid] = (central / baseline) if baseline else None
+    swing: dict[str, dict[str, float]] = {}
+    for key, ends in (statewide.get("one_at_a_time") or {}).items():
+        low = ends.get("low") or {}
+        high = ends.get("high") or {}
+        swing[key] = {
+            sid: abs(float(high[sid]) - float(low_value))
+            for sid, low_value in low.items()
+            if sid in high
+        }
+    return {"lift": lift, "swing": swing}
+
+
 def locked_results(code: str) -> dict[str, Any]:
     """Committed results only. Vercel and the GET route never compute."""
     doc = dict(load_results(check_state(code), allow_compute=False))
     # Display label only. The JSON key close_call_flip_share stays 0.10.
     doc["close_call_flip_share_label"] = "close-call threshold"
+    doc["derived"] = _derived_display(doc)
     return doc
 
 

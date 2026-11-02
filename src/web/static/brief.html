@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quick answer — Stateframe</title>
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/lab.css">
+</head>
+<body class="brief-body">
+  <a class="skip" href="#answer">Skip to the answer</a>
+  <main class="brief-sheet" id="brief-main">
+    <h1>Quick answer</h1>
+    <p class="help">A short reading of the same model. No new numbers live on this page.</p>
+    <form id="brief-form">
+      <label for="brief-state">Which state?
+        <select id="brief-state" name="st"></select>
+      </label>
+      <fieldset>
+        <legend>Which changes?</legend>
+        <label><input type="checkbox" name="on" value="adu"> Let homeowners add a backyard or basement apartment</label>
+        <label><input type="checkbox" name="on" value="missing_middle"> Allow 2–6 homes on single-family lots</label>
+        <label><input type="checkbox" name="on" value="parking"> Stop requiring parking spaces</label>
+        <label><input type="checkbox" name="on" value="fees"> Cut or cap permit and impact fees</label>
+      </fieldset>
+    </form>
+    <section id="answer" aria-live="polite"></section>
+    <section id="higher" aria-labelledby="higher-title">
+      <h2 id="higher-title">What could make it higher or lower</h2>
+      <ul id="higher-list"></ul>
+    </section>
+    <section id="limits" aria-labelledby="limits-title"></section>
+    <div class="exports">
+      <button type="button" class="btn pri" id="print-brief">Print one-page brief</button>
+      <button type="button" id="copy-link">Copy link</button>
+      <a class="btn" id="full-model" href="/lab#results">See the full model with these choices</a>
+    </div>
+    <p id="status" role="status"></p>
+    <p class="build-stamp">Build <!-- BUILD_STAMP --></p>
+  </main>
+  <script src="/fmt.js"></script>
+  <script src="/frame.js"></script>
+  <script src="/brief.js"></script>
+</body>
+</html>
