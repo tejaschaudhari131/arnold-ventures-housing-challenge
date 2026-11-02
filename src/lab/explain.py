@@ -144,6 +144,33 @@ def _screening_completion_block() -> tuple[dict[str, Any], dict[str, Any]]:
     return assumptions.completion_ratios(), assumptions.lab_completion_lot()
 
 
+_ANCHOR_KEYS = (
+    "parking_min_urban",
+    "parking_min_suburban",
+    "parking_min_rural",
+)
+
+
+def _anchor_params(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Fixed assumptions the UI quotes but does not offer as sliders."""
+    rows: dict[str, dict[str, Any]] = {}
+    for name in _ANCHOR_KEYS:
+        spec = doc["params"].get(name)
+        if not spec:
+            continue
+        rows[name] = {
+            "name": name,
+            "label": spec["label"],
+            "group": spec.get("group", ""),
+            "unit": spec.get("unit", ""),
+            "low": spec["low"],
+            "central": spec["central"],
+            "high": spec["high"],
+            "tag": "assumed",
+        }
+    return rows
+
+
 def assumption_catalog() -> dict[str, Any]:
     doc = load_assumptions()
     params = []
@@ -172,6 +199,7 @@ def assumption_catalog() -> dict[str, Any]:
         "seed": doc["monte_carlo_seed"],
         "reconciliation_note": load_ui()["reconciliation_note"],
         "parameters": params,
+        "anchors": _anchor_params(doc),
         "completion_ratios": _screening_completion_block()[0],
         "lab_completion_lot": _screening_completion_block()[1],
         "scenarios": [

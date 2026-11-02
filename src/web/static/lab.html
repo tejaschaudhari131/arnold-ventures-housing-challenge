@@ -27,17 +27,23 @@
     <button type="button" class="btn pri" id="try-pa">Try Pennsylvania 2027–31</button>
     <button type="button" class="btn ghost" id="tour-btn">Take the 1-minute tour</button>
     <p class="start-here" id="start-here">Start here: compare the reforms below, ranked by homes added. Then see where they land by county, open Why on any number, and print a one-page brief.</p>
+    <p class="entry-actions">
+      <a class="btn pri" href="/brief">Quick answer for my state</a>
+      <a class="btn" href="#results">Open the full model</a>
+    </p>
     <p id="state-notice" class="callout state-notice" role="status" hidden></p>
   </header>
 
   <section class="hero" id="hero" aria-labelledby="hero-title">
-    <div>
-      <p class="kicker" id="kicker">Your package · 2027–2031</p>
+    <div id="results">
+      <p class="kicker" id="kicker">Your package</p>
       <h1 id="hero-title">Turn reforms on and watch how many extra homes <span id="state-name">Pennsylvania</span> could get.</h1>
-      <section class="headline" id="headline" aria-label="Statewide answer"></section>
-      <div class="count" id="count" aria-hidden="true">0</div>
-      <p class="sr" id="count-live" aria-live="polite"></p>
+      <p class="model-badge county" id="model-badge">County model · county by county · PA, NH</p>
+      <div class="count range-hero" id="count"></div>
       <div class="bandwrap" aria-hidden="true"><div class="band" id="band"></div><div class="tick" id="tick"></div></div>
+      <p class="middle-est" id="middle-est"></p>
+      <section class="headline" id="headline" aria-label="Statewide answer"></section>
+      <p class="sr" id="count-live" aria-live="polite"></p>
       <p class="rangeline" id="rangeline"></p>
       <p class="sub" id="relate"></p>
       <div class="recon" id="recon"><!-- ENGINE_GAP --></div>
@@ -45,6 +51,9 @@
     <div class="mapcard">
       <div id="map-stage"></div>
       <div class="legend"><span>fewer</span><i></i><span>more extra homes</span> · <a class="skip-map" href="#county-table">Skip map — use the table</a></div>
+          <label class="county-pick" for="county-find">Find a county
+        <input id="county-find" type="search" autocomplete="off">
+      </label>
       <label class="county-pick" for="county-select">Jump to a county
         <select id="county-select"></select>
       </label>
@@ -60,7 +69,7 @@
         Every displayed number is tagged
         <abbr class="tag observed" title="Measured in a public dataset and stored for this place.">observed</abbr>
         <abbr class="tag assumed" title="A published assumption or an imputation.">assumed</abbr>
-        <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr>
+        <abbr class="tag calculated" title="Calculated from the inputs shown.">calculated</abbr>
       </p>
 
       <section id="package" class="no-print" aria-labelledby="package-title">
@@ -79,6 +88,7 @@
       <section class="panel overlap-panel" id="overlap-panel" aria-labelledby="overlap-title">
         <h2 id="overlap-title">2 · Why the total isn't a simple sum</h2>
         <p id="package-not-sum" class="sr">Package is not a sum</p>
+        <div id="drivers-mount"></div>
         <div class="stack" id="stack" aria-hidden="true"></div>
         <p id="sumline"></p>
         <div class="overlap" id="overlap"></div>
@@ -86,7 +96,7 @@
           <button type="button" class="btn pri" id="print-brief">Print / save one-page brief</button>
           <button type="button" id="copy-view">Copy link to this view</button>
         </div>
-        <p class="help">Every number is <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr> from <abbr class="tag observed" title="Measured in a public dataset.">observed</abbr> Census data and <abbr class="tag assumed" title="A published assumption.">assumed</abbr> published values. Likely range = 10th–90th percentile of the locked assumption draws.</p>
+        <p class="help">Every number is <abbr class="tag calculated" title="Calculated from the inputs shown.">calculated</abbr> from <abbr class="tag observed" title="Measured in a public dataset.">observed</abbr> Census data and <abbr class="tag assumed" title="A published assumption.">assumed</abbr> published values. Likely range means the 10th–90th percentile of the locked assumption draws.</p>
       </section>
 
       <section class="where" id="where" aria-labelledby="where-title">
@@ -104,23 +114,25 @@
           <div class="chips" id="chips" role="group" aria-label="Reform chips"></div>
           <div id="view-map" role="tabpanel" aria-labelledby="tab-map"></div>
           <div id="view-table" role="tabpanel" aria-labelledby="tab-table" hidden>
-            <div class="table-wrap tall" id="county-table" role="region" tabindex="0" aria-label="County results table (scrollable)">
+            <div class="table-region table-wrap" id="county-table" role="region" tabindex="0" aria-label="County table, scrolls sideways">
               <table>
-                <caption class="visually-hidden">County delivery, eligibility, feasibility, and uncertainty for the selected scenario</caption>
+                <caption id="county-caption">County model. Extra homes, with the likely range.</caption>
                 <thead>
                   <tr>
-                    <th>County</th>
-                    <th>Delivery <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
-                    <th>Eligible <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
-                    <th>Feasible <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
-                    <th><abbr title="The likely range from 2,000 test runs of the published assumptions.">Envelope</abbr> <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
-                    <th><abbr title="How the answer moves if unknown local rules are more or less strict.">Zoning</abbr> <abbr class="tag calculated" title="Arithmetic in src/lab/engine.py.">calculated</abbr></th>
-                    <th><abbr title="Census survey error on the counts and prices that feed the model.">ACS MOE</abbr> <abbr class="tag observed" title="Measured in a public dataset and stored for this place.">observed</abbr></th>
+                    <th scope="col"><button type="button" class="sort" data-sort="name">County</button></th>
+                    <th scope="col"><button type="button" class="sort" data-sort="homes">Extra homes (likely range)</button></th>
+                    <th scope="col"><button type="button" class="sort" data-sort="eligible">Eligible lots</button></th>
+                    <th scope="col"><button type="button" class="sort" data-sort="feasible">Lots where it pays off</button></th>
+                    <th scope="col"><button type="button" class="sort" data-sort="rules">Local-rules range</button></th>
+                    <th scope="col"><button type="button" class="sort" data-sort="census">Census survey error</button></th>
                   </tr>
                 </thead>
                 <tbody id="county-body"></tbody>
               </table>
+              <p id="county-filter-status" class="sr" aria-live="polite"></p>
+              <button type="button" id="show-all-counties" hidden>Show all counties</button>
             </div>
+            <div id="county-cards" class="county-cards" hidden></div>
           </div>
           <div id="view-chart" role="tabpanel" aria-labelledby="tab-chart" hidden>
             <div id="chart-stage"></div>
@@ -141,7 +153,7 @@
             <button type="button" id="why-toggle" aria-expanded="false" aria-controls="why">Open the Why drawer</button>
           </section>
           <aside class="why-drawer" id="why" hidden tabindex="-1">
-            <p class="help">Each input is labeled observed, assumed, or calculated. The ADU <abbr title="A simple cost-and-value worksheet for one building type.">pro forma</abbr> is illustrative — not a construction bid.</p>
+            <p class="help">Each input is labeled observed, assumed, or calculated. The ADU cost-and-value worksheet is illustrative — not a construction bid.</p>
             <div id="why-body"></div>
             <div class="exports">
               <button type="button" id="why-close">Close (Esc)</button>
@@ -171,6 +183,7 @@
         <h2 id="methods-title">Methods, tags, and downloads</h2>
         <p class="help">The Lab sits beside the eleven-state screening view. Equations live in <code>src/lab/engine.py</code>. Locked defaults live in <code>config/lab/assumptions.yaml</code>. Full write-up: <a href="/docs/SMALL_HOMES_LAB.md">docs/SMALL_HOMES_LAB.md</a>.</p>
         <div id="methods-recon"><!-- ENGINE_GAP --></div>
+        <div id="model-diff"></div>
         <p>County shapes are U.S. Census Bureau cartographic boundary file <code>cb_2024_us_county_5m</code>, public domain, Douglas–Peucker simplified. See <code>docs/DATA_PROVENANCE.md</code>.</p>
       </section>
     </main>
@@ -180,7 +193,7 @@
         <h2>Change one assumption</h2>
         <button type="button" id="reset">Reset</button>
       </div>
-      <p class="help" id="envelope-note">Move one slider. Central values, zoning bounds, and the ACS band recompute. The p10–p90 envelope stays on the locked 2,000-draw run.</p>
+      <p class="help" id="envelope-note">Move one slider. The middle estimate, the local-rules range, and the Census survey error update. The likely range stays on the locked run until a new published run replaces it.</p>
       <div id="sliders"></div>
       <div class="walk" id="walk" hidden>
         <p class="aside-label">Allegheny walkthrough</p>
@@ -211,6 +224,8 @@
     <p>Tejas Chaudhari (tchaudha@andrew.cmu.edu), Yoon Yik Ng (yoonyikn@andrew.cmu.edu), Christopher Severns (cseverns@andrew.cmu.edu), Carnegie Mellon University.</p>
     <p class="build-stamp">Build <!-- BUILD_STAMP --></p>
   </footer>
+  <script src="/fmt.js"></script>
+  <script src="/frame.js"></script>
   <script src="/lab.js"></script>
 </body>
 </html>

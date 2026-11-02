@@ -22,6 +22,21 @@
   var parameters = [];
   var overrides = {};
   var reformOn = { adu: true, missing_middle: true, tod: true, parking: true, fees: true };
+  (function readEntry() {
+    var q = new URLSearchParams(location.search);
+    var st = (q.get("st") || "").toUpperCase();
+    if (st) stateCode = st;
+    if (q.has("on")) {
+      var raw = q.get("on") || "";
+      REFORMS.forEach(function (id) { reformOn[id] = false; });
+      if (raw && raw !== "none") {
+        raw.split(",").forEach(function (part) {
+          var id = part === "mm" ? "missing_middle" : part;
+          if (REFORMS.indexOf(id) >= 0) reformOn[id] = true;
+        });
+      }
+    }
+  })();
   var reformWeight = { adu: 1, missing_middle: 1, tod: 1, parking: 1, fees: 1 };
   var result = null;
   var mapDoc = null;
@@ -365,6 +380,12 @@
     var answer = "In " + result.name + " over five years, the package adds " +
       integer(pack) + " homes on top of " + integer(result.baseline_completions_5yr) + " expected.";
     headline.innerHTML =
+      '<p class="model-badge screening">Screening model · statewide estimate · 11 states</p>' +
+      '<p class="range-hero">Likely range unavailable</p>' +
+      '<p class="middle-est">Middle estimate <span data-bind="scenarios.combined.incremental_completions">' +
+      integer(pack) + '</span> extra homes, on top of <span data-bind="baseline_completions_5yr">' +
+      integer(result.baseline_completions_5yr) + "</span> expected.</p>" +
+      '<p>' + (window.StateframeFrame ? window.StateframeFrame.FUNNEL_UNAVAILABLE : "") + "</p>" +
       '<p class="headline-answer">' + escapeHtml(answer) + badge("calculated") + "</p>" +
       card(
         "Baseline completions",
@@ -384,7 +405,7 @@
       card(
         "Lot screen",
         tagged(result.lot_feasible_share, lotTag, function (value) { return Math.round(value * 100) + "%"; }),
-        result.lot_feasible_note || "Share of single-family lots that can hold a 600 sq ft ADU."
+        result.lot_feasible_note || "Share of single-family lots that can hold an extra apartment."
       );
   }
 
@@ -1342,7 +1363,8 @@
       aduCompare = payloads[2];
       fillAduFeeNote();
       renderStates(payloads[0].states);
-      return selectState("PA");
+      var known = (payloads[0].states || []).some(function (row) { return row.code === stateCode; });
+      return selectState(known ? stateCode : "PA");
     })
     .catch(fail);
 })();

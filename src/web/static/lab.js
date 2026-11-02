@@ -19,12 +19,12 @@
   var SHORT = { missing_middle: "mm", fees: "fees", adu: "adu", parking: "parking" };
   var COL = { missing_middle: "#0e6e5c", fees: "#f2b632", adu: "#5b8fb9", parking: "#c8553d" };
   var CHIP_LABEL = { missing_middle: "2–6 homes", fees: "Fees", adu: "ADUs", parking: "Parking" };
-  var HONESTY = "simple sum, not modeled; overlap can move it down or up";
-  var HONESTY_LONG = "Simple sum shown, not modeled. Overlap can push the real total down (ADUs and 2–6 homes compete for the same lots) or up (fee and parking cuts help both).";
+  var HONESTY = "Added together, not modeled as a package";
+  var HONESTY_LONG = "Added together, not modeled as a package. Overlap can push the real total down (ADUs and 2–6 homes compete for the same lots) or up (fee and parking cuts help both).";
   var TOUR_STEPS = [
     ["This is the answer", "The big number is extra homes over five years from the reforms you pick. The bar under it is the likely range, never hidden."],
     ["Flip a reform", "Each card is one bill. Turn it on or off and watch the total and the map change."],
-    ["Don't add the bills up", "Reforms overlap. This panel shows the modeled total next to the simple sum when all four are on."],
+    ["Don't add the bills up", "Reforms overlap. This panel shows the modeled total next to the separate cards when all four are on."],
     ["Take it with you", "Print a one-page brief with your package and its range, or copy a link to this view."]
   ];
   var WALK = [
@@ -39,7 +39,10 @@
     "pro forma": "A simple cost-and-value worksheet for one building type.",
     "uptake hazard": "The yearly chance a feasible lot actually starts a project.",
     prior: "A published guess used when a local rule has not been read.",
-    Envelope: "The likely range from 2,000 test runs of the published assumptions.",
+    Envelope: "The likely range from the locked test runs of the published assumptions.",
+    "Likely range": "The 10th–90th percentile of the locked test runs. It describes the model, not the odds of success.",
+    "Local-rules range": "How the answer moves if unknown local rules are more or less strict.",
+    "Census survey error": "Census survey error on the counts and prices that feed the model.",
     Zoning: "How the answer moves if unknown local rules are more or less strict.",
     "ACS MOE": "Census survey error on the counts and prices that feed the model."
   };
@@ -67,6 +70,10 @@
   var aduCompare = null;
   var aduCache = {};
   var shown = 0;
+  var showAllCounties = false;
+  var showAllDrivers = false;
+  var tableSort = { key: "homes", dir: "desc" };
+  var countyQuery = "";
   var animToken = 0;
   var lastFocus = null;
   var tourIndex = 0;
@@ -598,6 +605,8 @@
     renderKeyPoints();
     renderSources();
     renderBrief();
+    renderDrivers();
+    renderModelDiff();
     renderRecon();
     setView(view, true);
     writeUrl();
@@ -639,7 +648,7 @@
   function rankingLine(sw) {
     var rank = sw.benchmark_ranking || [];
     if (isDrawTie(sw.top_benchmark_pair) && rank.length >= 2) {
-      return "Statistical tie (" + scenarioLabel(rank[0]) + " and " + scenarioLabel(rank[1]) + ")" +
+      return "Too close to call (" + scenarioLabel(rank[0]) + " and " + scenarioLabel(rank[1]) + ")" +
         (rank.length > 2 ? " > " + rank.slice(2).map(scenarioLabel).join(" > ") : "");
     }
     return rank.map(scenarioLabel).join(" > ");
@@ -653,71 +662,119 @@
     if (isDrawTie(pair) && sw) {
       var trail = sw.results[pair.trailer];
       var lead = sw.results[pair.leader];
-      return '<span class="badge-close" title="The central estimate and the median draw disagree, so this is a statistical tie. The ' +
-        escapeHtml(threshold) + ' is 10 percent of draws.">Statistical tie: central estimate favors ' +
-        escapeHtml(scenarioLabel(pair.leader)) + "; " +
-        escapeHtml(scenarioLabel(pair.trailer)) + " comes out ahead in " +
+      return tipControl("Too close to call", "The order flips in at least " +
+        Math.round((locked && locked.close_call_flip_share ? locked.close_call_flip_share : 0.1) * 100) +
+        " percent of test runs. Central estimate favors " + scenarioLabel(pair.leader) +
+        "; " + scenarioLabel(pair.trailer) + " comes out ahead in " +
         Math.round(pair.flip_share * 100) + " of 100 test runs (typical result " +
-        integer(trail.p50) + " vs " + integer(lead.p50) + ").</span>";
+        integer(trail.p50) + " vs " + integer(lead.p50) + "). " + threshold + ".");
     }
     var keep = pair.flip_share != null ? Math.max(1, Math.round((1 - pair.flip_share) * 5)) : 4;
-    return '<span class="badge-close" title="The top two Handbook reforms are close enough that a different published assumption can swap them. The ' +
-      escapeHtml(threshold) + ' is 10 percent of draws.">Ranking is close: ' +
-      escapeHtml(scenarioLabel(pair.leader)) + " beat " + escapeHtml(scenarioLabel(pair.trailer)) +
-      " in about " + keep + " of 5 test runs.</span>";
+    return tipControl("Too close to call", "The order flips in at least " +
+      Math.round((locked && locked.close_call_flip_share ? locked.close_call_flip_share : 0.1) * 100) +
+      " percent of test runs. " + scenarioLabel(pair.leader) + " beat " +
+      scenarioLabel(pair.trailer) + " in about " + keep + " of 5 test runs. " + threshold + ".");
+  }
+
+  function frameApi() {
+    return window.StateframeFrame || null;
+  }
+
+  function drawsNote() {
+    var n = locked && locked.draws ? Number(locked.draws).toLocaleString("en-US") : "";
+    return "Move one slider. The middle estimate, the local-rules range, and the Census survey error update. The likely range stays on the locked" +
+      (n ? " " + n + "-draw" : "") + " run.";
+  }
+
+  function endYearText() {
+    if (!catalog || !catalog.window_start) return "";
+    var start = Number(String(catalog.window_start).slice(0, 4));
+    if (!isFinite(start)) return "";
+    return String(start + Number(catalog.horizon_years) - 1);
+  }
+
+  function headlineSid() {
+    var ids = selectedIds();
+    if (ids.length === 1) return ids[0];
+    if (ids.length === 4) return "package";
+    return "";
+  }
+
+  function headlineOpts() {
+    var sid = headlineSid();
+    var sw = docStatewide();
+    var row = sid ? sw.results[sid] : null;
+    var t = packageTotal();
+    var base = sw.results.baseline;
+    return {
+      sid: on.size ? (sid || "selection") : "",
+      unmodeled: on.size > 0 && !t.exact,
+      status: t.status,
+      stateName: locked.name,
+      endYear: endYearText(),
+      label: sid ? scenarioLabel(sid) : "Your package",
+      low: row ? row.p10 : t.lo,
+      high: row ? row.p90 : t.hi,
+      middle: t.c,
+      baseline: base.central,
+      draws: locked.draws,
+      paths: {
+        low: "statewide.results." + (sid || "selection") + ".p10",
+        high: "statewide.results." + (sid || "selection") + ".p90",
+        middle: "statewide.results." + (sid || "selection") + ".central",
+        baseline: "statewide.results.baseline.central",
+        pct: "statewide.results." + (sid || "selection") + ".lift",
+        endYear: "assumptions.end_year",
+        draws: "draws"
+      }
+    };
   }
 
   function answerLine() {
     var t = packageTotal();
     var sw = docStatewide();
     var baseline = sw.results.baseline.central;
-    if (!on.size) return "Turn on a reform below to start.";
+    if (!on.size) return "Pick one or more reforms to see the extra homes. +0 extra homes.";
     if (t.exact && t.status !== "unavailable" && isFinite(Number(t.lo)) && isFinite(Number(t.hi))) {
-      var rangeWord = t.status === "reference" ? "Reference range (defaults) " : "likely ";
-      return "Your package: about " + integer(t.c) + " extra homes (" + rangeWord +
-        integer(t.lo) + "–" + integer(t.hi) + ") on top of " +
-        integer(baseline) + " expected.";
+      var rangeWord = t.status === "reference"
+        ? "Reference range — from default assumptions, not recomputed "
+        : "Likely ";
+      return rangeWord + integer(t.lo) + "–" + integer(t.hi) +
+        " extra homes. Middle estimate " + signed(t.c) +
+        ". On top of " + integer(baseline) + " expected without these reforms.";
     }
     if (t.exact && t.status === "unavailable") {
-      return "Your package: about " + integer(t.c) + " extra homes (likely range unavailable) on top of " +
-        integer(baseline) + " expected.";
+      return "Likely range unavailable. Middle estimate " + signed(t.c) +
+        " extra homes, on top of " + integer(baseline) + " expected.";
     }
-    return "Your package: about " + integer(t.c) +
-      " extra homes (simple sum, not modeled) on top of " +
-      integer(baseline) + " expected.";
+    return "Likely range unavailable. Middle estimate " + signed(t.c) +
+      " extra homes (" + HONESTY + ") on top of " + integer(baseline) + " expected.";
   }
 
   function renderHeadline() {
     var sw = docStatewide();
-    var t = packageTotal();
-    var sid = t.exact && on.size === 1 ? selectedIds()[0] : (t.exact && on.size === 4 ? "package" : activeScenario());
-    var row = sw.results[sid] || sw.results.adu;
-    var pair = sw.top_benchmark_pair;
-    var meta = "";
-    if (t.exact && on.size && isFinite(Number(t.lo)) && isFinite(Number(t.hi))) {
-      var envelopeLabel = t.status === "reference" ? "Reference range (defaults)" : "Envelope";
-      meta = '<p class="hero-meta">' + jargon(envelopeLabel === "Envelope" ? "Envelope" : envelopeLabel, envelopeLabel) +
-        " " + integer(t.lo) + "–" + integer(t.hi) + tag("calculated") +
-        " · " + jargon("Zoning") + " " + integer(row.zoning_low) + "–" + integer(row.zoning_high) + tag("calculated") +
-        " · " + jargon("ACS MOE") + " ±" + integer(row.acs_moe) + tag("observed") + "</p>";
-    } else if (t.exact && on.size && t.status === "unavailable") {
-      meta = '<p class="hero-meta">Likely range unavailable</p>';
-    }
-    var nh = "";
-    if (locked.state === "NH") {
-      nh = '<p class="hero-meta">New Hampshire already allows ADUs statewide, so the ADU reform adds ' +
-        signed(sw.results.adu.central) + ". Same code, same assumptions, a second state.</p>";
-    }
-    headline.innerHTML =
-      '<p class="headline-answer">' + escapeHtml(answerLine()) + tag("calculated") + "</p>" +
+    var api = frameApi();
+    var opts = headlineOpts();
+    document.getElementById("state-name").textContent = locked.name;
+    var years = endYearText();
+    document.getElementById("kicker").textContent = years
+      ? "Your package · " + String(catalog.window_start).slice(0, 4) + "–" + years
+      : "Your package";
+    var parts = api ? api.headlineParts(opts) : { html: "<p>" + escapeHtml(answerLine()) + "</p>", rangeHtml: "", middleHtml: "", live: answerLine() };
+    if (headline) headline.innerHTML = parts.html +
       '<p class="hero-rank">' + (mixUnranked()
         ? '<span class="badge-close">not computed for mix</span>'
-        : rankingBadge(pair, sw)) + "</p>" +
-      nh + meta;
-    document.getElementById("state-name").textContent = locked.name;
-    var years = catalog ? catalog.window_start.slice(0, 4) + "–" +
-      (Number(catalog.window_start.slice(0, 4)) + Number(catalog.horizon_years) - 1) : "2027–2031";
-    document.getElementById("kicker").textContent = "Your package · " + years;
+        : rankingBadge(sw.top_benchmark_pair, sw)) + "</p>" +
+      (locked.state === "NH"
+        ? '<p class="hero-meta">New Hampshire already allows ADUs statewide, so the ADU reform adds ' +
+          signed(sw.results.adu.central) + ". Same code, same assumptions, a second state.</p>"
+        : "");
+    var countEl = document.getElementById("count");
+    if (countEl) countEl.innerHTML = parts.rangeHtml || "";
+    var mid = document.getElementById("middle-est");
+    if (mid) mid.innerHTML = parts.middleHtml || "";
+    var liveEl = document.getElementById("count-live");
+    if (liveEl) liveEl.textContent = parts.live || answerLine();
   }
 
   function anim(to) {
@@ -740,56 +797,40 @@
     var t = packageTotal();
     var sw = docStatewide();
     var baseline = sw.results.baseline.central;
-    anim(t.c);
     var mx = Math.max(sw.results.package.p90 * 1.05, 1);
     var band = document.getElementById("band");
     var tick = document.getElementById("tick");
-    if (t.exact && t.c && isFinite(Number(t.lo)) && isFinite(Number(t.hi))) {
-      band.style.left = (t.lo / mx * 100) + "%";
-      band.style.width = ((t.hi - t.lo) / mx * 100) + "%";
-    } else {
-      band.style.left = "0";
-      band.style.width = "0";
+    if (band) {
+      band.classList.toggle("reference", t.status === "reference");
+      if (t.exact && isFinite(Number(t.lo)) && isFinite(Number(t.hi))) {
+        band.style.left = (Math.max(0, t.lo) / mx * 100) + "%";
+        band.style.width = (Math.max(0, t.hi - t.lo) / mx * 100) + "%";
+      } else {
+        band.style.left = "0";
+        band.style.width = "0";
+      }
     }
-    tick.style.left = (t.c / mx * 100) + "%";
+    if (tick) tick.style.left = (Math.max(0, t.c) / mx * 100) + "%";
     var range = document.getElementById("rangeline");
-    var liveEl = document.getElementById("count-live");
-    if (!on.size) {
-      range.textContent = "Turn on a reform below to start.";
-      liveEl.textContent = "No reforms selected.";
-    } else if (t.exact && t.status === "unavailable") {
-      range.textContent = "Likely range unavailable";
-      liveEl.textContent = "Your package: about " + integer(t.c) + " extra homes. Likely range unavailable.";
-    } else if (t.exact && isFinite(Number(t.lo)) && isFinite(Number(t.hi))) {
-      var rangeWord = t.status === "reference" ? "Reference range (defaults)" : "Likely range";
-      range.innerHTML = rangeWord + " <b>" + integer(t.lo) + " – " + integer(t.hi) +
-        "</b> extra homes · on top of " + integer(baseline) + " expected anyway " + tag("calculated");
-      liveEl.textContent = "Your package: about " + integer(t.c) + " extra homes, " + rangeWord.toLowerCase() + " " +
-        integer(t.lo) + " to " + integer(t.hi) + ".";
-    } else {
-      range.innerHTML = "<b>" + escapeHtml(HONESTY.charAt(0).toUpperCase() + HONESTY.slice(1)) + "</b> " +
-        escapeHtml(HONESTY_LONG);
-      liveEl.textContent = "Your package: about " + integer(t.c) + " extra homes, simple sum, not modeled.";
+    if (range) {
+      if (!on.size) range.textContent = "Pick one or more reforms to see the extra homes.";
+      else if (!t.exact) range.textContent = HONESTY_LONG;
+      else range.textContent = "Range from " + integer(locked.draws) + " runs of the published assumptions; it describes the model, not the odds of success.";
     }
     var relate = document.getElementById("relate");
-    relate.textContent = on.size
-      ? "That's about " + (t.c / baseline * 100).toFixed(1) + "% more homes than " +
-        locked.name + " is expected to finish anyway over five years."
-      : "";
+    if (relate) {
+      relate.textContent = on.size && baseline
+        ? "That's about " + (t.c / baseline * 100).toFixed(1) + "% more homes than " +
+          locked.name + " is expected to finish anyway over five years."
+        : "";
+    }
     var mini = document.getElementById("mini-total");
+    var api = frameApi();
     if (mini) {
       mini.hidden = !on.size;
-      if (!on.size) {
-        mini.textContent = "";
-      } else if (t.exact && isFinite(Number(t.lo)) && isFinite(Number(t.hi))) {
-        var miniWord = t.status === "reference" ? "Reference range (defaults) " : "likely ";
-        mini.textContent = "Your package: +" + integer(t.c) + " extra homes (" + miniWord +
-          integer(t.lo) + "–" + integer(t.hi) + ")";
-      } else if (t.exact) {
-        mini.textContent = "Your package: +" + integer(t.c) + " extra homes";
-      } else {
-        mini.textContent = "Your package: +" + integer(t.c) + " extra homes";
-      }
+      if (!on.size) mini.textContent = "";
+      else if (api) mini.innerHTML = api.miniTotal(headlineOpts());
+      else mini.textContent = answerLine();
     }
   }
 
@@ -814,7 +855,7 @@
 
   function placeLabel(index, key, sw) {
     var pair = sw.top_benchmark_pair;
-    if (!mixUnranked() && isDrawTie(pair) && (key === pair.leader || key === pair.trailer)) return "Statistical tie";
+    if (!mixUnranked() && isDrawTie(pair) && (key === pair.leader || key === pair.trailer)) return "Too close to call";
     return "#" + (index + 1) + " on its own";
   }
 
@@ -825,11 +866,11 @@
     if (k !== pair.leader && k !== pair.trailer) return "";
     var flip = Math.round(pair.flip_share * 100);
     if (isDrawTie(pair)) {
-      return '<button type="button" class="badge" aria-expanded="false" data-badge="close">Statistical tie</button>' +
+      return '<button type="button" class="badge" aria-expanded="false" data-badge="close">Too close to call</button>' +
         '<span class="sr">' + escapeHtml(scenarioLabel(pair.trailer)) + " ahead in " + flip +
         "% of test runs. The central estimate favors " + escapeHtml(scenarioLabel(pair.leader)) + ".</span>";
     }
-    return '<button type="button" class="badge" aria-expanded="false" data-badge="close">Ranking is close</button>' +
+    return '<button type="button" class="badge" aria-expanded="false" data-badge="close">Too close to call</button>' +
       '<span class="sr">' + escapeHtml(scenarioLabel(pair.trailer)) + " ahead in " + flip +
       "% of test runs. Both are strong options.</span>";
   }
@@ -840,23 +881,100 @@
     return '<button type="button" class="badge badge-out" aria-expanded="false" data-badge="out">Outcome uncertain</button>';
   }
 
+  function bound(path, text) {
+    return '<span data-bind="' + escapeHtml(path) + '">' + text + "</span>";
+  }
+
+  function paramSpec(name) {
+    var spec = null;
+    ((catalog && catalog.parameters) || []).forEach(function (row) {
+      if (row.name === name) spec = row;
+    });
+    if (!spec && catalog && catalog.anchors && catalog.anchors[name]) spec = catalog.anchors[name];
+    return spec;
+  }
+
+  function paramText(name) {
+    var spec = paramSpec(name);
+    if (!spec) return "";
+    var value = Object.prototype.hasOwnProperty.call(overrides, name) ? overrides[name] : spec.central;
+    if (spec.unit === "spaces per home") {
+      var n = Math.round(Number(value) * 100) / 100;
+      return String(n);
+    }
+    return sliderValueText(spec, value);
+  }
+
+  function cardExtras(k, row) {
+    var api = frameApi();
+    if (!api || !row) return "";
+    var prefix = "statewide.results." + k;
+    var drivers = api.rankDrivers(locked.statewide.one_at_a_time, k, catalog ? catalog.parameters : []);
+    var funnel = api.funnelHtml({
+      sid: k,
+      funnel: row.funnel,
+      stateName: locked.name,
+      label: scenarioLabel(k),
+      endYear: endYearText(),
+      prefix: prefix + ".funnel",
+      middle: row.central,
+      middlePath: prefix + ".central",
+      low: row.p10,
+      high: row.p90,
+      lowPath: prefix + ".p10",
+      highPath: prefix + ".p90",
+      feesLotHomes: row.host_delta,
+      feesPath: prefix + ".host_delta",
+      collapseSteps: true
+    });
+    var parking = k === "parking" ? api.parkingHtml({
+      show: true,
+      urbanText: paramText("parking_market_urban"),
+      urbanPath: "parameters.parking_market_urban.central",
+      minText: paramText("parking_min_urban"),
+      minPath: "anchors.parking_min_urban.central"
+    }) : "";
+    var limits = api.limitsHtml({
+      sid: k,
+      drivers: drivers,
+      driverSid: k,
+      ratios: catalog && catalog.completion_ratios,
+      low: row.p10,
+      high: row.p90,
+      baseline: docStatewide().results.baseline.central,
+      lowPath: prefix + ".p10",
+      highPath: prefix + ".p90",
+      parkingText: paramText("parking_market_urban"),
+      parkingPath: "parameters.parking_market_urban.central"
+    });
+    return funnel + parking + limits + '<p class="model-badge county">County model</p>';
+  }
+
   function renderCards() {
     var sw = docStatewide();
     var rank = rankedBenchmarks();
-    var mx = sw.results.package.p90;
+    var mx = Math.max(sw.results.package.p90, 1);
+    var api = frameApi();
     cards.innerHTML = rank.map(function (k, i) {
       var row = sw.results[k];
       var pressed = on.has(k);
+      var prefix = "statewide.results." + k;
+      var rangeHtml = api
+        ? ((row.interval_status === "reference"
+            ? "Reference range — from default assumptions, not recomputed "
+            : "Likely ") + api.rangeSpans(prefix + ".p10", prefix + ".p90", row.p10, row.p90) + " extra homes")
+        : describeRange(row);
       return '<article class="card" role="listitem">' +
         '<button type="button" class="tog" aria-pressed="' + pressed + '" data-k="' + k + '">' +
         "<span><span class='help'>" + escapeHtml(placeLabel(i, k, sw)) + "</span><span class='card-title'>" +
         escapeHtml(PLAIN[k]) + "</span></span><span class='sw' aria-hidden='true'></span></button>" +
-        '<div class="n">' + signed(row.central) + tag("calculated") + "</div>" +
-        '<div class="mini" aria-hidden="true"><i style="left:' + (row.p10 / mx * 100) +
-        "%;width:" + ((row.p90 - row.p10) / mx * 100) + '%"></i><b style="left:' +
-        (row.central / mx * 100) + '%"></b></div>' +
+        '<p class="card-range">' + rangeHtml + "</p>" +
+        '<div class="n">Middle estimate ' + bound(prefix + ".central", signed(row.central)) + tag("calculated") + "</div>" +
+        '<div class="mini" aria-hidden="true"><i style="left:' + (Math.max(0, row.p10) / mx * 100) +
+        "%;width:" + (Math.max(0, row.p90 - row.p10) / mx * 100) + '%"></i><b style="left:' +
+        (Math.max(0, row.central) / mx * 100) + '%"></b></div>' +
         '<div class="r">' + describeRange(row) + "</div>" +
-        closeBadgeHtml(k, sw) + outcomeBadgeHtml(row) + "</article>";
+        closeBadgeHtml(k, sw) + outcomeBadgeHtml(row) + cardExtras(k, row) + "</article>";
     }).join("");
     extraCards.innerHTML = (locked.scenarios || []).filter(function (s) {
       return s.id === "approval";
@@ -886,10 +1004,10 @@
           var pair = docStatewide().top_benchmark_pair;
           var ahead = scenarioLabel(pair.trailer) + " ahead in " + Math.round(pair.flip_share * 100) + "% of test runs.";
           if (isDrawTie(pair)) {
-            btn.textContent = open ? "Statistical tie" :
-              "Statistical tie: central estimate favors " + scenarioLabel(pair.leader) + "; " + ahead;
+            btn.textContent = open ? "Too close to call" :
+              "Too close to call: central estimate favors " + scenarioLabel(pair.leader) + "; " + ahead;
           } else {
-            btn.textContent = open ? "Ranking is close" : "Ranking is close: " + ahead + " Both are strong options.";
+            btn.textContent = open ? "Too close to call" : "Too close to call: " + ahead + " Both are strong options.";
           }
         } else {
           btn.textContent = open ? "Outcome uncertain" : "Outcome uncertain: under some assumptions this reform adds no homes.";
@@ -913,7 +1031,7 @@
     var width = Math.max(sum, t.c, 1) * 1.05;
     document.getElementById("stack").innerHTML = ids.map(function (k) {
       return '<span style="width:' + (sw.results[k].central / width * 100) + "%;background:" +
-        COL[k] + '" title="' + escapeHtml(PLAIN[k]) + '"></span>';
+        COL[k] + '" role="img" aria-label="' + escapeHtml(PLAIN[k]) + '"></span>';
     }).join("");
     var line = document.getElementById("sumline");
     var box = document.getElementById("overlap");
@@ -1129,7 +1247,7 @@
     } else if (env && env.interval_status === "reference") {
       range = " (Reference range (defaults) " + integer(env.p10) + "–" + integer(env.p90) + ")";
     } else if (ids.length > 1 && sid === "selection") {
-      range = " (simple sum, not modeled)";
+      range = " (" + HONESTY + ")";
     }
     var text = countyPhrase(row) + " " + who + signed(value) + " extra homes" + range +
       " on top of " + integer(cell(row, "baseline").central) + " expected.";
@@ -1159,7 +1277,7 @@
       countyDetail.innerHTML =
         "<p>" + escapeHtml(countyPhrase(row)) + " " + escapeHtml(selectionLabel()) + " " +
         signed(countyMapValue(row)) + tag("calculated") +
-        " (simple sum, not modeled) on top of " + integer(cell(row, "baseline").central) +
+        " (" + HONESTY + ") on top of " + integer(cell(row, "baseline").central) +
         " expected " + tag("calculated") + ".</p>";
       return;
     }
@@ -1181,24 +1299,87 @@
       ". " + rankingBadge(pair) + ".</p>";
   }
 
+  function tableValue(row, key, sid) {
+    var current = (sid && sid !== "selection") ? cell(row, sid) : null;
+    if (key === "name") return row.name || "";
+    if (key === "homes") return sid ? countyMapValue(row) : 0;
+    if (!current) return null;
+    if (key === "eligible") return current.eligible;
+    if (key === "feasible") return current.feasible;
+    if (key === "rules") return current.zoning_high;
+    if (key === "census") return current.acs_moe;
+    return 0;
+  }
+
+  function cellOrMissing(text, missing) {
+    if (missing) return '<span class="missing">No data</span>';
+    return text;
+  }
+
   function renderTable() {
     var sid = mapScenarioId();
-    var rows = docCounties().slice().sort(function (a, b) {
-      return Math.abs(countyMapValue(b)) - Math.abs(countyMapValue(a));
+    var query = countyQuery.trim().toLowerCase();
+    var rows = docCounties().slice().filter(function (row) {
+      return !query || String(row.name || "").toLowerCase().indexOf(query) >= 0;
     });
-    countyBody.innerHTML = rows.map(function (row) {
+    rows.sort(function (a, b) {
+      var av = tableValue(a, tableSort.key, sid);
+      var bv = tableValue(b, tableSort.key, sid);
+      if (tableSort.key === "name") {
+        return tableSort.dir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+      }
+      av = Number(av); bv = Number(bv);
+      if (!isFinite(av)) av = -Infinity;
+      if (!isFinite(bv)) bv = -Infinity;
+      return tableSort.dir === "asc" ? av - bv : bv - av;
+    });
+    var visible = showAllCounties ? rows : rows.slice(0, 15);
+    var caption = document.getElementById("county-caption");
+    if (caption) {
+      caption.textContent = "County model. " + (sid ? scenarioLabel(sid) : "No reform") +
+        ". Extra homes, " + (endYearText() ? String(catalog.window_start).slice(0, 4) + "–" + endYearText() : "the window") + ".";
+    }
+    countyBody.innerHTML = visible.map(function (row) {
       var value = sid ? countyMapValue(row) : 0;
       var current = (sid && sid !== "selection") ? cell(row, sid) : null;
       var env = current ? (lockedCell(row.fips, sid) || current) : null;
-      return "<tr data-fips='" + row.fips + "' class='" + (row.fips === selectedFips ? "selected" : "") + "'>" +
-        "<td>" + escapeHtml(row.name) + "</td>" +
-        "<td>" + signed(value) + "</td>" +
-        "<td>" + (current ? integer(current.eligible) : "") + "</td>" +
-        "<td>" + (current ? integer(current.feasible) : "") + "</td>" +
-        "<td>" + (env ? describeRange(env) : "") + "</td>" +
-        "<td>" + (current ? integer(current.zoning_low) + "–" + integer(current.zoning_high) : "") + "</td>" +
-        "<td>" + (current ? "±" + integer(current.acs_moe) : "") + "</td></tr>";
+      var prefix = "counties." + row.fips + ".results." + (sid || "baseline");
+      var homesCell = !sid ? cellOrMissing("", true) : bound(prefix + ".central", signed(value));
+      var rangeCell = env && isFinite(Number(env.p10))
+        ? bound(prefix + ".p10", integer(env.p10)) + "–" + bound(prefix + ".p90", integer(env.p90))
+        : cellOrMissing("", true);
+      return "<tr data-fips='" + row.fips + "' class='" + (row.fips === selectedFips ? "selected" : "") + "'" +
+        (row.fips === selectedFips ? " aria-current=\"true\"" : "") + ">" +
+        "<th scope=\"row\">" + escapeHtml(row.name) + "</th>" +
+        "<td>" + homesCell + (env ? " <span class=\"cell-range\">(" + rangeCell + ")</span>" : "") + "</td>" +
+        "<td>" + (current ? bound(prefix + ".eligible", integer(current.eligible)) + " lots" : cellOrMissing("", true)) + "</td>" +
+        "<td>" + (current ? bound(prefix + ".feasible", integer(current.feasible)) + " lots" : cellOrMissing("", true)) + "</td>" +
+        "<td>" + (current ? bound(prefix + ".zoning_low", integer(current.zoning_low)) + "–" + bound(prefix + ".zoning_high", integer(current.zoning_high)) : cellOrMissing("", true)) + "</td>" +
+        "<td>" + (current ? "±" + bound(prefix + ".acs_moe", integer(current.acs_moe)) : cellOrMissing("", true)) + "</td></tr>";
     }).join("");
+    var cardsEl = document.getElementById("county-cards");
+    if (cardsEl) {
+      cardsEl.innerHTML = visible.map(function (row) {
+        var current = (sid && sid !== "selection") ? cell(row, sid) : null;
+        return '<article class="county-card"><h3>' + escapeHtml(row.name) + "</h3>" +
+          "<p>Extra homes " + (sid ? signed(countyMapValue(row)) : "No data") + "</p>" +
+          "<p>Eligible lots " + (current ? integer(current.eligible) : "No data") + "</p>" +
+          "<p>Lots where it pays off " + (current ? integer(current.feasible) : "No data") + "</p></article>";
+      }).join("");
+    }
+    var more = document.getElementById("show-all-counties");
+    if (more) {
+      var hiddenCount = rows.length - visible.length;
+      more.hidden = hiddenCount <= 0 && !showAllCounties;
+      more.textContent = showAllCounties ? "Show the first 15 counties" : "Show all " + rows.length + " counties";
+    }
+    var status = document.getElementById("county-filter-status");
+    if (status) status.textContent = query ? (rows.length + " counties match.") : "";
+    document.querySelectorAll("#county-table .sort").forEach(function (btn) {
+      var key = btn.getAttribute("data-sort");
+      if (key === tableSort.key) btn.setAttribute("aria-sort", tableSort.dir === "asc" ? "ascending" : "descending");
+      else btn.removeAttribute("aria-sort");
+    });
     countyBody.querySelectorAll("tr").forEach(function (tr) {
       tr.addEventListener("click", function () {
         chooseCounty(tr.getAttribute("data-fips"));
@@ -1313,19 +1494,42 @@
       groups[p.group] = groups[p.group] || [];
       groups[p.group].push(p);
     });
-    sliders.innerHTML = Object.keys(groups).map(function (group) {
+    var keys = Object.keys(groups);
+    if (on.has("parking")) {
+      keys = keys.filter(function (group) { return group !== "parking"; });
+      keys.unshift("parking");
+    }
+    var api = frameApi();
+    var sid = headlineSid();
+    var ranks = {};
+    if (api && sid && locked) {
+      api.rankDrivers(locked.statewide.one_at_a_time, sid, catalog.parameters).forEach(function (row, index) {
+        ranks[row.key] = index + 1;
+      });
+    }
+    sliders.innerHTML = keys.map(function (group) {
       var inner = groups[group].map(function (p) {
         var value = overrides.hasOwnProperty(p.name) ? overrides[p.name] : p.central;
         var step = (p.high - p.low) / 40;
         var id = "lab-slider-" + p.name;
-        return '<div class="slider"><label for="' + id + '"><span>' + escapeHtml(p.label) + tag("assumed") +
+        var label = api ? api.plainLabel(p.name, p.label) : p.label;
+        var rankNote = ranks[p.name]
+          ? '<p class="rank-note">Ranked #' + ranks[p.name] + " at default settings for " + escapeHtml(scenarioLabel(sid)) + ".</p>"
+          : "";
+        var changed = overrides.hasOwnProperty(p.name) ? '<p class="you-changed">you changed this</p>' : "";
+        var valueText = sliderValueText(p, value);
+        if (p.unit && valueText.indexOf("a year") < 0 && valueText.indexOf(p.unit) < 0) valueText += " " + p.unit;
+        return '<div class="slider"><label for="' + id + '"><span>' + escapeHtml(label) + tag("assumed") +
           "</span><span>" + formatParam(p, value) + "</span></label>" +
           '<input id="' + id + '" type="range" min="' + p.low + '" max="' + p.high + '" step="' + step +
           '" value="' + value + '" data-name="' + p.name +
-          '" aria-valuetext="' + escapeHtml(sliderValueText(p, value)) + '">' +
+          '" aria-valuetext="' + escapeHtml(valueText) + '">' +
+          rankNote + changed +
           '<p class="hint">' + escapeHtml(p.rationale) + "</p></div>";
       }).join("");
-      return "<details class='slider-group'><summary>" + escapeHtml(group) + "</summary>" + inner + "</details>";
+      var heading = api ? api.groupHeading(group) : group;
+      var open = on.has("parking") && group === "parking" ? " open" : "";
+      return "<details class='slider-group'" + open + "><summary>" + escapeHtml(heading) + "</summary>" + inner + "</details>";
     }).join("");
     sliders.querySelectorAll("input[type=range]").forEach(function (input) {
       input.addEventListener("input", function () {
@@ -1357,7 +1561,7 @@
     var names = Object.keys(overrides);
     if (!names.length) {
       live = null;
-      envelopeNote.textContent = "Move one slider. Central values, zoning bounds, and the ACS band recompute. The p10–p90 envelope stays on the locked " + ((locked && locked.draws) ? Number(locked.draws).toLocaleString("en-US") : "2,000") + "-draw run.";
+      envelopeNote.textContent = drawsNote();
       renderAll();
       if (whyOpen) loadWhy();
       setStatus("");
@@ -1371,7 +1575,7 @@
       renderAll();
       if (whyOpen) loadWhy();
       var t = packageTotal();
-      setStatus("Updated: package now " + signed(t.c) + ". Live central / zoning / ACS. Envelope locked.");
+      setStatus("Updated. Middle estimate " + signed(t.c) + ". Reference range — from default assumptions, not recomputed.");
     }).catch(function (err) {
       setStatus(err.message);
     });
@@ -1443,9 +1647,29 @@
 
   function renderLotFunnel(whyDoc) {
     var funnel = whyDoc.result && whyDoc.result.funnel;
+    var api = frameApi();
+    if (api) {
+      var sid = whyDoc.scenario;
+      var fips = whyDoc.county && whyDoc.county.fips;
+      return api.funnelHtml({
+        sid: sid,
+        funnel: funnel,
+        stateName: locked ? locked.name : "",
+        label: scenarioLabel(sid),
+        endYear: endYearText(),
+        prefix: fips ? "counties." + fips + ".results." + sid + ".funnel" : "statewide.results." + sid + ".funnel",
+        middle: whyDoc.result && whyDoc.result.delivery,
+        middlePath: fips ? "counties." + fips + ".results." + sid + ".central" : "statewide.results." + sid + ".central",
+        low: null,
+        high: null,
+        feesLotHomes: whyDoc.result && whyDoc.result.host_delta,
+        feesPath: fips ? "counties." + fips + ".results.fees.host_delta" : "statewide.results.fees.host_delta",
+        collapseSteps: window.matchMedia && window.matchMedia("(max-width: 600px)").matches
+      });
+    }
     if (!funnel) {
       if (whyDoc.scenario === "parking" || whyDoc.scenario === "fees") {
-        return "<h3>Lot funnel</h3><p>Not modelled for this reform.</p>";
+        return "<h3>Lot funnel</h3><p>Not modelled for this reform: this reform changes costs for projects, not what is legal.</p>";
       }
       return "";
     }
@@ -1483,7 +1707,7 @@
       }).join("");
       whyBody.innerHTML =
         "<h3>Why this selection</h3><p>" + escapeHtml(whyDoc.note || "") + "</p><ul>" + lines +
-        "</ul><p>Together, as a simple sum of standalone results, not modelled jointly: " +
+        "</ul><p>Together, added together, not modeled as a package: " +
         signed(whyDoc.result.delivery) +
         " extra homes. Eligible " + integer(whyDoc.result.eligible) +
         ", feasible " + integer(whyDoc.result.feasible) +
@@ -1531,7 +1755,7 @@
       (whyDoc.imputed.length ? "<p class='help'>Imputed ACS fields, never zero: " + escapeHtml(whyDoc.imputed.join(", ")) + ".</p>" : "") +
       "<h3>Inputs</h3><div class='receipt'>" + inputs + "</div>" +
       "<h3>Assumptions used</h3><div class='receipt'>" + assumptions + "</div>" +
-      "<h3>Illustrative urban detached " + jargon("pro forma") + "</h3><p class='help'>" + escapeHtml(whyDoc.option_note) + "</p>" +
+      "<h3>Illustrative urban detached cost-and-value worksheet</h3><p class='help'>" + escapeHtml(whyDoc.option_note) + "</p>" +
       "<div class='proforma'>" + options + "</div>" +
       "<h3>Formulas</h3>" + formulas +
       "<h3>Package is not a sum</h3><p>Legalization resolved " + integer(decomp.legalization_resolved) + tag("calculated") +
@@ -1542,7 +1766,20 @@
       scenarioLabel(sw.top_benchmark_pair.leader) + " vs " + scenarioLabel(sw.top_benchmark_pair.trailer) +
       ". Switching values are from the locked run. The " +
       escapeHtml((locked && locked.close_call_flip_share_label) || "close-call threshold") +
-      " is 10 percent of draws.</p><ul>" + switches + "</ul>";
+      " is 10 percent of draws.</p><ul>" + switches + "</ul>" +
+      (frameApi() ? frameApi().limitsHtml({
+        sid: whyDoc.scenario === "package" || BENCHMARKS.indexOf(whyDoc.scenario) >= 0 ? whyDoc.scenario : headlineSid(),
+        drivers: frameApi().rankDrivers(locked.statewide.one_at_a_time, headlineSid() || whyDoc.scenario, catalog ? catalog.parameters : []),
+        driverSid: headlineSid() || whyDoc.scenario,
+        ratios: catalog && catalog.completion_ratios,
+        low: (docStatewide().results[whyDoc.scenario] || {}).p10,
+        high: (docStatewide().results[whyDoc.scenario] || {}).p90,
+        baseline: docStatewide().results.baseline.central,
+        lowPath: "statewide.results." + whyDoc.scenario + ".p10",
+        highPath: "statewide.results." + whyDoc.scenario + ".p90",
+        parkingText: paramText("parking_market_urban"),
+        parkingPath: "parameters.parking_market_urban.central"
+      }) : "");
     var head = document.getElementById("why-heading");
     if (head) head.focus();
   }
@@ -1625,12 +1862,30 @@
         "</td><td>" + describeRange(r) + "</td></tr>";
     }).join("");
     var d = sw.package_decomposition;
+    var api = frameApi();
+    var opts = headlineOpts();
+    var head = api ? api.headlineParts(opts).html : "<h1>" + escapeHtml(answerLine()) + "</h1>";
+    var sid = headlineSid();
+    var limits = api && sid ? api.limitsHtml({
+      sid: sid,
+      drivers: api.rankDrivers(locked.statewide.one_at_a_time, sid, catalog ? catalog.parameters : []),
+      driverSid: sid,
+      ratios: catalog && catalog.completion_ratios,
+      low: opts.low,
+      high: opts.high,
+      baseline: opts.baseline,
+      lowPath: opts.paths.low,
+      highPath: opts.paths.high,
+      parkingText: paramText("parking_market_urban"),
+      parkingPath: "parameters.parking_market_urban.central"
+    }) : "<p>What this can't tell you: it is not a forecast of which lots will build.</p>";
     el.innerHTML =
-      "<h1>" + escapeHtml(answerLine()) + "</h1>" +
-      "<p>Bottom line: the selected package is " + signed(t.c) +
-      (t.exact ? " (likely " + integer(t.lo) + "–" + integer(t.hi) + ")" : " — " + HONESTY) +
-      " on top of " + integer(sw.results.baseline.central) + " expected.</p>" +
-      "<table><thead><tr><th>Reform</th><th>Extra homes</th><th>" + escapeHtml(rangeHead) + "</th></tr></thead><tbody>" +
+      '<p class="model-badge county">County model · county by county · PA, NH</p>' +
+      "<p>Stateframe brief — " + escapeHtml(locked.name) + ", " +
+      escapeHtml(String(catalog && catalog.window_start || "").slice(0, 4)) + "–" + escapeHtml(endYearText()) +
+      ". " + escapeHtml(locked.generated || "") + ". " + escapeHtml(locked.fingerprint || "") + ".</p>" +
+      head +
+      "<table><thead><tr><th>Reform</th><th>Middle estimate</th><th>" + escapeHtml(rangeHead) + "</th></tr></thead><tbody>" +
       rows +
       "<tr><td>All four together (don't add the bills up)</td><td>" + signed(d.package) +
       "</td><td>" + integer(sw.results.package.p10) + "–" + integer(sw.results.package.p90) +
@@ -1638,13 +1893,69 @@
       "<p>" + (mixUnranked()
         ? "Close call: not computed for mix."
         : escapeHtml(rankingLine(sw)) + ". " +
-          (sw.top_benchmark_pair.close_call ? "Ranking is close." : "Ranking holds.")) + "</p>" +
+          (sw.top_benchmark_pair.close_call ? "Too close to call." : "Ranking holds.")) + "</p>" +
       "<p>Also modeled, not a Handbook benchmark: by-right approval with a shot clock, " +
       signed(sw.results.approval.central) + ".</p>" +
-      "<p>Key assumptions: homeowner uptake, conversion cost, and ADU fees stay inside the published bands.</p>" +
-      "<p>What this cannot tell you: it is not a forecast of which lots will build, and it is not a backtest against homes already built.</p>" +
+      (on.has("parking") && api ? api.parkingHtml({
+        show: true,
+        urbanText: paramText("parking_market_urban"),
+        minText: paramText("parking_min_urban")
+      }) : "") +
+      limits +
+      (api ? api.modelDiffHtml(catalog && catalog.completion_ratios) : "") +
       (catalog && catalog.reconciliation_note ? "<p>" + escapeHtml(catalog.reconciliation_note) + "</p>" : "") +
-      "<p>" + location.href.split("#")[0] + " · " + locked.generated + "</p>";
+      "<p>" + escapeHtml(location.href.split("#")[0]) + "</p>";
+    void t;
+  }
+
+  function renderDrivers() {
+    var mount = document.getElementById("drivers-mount");
+    var api = frameApi();
+    if (!mount || !api || !locked) return;
+    var sid = headlineSid();
+    mount.innerHTML = api.driversHtml({
+      sid: sid,
+      label: sid ? scenarioLabel(sid) : "",
+      oat: locked.statewide.one_at_a_time,
+      params: catalog ? catalog.parameters : [],
+      showAll: showAllDrivers,
+      hasOverrides: Object.keys(overrides).length > 0,
+      changed: overrides,
+      switches: (locked.statewide.what_would_change && locked.statewide.what_would_change.switches) || [],
+      formatBand: function (row) {
+        var spec = paramSpec(row.key) || { unit: row.unit };
+        return sliderValueText(spec, row.bandLow) + "–" + sliderValueText(spec, row.bandHigh);
+      },
+      formatSwitch: function (row) {
+        return sliderValueText({ unit: row.unit }, row.switch_at);
+      }
+    });
+    var limitIds = sid ? [sid] : selectedIds();
+    limitIds.forEach(function (limitId) {
+      var row = docStatewide().results[limitId];
+      if (!row) return;
+      var prefix = "statewide.results." + limitId;
+      mount.insertAdjacentHTML("beforeend", api.limitsHtml({
+        sid: limitId,
+        drivers: api.rankDrivers(locked.statewide.one_at_a_time, limitId, catalog ? catalog.parameters : []),
+        driverSid: limitId,
+        ratios: catalog && catalog.completion_ratios,
+        low: row.p10,
+        high: row.p90,
+        baseline: docStatewide().results.baseline.central,
+        lowPath: prefix + ".p10",
+        highPath: prefix + ".p90",
+        parkingText: paramText("parking_market_urban"),
+        parkingPath: "parameters.parking_market_urban.central"
+      }));
+    });
+  }
+
+  function renderModelDiff() {
+    var el = document.getElementById("model-diff");
+    var api = frameApi();
+    if (!el || !api) return;
+    el.innerHTML = api.modelDiffHtml(catalog && catalog.completion_ratios);
   }
 
   function renderWalk() {
@@ -1796,21 +2107,72 @@
     applyWalk();
   });
 
-  document.addEventListener("click", function (event) {
-    var btn = event.target.closest ? event.target.closest("button.tip") : null;
-    if (!btn) {
+  if (window.StateframeFmt) {
+    window.StateframeFmt.bindTips(document);
+  } else {
+    document.addEventListener("click", function (event) {
+      var btn = event.target.closest ? event.target.closest("button.tip") : null;
+      if (!btn) {
+        closeTips();
+        return;
+      }
+      event.preventDefault();
+      var open = btn.getAttribute("aria-expanded") === "true";
       closeTips();
-      return;
-    }
-    event.preventDefault();
-    var open = btn.getAttribute("aria-expanded") === "true";
-    closeTips();
-    if (!open) {
+      if (!open) {
+        btn.setAttribute("aria-expanded", "true");
+        var pop = document.getElementById(btn.getAttribute("aria-describedby"));
+        if (pop) pop.hidden = false;
+      }
+    });
+    document.addEventListener("focusin", function (event) {
+      var btn = event.target.closest ? event.target.closest("button.tip") : null;
+      if (!btn) return;
+      closeTips();
       btn.setAttribute("aria-expanded", "true");
       var pop = document.getElementById(btn.getAttribute("aria-describedby"));
       if (pop) pop.hidden = false;
+    });
+  }
+  document.addEventListener("click", function (event) {
+    var moreDrivers = event.target.closest ? event.target.closest("#drivers-more") : null;
+    if (moreDrivers) {
+      showAllDrivers = !showAllDrivers;
+      renderDrivers();
+      return;
+    }
+    var adjust = event.target.closest ? event.target.closest(".driver-adjust") : null;
+    if (adjust) {
+      var name = adjust.getAttribute("data-driver");
+      var input = document.getElementById("lab-slider-" + name);
+      if (input) {
+        var details = input.closest("details");
+        if (details) details.open = true;
+        input.focus();
+      }
+      return;
+    }
+    var showCounties = event.target.closest ? event.target.closest("#show-all-counties") : null;
+    if (showCounties) {
+      showAllCounties = !showAllCounties;
+      renderTable();
+      return;
+    }
+    var sortBtn = event.target.closest ? event.target.closest(".sort") : null;
+    if (sortBtn) {
+      var key = sortBtn.getAttribute("data-sort");
+      if (tableSort.key === key) tableSort.dir = tableSort.dir === "asc" ? "desc" : "asc";
+      else tableSort = { key: key, dir: key === "name" ? "asc" : "desc" };
+      renderTable();
     }
   });
+  var countyFind = document.getElementById("county-find");
+  if (countyFind) {
+    countyFind.addEventListener("input", function () {
+      countyQuery = countyFind.value || "";
+      renderTable();
+    });
+  }
   whyToggle.addEventListener("click", function () {
     setWhy(!whyOpen);
   });
@@ -1853,7 +2215,7 @@
   document.getElementById("reset").addEventListener("click", function () {
     overrides = {};
     live = null;
-    envelopeNote.textContent = "Move one slider. Central values, zoning bounds, and the ACS band recompute. The p10–p90 envelope stays on the locked " + ((locked && locked.draws) ? Number(locked.draws).toLocaleString("en-US") : "2,000") + "-draw run.";
+    envelopeNote.textContent = drawsNote();
     renderAll();
     if (whyOpen) loadWhy();
     setStatus("");
@@ -1909,13 +2271,5 @@
   loadAll().then(function () {
     if (shouldTry) tryPennsylvania();
     loadChecked();
-    var seen = false;
-    try { seen = localStorage.getItem(TOUR_KEY) === "1"; } catch (err) {}
-    if (!seen && location.hash.indexOf("notour") < 0) {
-      setTimeout(function () {
-        lastFocus = document.getElementById("tour-btn");
-        showTour(0);
-      }, RM ? 0 : 1200);
-    }
   });
 })();

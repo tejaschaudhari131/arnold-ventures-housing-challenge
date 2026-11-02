@@ -68,8 +68,7 @@ def test_lab_phase2_landmarks_and_tour():
 
 
 def test_package_honesty_uses_live_results():
-    assert "simple sum, not modeled; overlap can move it down or up" in LAB_JS
-    assert "Simple sum shown, not modeled" in LAB_JS
+    assert "Added together, not modeled as a package" in LAB_JS
     for stale in STALE:
         assert stale not in LAB_JS
         assert stale not in LAB
@@ -117,11 +116,12 @@ def test_shareable_url_and_exports_and_reduced_motion():
 
 
 def test_answer_matches_selection_and_plain_tie_badge():
-    assert 'Your package: about " + integer(t.c)' in LAB_JS
+    assert "Middle estimate " in LAB_JS
+    assert "Likely " in LAB_JS
     assert "All four reforms together add" not in LAB_JS
     assert "comes out ahead in" in LAB_JS
     assert "typical result " in LAB_JS
-    assert "Statistical tie" in LAB_JS
+    assert "Too close to call" in LAB_JS
     assert "placeLabel" in LAB_JS
     assert 'id="state-notice"' in LAB
     assert "Unknown state " in LAB_JS

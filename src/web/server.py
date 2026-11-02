@@ -38,6 +38,11 @@ STATIC_FILES = {
     "/lab.html": ("lab.html", "text/html; charset=utf-8"),
     "/lab.css": ("lab.css", "text/css; charset=utf-8"),
     "/lab.js": ("lab.js", "text/javascript; charset=utf-8"),
+    "/fmt.js": ("fmt.js", "text/javascript; charset=utf-8"),
+    "/frame.js": ("frame.js", "text/javascript; charset=utf-8"),
+    "/brief": ("brief.html", "text/html; charset=utf-8"),
+    "/brief.html": ("brief.html", "text/html; charset=utf-8"),
+    "/brief.js": ("brief.js", "text/javascript; charset=utf-8"),
 }
 MAX_BODY = 64_000
 _ERROR_LIMIT = 160
@@ -148,7 +153,7 @@ def read_doc(path: str) -> bytes | None:
 # (?v=<sha>) and the fingerprinted Lab results may stay cached.
 HTML_CACHE = "public, max-age=60, s-maxage=60, stale-while-revalidate=60"
 ASSET_CACHE = "public, max-age=300, s-maxage=86400"
-HTML_PATHS = {"/", "/index.html", "/lab", "/lab.html"}
+HTML_PATHS = {"/", "/index.html", "/lab", "/lab.html", "/brief", "/brief.html"}
 
 
 def _state_catalog(fixtures: dict[str, Any]) -> list[dict[str, Any]]:
@@ -583,7 +588,16 @@ def make_handler(app: App):
 ADU_NOTE_MARKER = b"<!-- ADU_FEE_NOTE -->"
 ENGINE_GAP_MARKER = b"<!-- ENGINE_GAP -->"
 BUILD_STAMP_MARKER = b"<!-- BUILD_STAMP -->"
-_VERSIONED_ASSETS = (b"/tokens.css", b"/styles.css", b"/lab.css", b"/app.js", b"/lab.js")
+_VERSIONED_ASSETS = (
+    b"/tokens.css",
+    b"/styles.css",
+    b"/lab.css",
+    b"/app.js",
+    b"/lab.js",
+    b"/fmt.js",
+    b"/frame.js",
+    b"/brief.js",
+)
 
 
 def _static_cache(path: str, query: dict[str, list[str]]) -> str:
