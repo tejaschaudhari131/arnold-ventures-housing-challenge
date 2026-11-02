@@ -40,7 +40,7 @@ function assertBound(html, doc, label) {
     if (value == null || typeof value === "object") return;
     const numeric = Number(value);
     if (!isFinite(numeric)) return;
-    const plain = pair[1].replace(/[+,]/g, "").replace("−", "-").replace("%", "");
+    const plain = pair[1].replace(/[+,]/g, "").replaceAll("−", "-").replaceAll("%", "");
     const shown = Number(plain);
     if (!isFinite(shown)) throw new Error(label + " unbound text " + pair[1] + " at " + pair[0]);
     const ratio = pair[1].indexOf("%") >= 0;
@@ -199,6 +199,16 @@ const mmDrivers = Frame.driversHtml({
 if (mmDrivers.indexOf("Share of owners who add 2–6 homes each year on lots where it pays off") < 0) {
   throw new Error("missing-middle driver kept ADU wording");
 }
+const mmOnly = Frame.plainLabel(
+  "hazard_homeowner_feasible",
+  "Share of homeowners who add an ADU each year (lots where it pays off)",
+  "missing_middle"
+);
+if (mmOnly.indexOf("2–6 homes") < 0 || mmOnly.indexOf("ADU") >= 0) {
+  throw new Error("missing-middle-only label: " + mmOnly);
+}
+const aduLabel = Frame.plainLabel("hazard_homeowner_feasible", "", "adu");
+if (aduLabel.indexOf("ADU") < 0) throw new Error("ADU homeowner label changed: " + aduLabel);
 if (mmDrivers.indexOf("add an ADU") >= 0) throw new Error("missing-middle table uses ADU copy");
 if (!/data-bind="derived\.swing\.hazard_homeowner_feasible\.missing_middle">9,721</.test(mmDrivers)) {
   throw new Error("9,721 is not bound to the missing-middle swing");

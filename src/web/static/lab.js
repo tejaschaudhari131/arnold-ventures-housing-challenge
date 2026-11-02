@@ -218,7 +218,7 @@
         close ? "yes" : "no"
       ].concat(csvMeta(opts))));
     });
-    return lines.join("\n") + "\n";
+    return lines.join("\r\n") + "\r\n";
   }
 
   function describeRange(row) {
@@ -1580,7 +1580,7 @@
         var value = overrides.hasOwnProperty(p.name) ? overrides[p.name] : p.central;
         var step = (p.high - p.low) / 40;
         var id = "lab-slider-" + p.name;
-        var label = api ? api.plainLabel(p.name, p.label) : p.label;
+        var label = api ? api.plainLabel(p.name, p.label, sid) : p.label;
         var rankNote = ranks[p.name]
           ? '<p class="rank-note">Ranked #' + ranks[p.name] + " at default settings for " + escapeHtml(scenarioLabel(sid)) + ".</p>"
           : "";

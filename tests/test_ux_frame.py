@@ -78,7 +78,7 @@ def test_parking_anchors_come_from_the_catalog():
 
 def _brief_copy() -> str:
     html = (STATIC / "brief.html").read_text(encoding="utf-8")
-    html = re.sub(r"<script[\s\S]*?</script>", " ", html)
+    html = re.sub(r"(?i)<script[\s\S]*?</script>", " ", html)
     html = re.sub(r"<[^>]+>", " ", html)
     js = (STATIC / "brief.js").read_text(encoding="utf-8")
     sentences = [

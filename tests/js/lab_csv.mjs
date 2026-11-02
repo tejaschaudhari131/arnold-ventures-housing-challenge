@@ -175,7 +175,12 @@ refs.forEach((ref) => {
 });
 
 const csv = api.buildCountyCsv([county], ["adu"], { lockedCounties: [county], overrides: "" });
-if (!csv.endsWith("\n")) throw new Error("csv missing trailing newline");
+if (!csv.endsWith("\r\n")) throw new Error("csv missing trailing CRLF");
+if (csv.replace(/\r\n/g, "").includes("\n") || csv.replace(/\r\n/g, "").includes("\r")) {
+  throw new Error("county csv line endings are not CRLF");
+}
+const lf = csv.replace(/\r\n/g, "\n");
+if (csv !== lf.replace(/\n/g, "\r\n")) throw new Error("CRLF rewrite changed column bytes");
 const kept = api.decodeOverrides("z:1,adoption_lag_years:2", { adoption_lag_years: true });
 if (kept.z != null) throw new Error("unknown override kept");
 if (kept.adoption_lag_years !== 2) throw new Error("known override dropped " + JSON.stringify(kept));

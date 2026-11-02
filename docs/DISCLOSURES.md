@@ -77,7 +77,7 @@ Direct dependencies are pinned in `requirements.txt`. `tests/test_licenses.py` r
 | iniconfig (pytest) | MIT | Dev, transitive | Not imported by the app |
 | packaging (pytest) | Apache-2.0 or BSD | Dev, transitive | Not imported by the app |
 
-The web client has no npm dependencies, no chart library, and no remote font. Python's standard library serves HTTP. There is no Flask, FastAPI, numpy, pandas, or copyleft package.
+The web client has no npm dependencies, no chart library, and no remote font. Python's standard library serves HTTP. There is no Flask, FastAPI, or copyleft package. pandas is not imported by the app; `requirements-dev.txt` pins it for the CSV test only, because NumPy's license expression includes CC0.
 
 `docs/sbom.cdx.json` is a CycloneDX 1.5 bill of materials for the resolved tree: PyYAML is `required` (the app); pytest, ruff, and their installed dependencies are `optional` (dev). `tests/test_licenses.py` checks every resolved package. GitHub's dependency graph, once Dependabot is enabled from the repository settings (the `dependabot.yml` file is already in the repo), is the upstream source of truth for alerts. No license exception is requested.
 
