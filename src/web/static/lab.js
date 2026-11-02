@@ -62,6 +62,7 @@
   var catalog = null;
   var whyDoc = null;
   var overrides = {};
+  var appliedOverrides = {};
   var urlOverridesPending = false;
   var walkStep = 0;
   var whyOpen = false;
@@ -217,7 +218,7 @@
         close ? "yes" : "no"
       ].concat(csvMeta(opts))));
     });
-    return lines.join("\n");
+    return lines.join("\n") + "\n";
   }
 
   function describeRange(row) {
@@ -235,7 +236,7 @@
     }).join(",");
   }
 
-  function decodeOverrides(raw) {
+  function decodeOverrides(raw, allowed) {
     var out = {};
     if (!raw) return out;
     raw.split(",").forEach(function (part) {
@@ -243,9 +244,18 @@
       if (idx <= 0) return;
       var name = part.slice(0, idx);
       var value = Number(part.slice(idx + 1));
-      if (name && isFinite(value)) out[name] = value;
+      if (!name || !isFinite(value)) return;
+      if (allowed && !allowed[name]) return;
+      out[name] = value;
     });
     return out;
+  }
+
+  function allowedOverrides() {
+    var allowed = {};
+    if (!catalog || !catalog.parameters) return null;
+    catalog.parameters.forEach(function (row) { allowed[row.name] = true; });
+    return allowed;
   }
 
   function money(value) {
@@ -275,7 +285,9 @@
 
   function tipControl(label, tip, className) {
     if (!tip) return escapeHtml(label);
-    var id = "tip-" + (++tipSerial);
+    var id = window.StateframeFmt && window.StateframeFmt.nextTipId
+      ? window.StateframeFmt.nextTipId()
+      : "tip-lab-" + (++tipSerial);
     return '<button type="button" class="tip' + (className ? " " + className : "") + '" aria-describedby="' + id +
       '" aria-expanded="false">' + escapeHtml(label) + '</button><span class="tip-pop" id="' + id +
       '" role="tooltip" hidden>' + escapeHtml(tip) + "</span>";
@@ -586,6 +598,8 @@
       var keepOverrides = urlOverridesPending;
       urlOverridesPending = false;
       if (!keepOverrides) overrides = {};
+      else overrides = decodeOverrides(encodeOverrides(overrides), allowedOverrides());
+      appliedOverrides = {};
       if (stateCode === "PA") selectedFips = selectedFips || "42003";
       else if (!countyRow(selectedFips)) selectedFips = locked.counties[0].fips;
       if (stateSelect) stateSelect.value = stateCode;
@@ -666,12 +680,19 @@
     return rank.map(scenarioLabel).join(" > ");
   }
 
-  function rankingBadge(pair, sw) {
+  function rankingBadge(pair, sw, flipPath) {
     var threshold = (locked && locked.close_call_flip_share_label) || "close-call threshold";
     if (!pair || !pair.close_call) {
       return '<span class="badge-holds">Ranking holds</span>';
     }
-    var flip = bound("statewide.top_benchmark_pair.flip_share", Math.round(pair.flip_share * 100) + "%");
+    var path = flipPath || "statewide.top_benchmark_pair.flip_share";
+    var county = path.indexOf("counties.") === 0 ? path.split(".")[1] : "";
+    function resultPath(sid, field) {
+      return county
+        ? "counties." + county + ".results." + sid + "." + field
+        : "statewide.results." + sid + "." + field;
+    }
+    var flip = bound(path, Math.round(pair.flip_share * 100) + "%");
     var gate = bound("close_call_flip_share", Math.round((locked && locked.close_call_flip_share ? locked.close_call_flip_share : 0.1) * 100) + "%");
     if (isDrawTie(pair) && sw) {
       var trail = sw.results[pair.trailer];
@@ -680,14 +701,17 @@
         '<span class="sr">Central estimate favors ' + escapeHtml(scenarioLabel(pair.leader)) +
         "; " + escapeHtml(scenarioLabel(pair.trailer)) + " comes out ahead in " + flip +
         " of test runs (typical result " +
-        bound("statewide.results." + pair.trailer + ".p50", integer(trail.p50)) + " vs " +
-        bound("statewide.results." + pair.leader + ".p50", integer(lead.p50)) +
+        bound(resultPath(pair.trailer, "p50"), integer(trail.p50)) + " vs " +
+        bound(resultPath(pair.leader, "p50"), integer(lead.p50)) +
         "). The threshold is " + gate + ".</span>";
     }
-    var keep = pair.flip_share != null ? Math.max(1, Math.round((1 - pair.flip_share) * 5)) : 4;
+    var keep = pair.flip_share != null ? Math.round((1 - pair.flip_share) * 5) : 4;
+    if (keep >= 5) return '<span class="badge-holds">Ranking holds</span>';
+    if (keep < 1) keep = 1;
+    var kept = '<span data-derived="kept-runs" data-from="' + escapeHtml(path) + '">' + keep + "</span>";
     return tipControl("Too close to call", "The order flips often enough that a different published assumption can swap the top two. " + threshold + ".") +
       '<span class="sr">' + escapeHtml(scenarioLabel(pair.leader)) + " beat " +
-      escapeHtml(scenarioLabel(pair.trailer)) + " in about " + keep + " of 5 test runs (" +
+      escapeHtml(scenarioLabel(pair.trailer)) + " in about " + kept + " of 5 test runs (" +
       flip + "). The threshold is " + gate + ".</span>";
   }
 
@@ -749,7 +773,7 @@
     var t = packageTotal();
     var sw = docStatewide();
     var baseline = sw.results.baseline.central;
-    if (!on.size) return "Pick one or more reforms to see the extra homes. +0 extra homes.";
+    if (!on.size) return "Pick a reform to see the extra homes.";
     if (t.exact && t.status !== "unavailable" && isFinite(Number(t.lo)) && isFinite(Number(t.hi))) {
       var rangeWord = t.status === "reference"
         ? "Reference range — from default assumptions, not recomputed "
@@ -777,9 +801,9 @@
       : "Your package";
     var parts = api ? api.headlineParts(opts) : { html: "<p>" + escapeHtml(answerLine()) + "</p>", rangeHtml: "", middleHtml: "", live: answerLine() };
     if (headline) headline.innerHTML = parts.html +
-      '<p class="hero-rank">' + (mixUnranked()
-        ? '<span class="badge-close">not computed for mix</span>'
-        : rankingBadge(sw.top_benchmark_pair, sw)) + "</p>" +
+      (opts.unmodeled ? "" : '<p class="hero-rank">' + (mixUnranked()
+        ? ""
+        : rankingBadge(sw.top_benchmark_pair, sw)) + "</p>") +
       (locked.state === "NH"
         ? '<p class="hero-meta">New Hampshire already allows ADUs statewide, so the ADU reform adds ' +
           signed(sw.results.adu.central) + ". Same code, same assumptions, a second state.</p>"
@@ -828,8 +852,8 @@
     if (tick) tick.style.left = (Math.max(0, t.c) / mx * 100) + "%";
     var range = document.getElementById("rangeline");
     if (range) {
-      if (!on.size) range.textContent = "Pick one or more reforms to see the extra homes.";
-      else if (!t.exact) range.textContent = HONESTY_LONG;
+      if (!on.size) range.textContent = "";
+      else if (!t.exact) range.textContent = "";
       else range.innerHTML = "Range from " + bound("draws", integer(locked.draws)) + " runs of the published assumptions; it describes the model, not the odds of success.";
     }
     var relate = document.getElementById("relate");
@@ -1004,7 +1028,7 @@
       var row = sw.results[s.id];
       return '<article class="scenario-card" data-sid="' + s.id + '"><div class="card-top"><h3><button type="button" data-sid="' +
         s.id + '">' + escapeHtml(cardTitle(s)) + "</button></h3><span class='pill t2'>extra</span></div>" +
-        "<p class='plain'>" + signed(row.central) + " vs Baseline" + tag("calculated") +
+        "<p class='plain'>" + bound("statewide.results.approval.central", signed(row.central)) + " vs Baseline" + tag("calculated") +
         ". Not part of the package.</p></article>";
     }).join("");
     cards.querySelectorAll(".tog").forEach(function (btn) {
@@ -1331,7 +1355,7 @@
       ". Census survey error ±" + bound(prefix + ".acs_moe", integer(current.acs_moe)) + tag("observed") +
       ". Local zoning known for " + bound("counties." + row.fips + ".coverage.adu", pct(cover.adu || 0)) +
       " of ADU lots " + tag("observed") +
-      ". " + rankingBadge(pair) + ".</p>";
+      ". " + rankingBadge(pair, null, "counties." + row.fips + ".top_benchmark_pair.flip_share") + ".</p>";
   }
 
   function tableValue(row, key, sid) {
@@ -1565,7 +1589,10 @@
         var valueText = sliderValueText(p, value);
         if (p.unit && valueText.indexOf("a year") < 0 && valueText.indexOf(p.unit) < 0) valueText += " " + p.unit;
         return '<div class="slider"><label for="' + id + '"><span>' + escapeHtml(label) + tag("assumed") +
-          "</span><span>" + formatParam(p, value) + "</span></label>" +
+          "</span><span>" + (Number(value) === Number(p.central)
+            ? bound("by_name." + p.name + ".central", formatParam(p, value))
+            : '<span data-derived="override" data-from="by_name.' + p.name + '.central">' +
+              escapeHtml(formatParam(p, value)) + "</span>") + "</span></label>" +
           '<input id="' + id + '" type="range" min="' + p.low + '" max="' + p.high + '" step="' + step +
           '" value="' + value + '" data-name="' + p.name +
           '" aria-valuetext="' + escapeHtml(valueText) + '">' +
@@ -1580,16 +1607,10 @@
       input.addEventListener("input", function () {
         var name = input.getAttribute("data-name");
         var spec = catalog.parameters.filter(function (p) { return p.name === name; })[0];
-        overrides = {};
-        overrides[name] = Number(input.value);
-        input.setAttribute("aria-valuetext", sliderValueText(spec, Number(input.value)));
-        sliders.querySelectorAll("input[type=range]").forEach(function (other) {
-          if (other !== input) {
-            var otherSpec = catalog.parameters.filter(function (p) { return p.name === other.getAttribute("data-name"); })[0];
-            other.value = otherSpec.central;
-            other.setAttribute("aria-valuetext", sliderValueText(otherSpec, otherSpec.central));
-          }
-        });
+        var next = Number(input.value);
+        if (Math.abs(next - Number(spec.central)) < 1e-12) delete overrides[name];
+        else overrides[name] = next;
+        input.setAttribute("aria-valuetext", sliderValueText(spec, next));
         if (walkStep === 4) walkStep = 5;
         writeUrl();
         scheduleRecompute();
@@ -1605,8 +1626,9 @@
 
   function runRecompute() {
     var names = Object.keys(overrides);
-    if (!names.length) {
+      if (!names.length) {
       live = null;
+      appliedOverrides = {};
       envelopeNote.textContent = drawsNote();
       renderAll();
       if (whyOpen) loadWhy();
@@ -1617,12 +1639,17 @@
     post("/api/lab/recompute", { state: stateCode, overrides: overrides, county: selectedFips }).then(function (doc) {
       if (id !== requestId) return;
       live = doc;
+      appliedOverrides = {};
+      Object.keys(doc.overrides || overrides).forEach(function (name) {
+        appliedOverrides[name] = (doc.overrides || overrides)[name];
+      });
       envelopeNote.textContent = doc.envelope_note;
       renderAll();
       if (whyOpen) loadWhy();
       var t = packageTotal();
       setStatus("Updated. Middle estimate " + signed(t.c) + ". Reference range — from default assumptions, not recomputed.");
     }).catch(function (err) {
+      if (id !== requestId) return;
       setStatus(err.message);
     });
   }
@@ -1847,17 +1874,23 @@
     var ratio = eligible ? feasible / eligible : 0;
     var wwc = locked.statewide.what_would_change;
     var switch0 = wwc && wwc.switches && wwc.switches[0];
-    var bullets = [
-      "Most of the gain comes from converting existing homes, not teardowns. Host term " +
-        signed((row ? cell(row, sid) : docStatewide().results[sid]).host_delta) + ".",
-      eligible ? ("Fewer than " + (ratio > 0 ? "1 in " + Math.max(1, Math.round(1 / ratio)) : "all") +
-        " lots where it becomes legal also pencil out (" + integer(feasible) + " of " + integer(eligible) + ").") :
-        "Eligible and feasible counts come from the locked county run.",
-      switch0 ? ("The result is most sensitive to " + switch0.label.toLowerCase() +
-        ". Order can flip at " + formatParam({ unit: switch0.unit }, switch0.switch_at) + ".") :
-        "The ranking can move when a published assumption changes."
-    ];
-    list.innerHTML = bullets.map(function (b) { return "<li>" + escapeHtml(b) + " " + tag("calculated") + "</li>"; }).join("");
+    var host = (row ? cell(row, sid) : docStatewide().results[sid]).host_delta;
+    var basePath = row ? "counties." + row.fips + ".results." + sid : "statewide.results." + sid;
+    var hostLine = "<li>Most of the gain comes from converting existing homes, not teardowns. Host term " +
+      bound(basePath + ".host_delta", signed(host)) + ". " + tag("calculated") + "</li>";
+    var lotLine = eligible
+      ? "<li>Fewer than 1 in " + (ratio > 0 ? Math.max(1, Math.round(1 / ratio)) : "all") +
+        " lots where it becomes legal also pencil out (" +
+        bound(basePath + ".feasible", integer(feasible)) + " of " +
+        bound(basePath + ".eligible", integer(eligible)) + "). " + tag("calculated") + "</li>"
+      : "<li>Eligible and feasible counts come from the locked county run.</li>";
+    var flipLine = switch0
+      ? "<li>The result is most sensitive to " + escapeHtml(switch0.label.toLowerCase()) +
+        ". Order can flip at " +
+        bound("statewide.what_would_change.switches.0.switch_at", assumptionFigure(switch0.unit, switch0.switch_at)) +
+        ". " + tag("calculated") + "</li>"
+      : "<li>The ranking can move when a published assumption changes.</li>";
+    list.innerHTML = hostLine + lotLine + flipLine;
   }
 
   function renderSources() {
@@ -1883,12 +1916,16 @@
     post("/api/crossval", { scope: "tier1", draws: 20 }).then(function (doc) {
       var parts = Object.keys(doc.states || {}).map(function (code) {
         var block = doc.states[code].scenarios || {};
-        var first = block.adu || block.missing_middle || {};
+        var scenario = block.adu ? "adu" : "missing_middle";
+        var first = block[scenario] || {};
         var err = first.imputed_parcels && first.imputed_parcels.percent_error;
-        return code + (err == null ? "" : " " + (err > 0 ? "+" : "") + err.toFixed(1) + "%");
+        if (err == null) return escapeHtml(code);
+        var text = (err > 0 ? "+" : "") + Number(err).toFixed(1) + "%";
+        var path = "states." + code + ".scenarios." + scenario + ".imputed_parcels.percent_error";
+        return escapeHtml(code) + ' <span data-bind="' + path + '" data-api="/api/crossval">' + text + "</span>";
       });
       el.innerHTML = "Error vs. parcel data on the states that have extracts: " +
-        escapeHtml(parts.join(" · ") || "see Cross-check on the screening view") +
+        (parts.join(" · ") || "see Cross-check on the screening view") +
         " " + tag("calculated") + ". " + escapeHtml(doc.note || "");
     }).catch(function () {
       el.textContent = "Open the screening view Cross-check tab to run the comparison on CT, WI, UT, and HI.";
@@ -2096,7 +2133,7 @@
       seed: locked && locked.seed,
       fingerprint: locked && locked.fingerprint,
       sha: sha,
-      overrides: encodeOverrides(overrides)
+      overrides: encodeOverrides(appliedOverrides)
     });
     downloadBlob(new Blob([text], { type: "text/csv" }), "stateframe-" + stateCode + "-counties.csv");
   }
@@ -2306,6 +2343,7 @@
       buildCountyCsv: buildCountyCsv,
       sliderValueText: sliderValueText,
       tooltipMarkup: tipControl,
+      decodeOverrides: decodeOverrides,
       mixColumns: MIX_CSV_COLUMNS.slice(),
       scenarioColumns: SCENARIO_CSV_COLUMNS.slice()
     };

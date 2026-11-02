@@ -72,8 +72,17 @@
   var MIDDLE_TIP = "The result with every assumption at its middle value. The range comes from the test runs that vary the assumptions.";
   var PARKING_SOURCE = "Based on Buffalo after it dropped parking minimums (Hess & Rehler 2021): projects kept building about 1 space per home.";
 
-  function plainLabel(key, fallback) {
-    return PLAIN[key] || fallback || key;
+  var SCENARIO_PLAIN = {
+    missing_middle: {
+      hazard_homeowner: "Share of owners who add 2–6 homes each year",
+      hazard_homeowner_feasible: "Share of owners who add 2–6 homes each year on lots where it pays off",
+      hazard_developer: "Share of profitable lots rebuilt with 2–6 homes each year"
+    }
+  };
+
+  function plainLabel(key, fallback, sid) {
+    var scoped = sid && SCENARIO_PLAIN[sid] && SCENARIO_PLAIN[sid][key];
+    return scoped || PLAIN[key] || fallback || key;
   }
 
   function groupHeading(key) {
@@ -108,27 +117,21 @@
     opts = opts || {};
     var paths = opts.paths || {};
     if (opts.unmodeled) {
-      var unmodeledHtml = '<p class="range-kicker">Likely range unavailable</p>' +
-        '<p class="range-hero">Not computed for this combination</p>' +
-        "<p>Added together, not modeled as a package. Pick one reform, or all four, for a modeled total.</p>";
       return {
-        rangeHtml: "Not computed for this combination",
+        rangeHtml: "",
         middleHtml: "",
-        html: unmodeledHtml,
-        live: "Not computed for this combination."
+        html: "<p class=\"range-hero\">Not computed for this combination. Pick one reform, or all four, for a modeled total.</p>",
+        live: ""
       };
     }
     var empty = !opts.sid;
     if (empty) {
-      var emptyHtml = '<p class="range-kicker">Likely range</p>' +
-        '<p class="range-hero" id="range-hero">+0 extra homes</p>' +
-        "<p>Pick one or more reforms to see the extra homes.</p>" +
-        "<p>+0 extra homes — pick a reform above.</p>";
+      var emptyHtml = "<p>Pick a reform to see the extra homes.</p>";
       return {
-        rangeHtml: "+0 extra homes",
+        rangeHtml: "",
         middleHtml: "",
         html: emptyHtml,
-        live: "No reforms selected. +0 extra homes. Pick a reform above."
+        live: ""
       };
     }
     var reference = opts.status === "reference";
@@ -145,7 +148,7 @@
     var pctText = share == null ? "No data" : (share * 100).toFixed(1) + "%";
     var draws = opts.draws == null ? "" : String(opts.draws);
     var html = '<p class="range-kicker">' + esc(kicker) + "</p>" +
-      '<p class="range-hero" id="range-hero">' + lead + "</p>" +
+      '<p class="range-hero">' + lead + "</p>" +
       '<p class="middle-est">Middle estimate ' + middle + ". " +
       Fmt.tipButton("What middle estimate means", MIDDLE_TIP + (draws ? " Runs: " + draws + "." : "")) +
       "</p>" +
@@ -350,7 +353,7 @@
       if (!isFinite(low) || !isFinite(high)) return;
       rows.push({
         key: spec.name,
-        label: plainLabel(spec.name, spec.label),
+        label: plainLabel(spec.name, spec.label, sid),
         low: low,
         high: high,
         swing: Math.abs(high - low),
@@ -414,14 +417,14 @@
         var hi = opts.formatFigure ? opts.formatFigure(row.unit, row.band[1]) : String(row.band[1]);
         band = " (tested range " + bind(base + "band.0", lo) + "–" + bind(base + "band.1", hi) + ")";
       }
-      return "<li>" + esc(plainLabel(row.param, row.label)) + " would have to be " + way + " " +
+      return "<li>" + esc(plainLabel(row.param, row.label, sid)) + " would have to be " + way + " " +
         bind(base + "switch_at", at) + band + ".</li>";
     }).join("");
     return '<section id="driver-table" class="drivers" aria-labelledby="drivers-title">' +
       '<h2 id="drivers-title">Assumptions that matter most</h2>' +
       '<p class="drivers-caption">Ranked at default settings. ' + esc(opts.label || "") + ".</p>" +
       overrideNote + more +
-      '<div class="driver-fit">' +
+      '<div class="table-region" role="region" tabindex="0" aria-label="Assumptions that matter most, scrolls sideways">' +
       '<table><caption>Ranked at default settings</caption><thead><tr>' +
       "<th scope=\"col\">Rank</th><th scope=\"col\">Assumption</th><th scope=\"col\">Tested from–to</th>" +
       "<th scope=\"col\">Result at low end</th><th scope=\"col\">Result at high end</th>" +
@@ -476,9 +479,6 @@
         }).join("") + "</ul>" + modelDiffHtml(opts.ratios) + "</section>");
     }
     var top = (opts.drivers || [])[0];
-    if (top && opts.sid && opts.sid !== "adu" && /ADU/i.test(top.label)) {
-      top = Object.assign({}, top, { label: "How many owners build each year on lots where it pays off" });
-    }
     var aduItems = [
       "It can't tell you which streets or owners will build, only county and state totals.",
       "The yearly build rate comes from California after its ADU laws. Other states may move faster or slower.",
@@ -488,7 +488,8 @@
     var mmItems = [
       top ? ("How many owners actually build is the biggest unknown. At default settings, changing \"" +
         esc(top.label) + "\" alone moves the answer by about " +
-        bind("statewide.one_at_a_time." + top.key + ".swing." + (opts.driverSid || sid), homes(top.swing)) +
+        derived("swing", homes(top.swing), "statewide.one_at_a_time." + top.key + ".low." + (opts.driverSid || sid) +
+          " statewide.one_at_a_time." + top.key + ".high." + (opts.driverSid || sid)) +
         " homes (" + bind("statewide.one_at_a_time." + top.key + ".low." + (opts.driverSid || sid), signed(top.low)) +
         " to " + bind("statewide.one_at_a_time." + top.key + ".high." + (opts.driverSid || sid), signed(top.high)) + ").")
         : "How many owners actually build is the biggest unknown.",

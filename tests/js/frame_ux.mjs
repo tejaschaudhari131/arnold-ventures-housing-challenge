@@ -161,7 +161,9 @@ const ref = Frame.headlineParts({
 });
 if (ref.html.indexOf("Reference range — from default assumptions, not recomputed") < 0) throw new Error("reference kicker");
 if (ref.html.indexOf("not recomputed") < 0) throw new Error("not recomputed");
-if (Frame.headlineParts({ sid: "" }).html.indexOf("+0 extra homes") < 0) throw new Error("empty headline");
+const emptyHead = Frame.headlineParts({ sid: "" }).html;
+if (emptyHead.indexOf("+0") >= 0) throw new Error("empty headline shows +0");
+if ((emptyHead.match(/pick a reform/gi) || []).length !== 1) throw new Error("pick a reform repeated: " + emptyHead);
 const mix = Frame.miniTotal({ unmodeled: true, label: "Your package", low: null, high: null, middle: 8517 });
 if (mix.indexOf("0 to 0") >= 0 || mix.indexOf("8,517") >= 0) throw new Error("mix total invented a sum: " + mix);
 if (mix.indexOf("not computed for this combination") < 0) throw new Error("mix total missing the explicit state");

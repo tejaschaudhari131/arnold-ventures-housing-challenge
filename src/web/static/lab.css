@@ -604,14 +604,25 @@ html { scroll-padding-top: 120px; }
   overflow-x: auto;
   overflow-y: visible;
 }
-.lab-body .driver-fit,
-.lab-body .drivers .table-region {
-  overflow: visible;
-  max-height: none;
+.lab-body .drivers,
+.lab-body #drivers-mount,
+.lab-body .overlap-panel,
+.lab-body main {
+  min-width: 0;
+  max-width: 100%;
 }
-.lab-body .drivers table { width: 100%; }
-.lab-body .drivers th,
-.lab-body .drivers td { white-space: normal; }
+.lab-body .drivers .table-region {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.lab-body .drivers table {
+  width: max-content;
+  min-width: 100%;
+}
 .funnel-bar {
   display: block;
   min-height: 18px;
@@ -684,6 +695,7 @@ html { scroll-padding-top: 120px; }
   .card .n, .card-range { max-width: 100%; }
 }
 @media print {
+  html, body, .lab-body { overflow: hidden; }
   .sf-top, .start-here, .hero, .lab-layout, .tour, footer, .no-print { display: none !important; }
   .brief-print, .brief-print[hidden] { display: block !important; }
   .brief-print {
@@ -693,7 +705,15 @@ html { scroll-padding-top: 120px; }
   }
   .brief-print h1, .brief-print .range-hero, .brief-print .middle-est { color: #000; font-size: 16pt; }
   .brief-print table { width: 100%; border-collapse: collapse; }
-  .brief-print th, .brief-print td { border-bottom: 1px solid #ccc; padding: 4px 6px; text-align: right; }
+  .brief-print { max-width: 100%; overflow: hidden; }
+  .brief-print table { width: 100%; table-layout: fixed; }
+  .brief-print th, .brief-print td {
+    border-bottom: 1px solid #ccc;
+    padding: 4px 6px;
+    text-align: right;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   .brief-print th:first-child, .brief-print td:first-child { text-align: left; }
   @page { size: letter; margin: 0.5in; }
 }

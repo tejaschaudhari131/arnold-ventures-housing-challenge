@@ -174,4 +174,12 @@ refs.forEach((ref) => {
   });
 });
 
+const csv = api.buildCountyCsv([county], ["adu"], { lockedCounties: [county], overrides: "" });
+if (!csv.endsWith("\n")) throw new Error("csv missing trailing newline");
+const kept = api.decodeOverrides("z:1,adoption_lag_years:2", { adoption_lag_years: true });
+if (kept.z != null) throw new Error("unknown override kept");
+if (kept.adoption_lag_years !== 2) throw new Error("known override dropped " + JSON.stringify(kept));
+const open = api.decodeOverrides("z:1,adoption_lag_years:2");
+if (open.z !== 1) throw new Error("unfiltered decode dropped a key before the catalog loaded");
+
 console.log("ok " + subsets(reforms).length + " subsets");

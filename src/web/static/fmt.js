@@ -60,11 +60,14 @@
     return '<span data-bind="' + esc(path) + '">' + text + "</span>";
   }
 
-  var tipSerial = 0;
+  function nextTipId() {
+    root.__sfTipSerial = (root.__sfTipSerial || 0) + 1;
+    return "tip-" + root.__sfTipSerial;
+  }
 
   function tipButton(label, tip, className) {
     if (!tip) return esc(label);
-    var id = "tip-" + (++tipSerial);
+    var id = nextTipId();
     return '<button type="button" class="tip' + (className ? " " + className : "") +
       '" aria-describedby="' + id + '" aria-expanded="false">' + esc(label) +
       '</button><span class="tip-pop" id="' + id + '" role="tooltip" hidden>' + esc(tip) + "</span>";
@@ -97,7 +100,7 @@
       var tip = node.getAttribute("title");
       if (!tip) return;
       node.removeAttribute("title");
-      var id = "tip-" + (++tipSerial);
+      var id = nextTipId();
       var btn = root.ownerDocument ? root.ownerDocument.createElement("button") : document.createElement("button");
       var pop = root.ownerDocument ? root.ownerDocument.createElement("span") : document.createElement("span");
       var doc = node.ownerDocument || document;
@@ -139,6 +142,10 @@
         return;
       }
       event.preventDefault();
+      if (event.detail === 0) {
+        openTip(btn);
+        return;
+      }
       var open = btn.getAttribute("aria-expanded") === "true";
       closeTips(doc);
       if (!open) openTip(btn);
@@ -171,6 +178,7 @@
     percent: percent,
     money: money,
     bind: bind,
+    nextTipId: nextTipId,
     tipButton: tipButton,
     upgradeTitles: upgradeTitles,
     bindTips: bindTips,

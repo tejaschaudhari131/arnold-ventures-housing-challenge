@@ -83,6 +83,13 @@ def _waterfall(state: Any, lab_fee: float, core_fee: float, core_cap: float, cor
     return steps
 
 
+def _never_complete_shares() -> str:
+    """Single-family, small-building, and multifamily completion ratios from config."""
+    catalog = load_assumptions()
+    names = ("completion_ratio_sf", "completion_ratio_small", "completion_ratio_mf")
+    return "/".join(f"{float(catalog.spec(name)['central']):.2f}" for name in names)
+
+
 def _baseline_note(lab_base: float, core_base: float, host_adj: float = 0.0) -> str:
     """Baseline gap from the two engines. The permit-window piece is the residual."""
     lab = homes(lab_base)
@@ -96,7 +103,7 @@ def _baseline_note(lab_base: float, core_base: float, host_adj: float = 0.0) -> 
         f"The Lab baseline ({lab}) and the core baseline ({core}) differ by "
         f"{homes(gap, signed=True)}. Pennsylvania's core permits are the same "
         "2023-2025 county files as the Lab. The Lab pipeline uses the same "
-        "never-complete shares as the core (0.93/0.90/0.90), including "
+        f"never-complete shares as the core ({_never_complete_shares()}), including "
         "completion_ratio_mf for 5+ homes, so the pipeline baselines match. "
         f"The residual after the host term is {window}. The Lab also adds a {host} "
         "host adjustment for already-legal homes the permit window cannot contain yet."

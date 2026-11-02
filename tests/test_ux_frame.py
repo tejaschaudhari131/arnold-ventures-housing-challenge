@@ -58,6 +58,24 @@ def _brief_copy() -> str:
     return html + "\n" + "\n".join(sentences) + "\n" + "\n".join(limits)
 
 
+def test_pc17_completion_literals_are_not_in_python_copy():
+    import ast
+
+    # These files are hashed into the locked Lab results fingerprint.
+    frozen = {ROOT / "src" / "lab" / name for name in (
+        "config.py", "data.py", "engine.py", "options.py", "uncertainty.py", "results.py"
+    )}
+    banned = ("0.84", "0.90", "0.92", "0.93")
+    for path in (ROOT / "src").rglob("*.py"):
+        if path.resolve() in {item.resolve() for item in frozen}:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                for token in banned:
+                    assert token not in node.value, (path.name, token)
+
+
 def test_brief_copy_stays_plain():
     text = _brief_copy()
     jargon = re.compile(
