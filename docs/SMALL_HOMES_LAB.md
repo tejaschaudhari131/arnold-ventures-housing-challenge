@@ -111,9 +111,9 @@ The Lab reports three uncertainty layers separately and never adds them together
 
 | Layer | Question | Method | PA ADU increment |
 | ----- | -------- | ------ | ---------------- |
-| Assumption envelope | What if our economic and behavioral assumptions are off? | 2,000 assumption draws (seed 20261107) over every adjustable parameter except the zoning priors and the locked Handbook levers. All scenarios share the same draws. Reported as p10–p90, with a bootstrap SE on each percentile. | 3,343–11,084 |
-| Zoning-evidence bound | What if unknown zoning is more or less permissive than our prior? | The priors are set to their low and high ends, giving the reported bound. The logical bound sets every unknown lot to allowed and then to prohibited. | 4,416–6,486 (logical -45–6,918) |
-| ACS sampling error | What if the survey inputs are off by their margin of error? | Each county's host counts, 1-BR and 2-BR rents, and median value are moved by −MOE and +MOE, one at a time. Half the change is the sensitivity, and the sensitivities combine in quadrature across inputs and counties. | ±26 |
+| Assumption envelope | What if our economic and behavioral assumptions are off? | 2,000 assumption draws (seed 20261107) over every adjustable parameter except the zoning priors and the locked Handbook levers. All scenarios share the same draws. Reported as p10–p90, with a bootstrap SE on each percentile. | 457–4,438 |
+| Zoning-evidence bound | What if unknown zoning is more or less permissive than our prior? | The priors are set to their low and high ends, giving the reported bound. The logical bound sets every unknown lot to allowed and then to prohibited. | 2,013–3,303 (logical −57–3,582) |
+| ACS sampling error | What if the survey inputs are off by their margin of error? | Each county's host counts, 1-BR and 2-BR rents, and median value are moved by −MOE and +MOE, one at a time. Half the change is the sensitivity, and the sensitivities combine in quadrature across inputs and counties. | ±86 |
 
 A comparison between two scenarios is flagged as a **close call** if any of the following holds:
 

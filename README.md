@@ -21,7 +21,9 @@ Stateframe compares a calibrated baseline with five benchmark reforms, plus a co
 - Check that county rows sum to the state.
 - Walk Pennsylvania from Allegheny County up to the state total, with observed inputs separated from imputations (`docs/CASE_STUDY_PA_ALLEGHENY.md`, and the case-study tab in the app).
 - Open the [Small Homes Policy Lab](https://stateframe-housing.vercel.app/lab) at https://stateframe-housing.vercel.app/lab for a 67-county Pennsylvania comparison (New Hampshire is the portability test), with a Why drawer, close-call badges, and a downloadable brief.
-- Run the tier-1 states through the incomplete-data estimator and see the error.
+- Run the tier-1 states through the incomplete-data estimator and see the error, or inspect where uncertainty comes from (behavioral & cost band vs. unmapped local zoning vs. Census MOE).
+- Toggle **Inspect numbers** (or `Alt+Click` any figure) to open live provenance and equation lineage on any displayed number, use **Committee amendment presets**, **Pin & Compare (A vs. B)**, or color counties by **Primary bottleneck** (*Zoning-locked*, *Fee-sensitive*, *Rent/cost-constrained*).
+- Open `/deck` (or run `PYTHONPATH=. .venv/bin/python scripts/build_deck.py`) for a 16-slide data-bound executive presentation deck ready for Print-to-PDF, paired with `docs/DEMO_SCRIPT.md`.
 - Export CSV, JSON, and Markdown. Every numeric field in the CSV and JSON carries an observed, assumed, or calculated tag.
 
 ## How to read a number
@@ -93,7 +95,8 @@ The committed extract used that workbook on 2026-10-31. Pass it with `python -m 
 | `src/model/crossval.py` | Tier-1 extract versus the tier-2 imputation, and versus a state-median screen |
 | `src/data/` | Schema, adapter, and the public-data acquisition script |
 | `data/sample/` | Small committed benchmark so tests run with no network |
-| `src/web/` | Standard-library server and the single-page app |
+| `src/web/` | Standard-library server, single-page apps, and `inspector.js` number-lineage popover |
+| `src/deck.py` | 16-slide data-bound executive presentation deck (`/deck` and `scripts/build_deck.py`) |
 | `docs/MODEL_AND_ASSUMPTIONS.md` | Equations, calibration, and limits |
 | `docs/API.md` | HTTP routes, including `draws: null` |
 | `docs/POLICY_SCENARIO_COMPARISON.md` | Lab comparison (≤4 pages) and the eleven-state core table |
@@ -102,6 +105,7 @@ The committed extract used that workbook on 2026-10-31. Pass it with `python -m 
 | `docs/DATA_PROVENANCE.md` | Sources, vintages, cleaning, and privacy |
 | `docs/DISCLOSURES.md` | AI use, prior work, datasets, dependencies, and external services |
 | `docs/CASE_STUDY_PA_ALLEGHENY.md` | Allegheny County to Pennsylvania, with observed and imputed inputs separated |
+| `docs/DEMO_SCRIPT.md` | Timestamped 5-minute demonstration video script aligned to the challenge rubric |
 | `docs/sbom.cdx.json` | CycloneDX bill of materials for the resolved app and dev trees |
 | `data/sample/county_points.json` | Census 2024 gazetteer interior points for the eleven states |
 

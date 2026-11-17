@@ -140,9 +140,11 @@
       ? "Reference range — from default assumptions, not recomputed"
       : "Likely range (10th–90th percentile, model-conditional)";
     var rangeInner = unavailable ? "Likely range unavailable" : rangeSpans(paths.low, paths.high, opts.low, opts.high);
-    var lead = reference
-      ? "Reference range " + rangeInner + ", from default settings, not recomputed"
-      : "Likely " + rangeInner + " extra homes";
+    var lead = unavailable
+      ? rangeInner
+      : (reference
+        ? "Reference range " + rangeInner + ", from default settings, not recomputed"
+        : "Likely " + rangeInner + " extra homes");
     var middle = bind(paths.middle, signed(opts.middle));
     var share = pctOf(opts.middle, opts.baseline);
     var pctText = share == null ? "No data" : (share * 100).toFixed(1) + "%";
@@ -179,11 +181,12 @@
     if (!opts.sid) return "";
     var paths = opts.paths || {};
     var rangeWord = opts.status === "reference" ? "Reference range, not recomputed, " : "likely ";
-    var range = knownNumber(opts.low) && knownNumber(opts.high)
-      ? rangeSpans(paths.low, paths.high, opts.low, opts.high)
+    var hasRange = knownNumber(opts.low) && knownNumber(opts.high);
+    var rangeSegment = hasRange
+      ? rangeWord + rangeSpans(paths.low, paths.high, opts.low, opts.high) + " extra homes"
       : "Likely range unavailable";
-    return esc(opts.label || "Package") + ": " + rangeWord + range +
-      " extra homes · middle " + bind(paths.middle, signed(opts.middle)) +
+    return esc(opts.label || "Package") + ": " + rangeSegment +
+      " · middle " + bind(paths.middle, signed(opts.middle)) +
       " · <span class=\"model-badge county\">County model</span>";
   }
 
@@ -456,8 +459,8 @@
 
   function modelDiffHtml(ratios) {
     var pair = completionPair(ratios);
-    var tail = " This is a known difference under review.";
-    var lead = "The county model assumes started projects finish; the 11-state screening model applies a completion ratio";
+    var tail = " The screening model also adds transit zones instead of lot rules.";
+    var lead = "Both models apply the same finish share";
     if (!pair) {
       return '<p class="model-diff" role="note" data-component="ModelDiffNote">' + lead + "." + tail + "</p>";
     }
@@ -531,16 +534,21 @@
 
   function briefAnswer(opts) {
     opts = opts || {};
-    if (!opts.sid && !opts.screeningMiddle) {
+    if (!opts.sid && !knownNumber(opts.screeningMiddle)) {
       return "<p>Pick at least one change to see a number.</p>";
     }
     if (opts.screening) {
+      var hasBand = knownNumber(opts.low) && knownNumber(opts.high);
+      var hero = hasBand
+        ? "Likely " + rangeSpans("band.low", "band.high", opts.low, opts.high) + " extra homes"
+        : "Likely range unavailable";
+      var when = opts.endYear ? (" by " + esc(opts.endYear)) : " over five years";
       return '<p class="model-badge screening">Rough estimate (screening model)</p>' +
-        '<p class="range-hero">Likely range unavailable</p>' +
+        '<p class="range-hero">' + hero + "</p>" +
         "<p>" + esc(FUNNEL_UNAVAILABLE) + "</p>" +
         '<p class="middle-est">Middle estimate ' +
         bind("scenarios.combined.incremental_completions", signed(opts.screeningMiddle)) +
-        " extra homes by " + esc(opts.endYear || "") + " in " + esc(opts.stateName || "") + ".</p>";
+        " extra homes" + when + " in " + esc(opts.stateName || "") + ".</p>";
     }
     var parts = headlineParts(opts);
     return '<p class="model-badge county">County model · county by county · PA, NH</p>' + parts.html;

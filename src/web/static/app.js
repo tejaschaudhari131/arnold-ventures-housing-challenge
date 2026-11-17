@@ -43,11 +43,17 @@
   var mapScope = "state";
   var selectedFips = null;
   var lastBand = null;
+  var heroBand = null;
+  var heroBandLoading = false;
+  var bandRequestId = 0;
   var caseStudy = null;
   var caseStep = 0;
   var timer = null;
   var requestId = 0;
   var aduCompare = null;
+  var aduCompareCache = {};
+  var coreMapMetric = "homes";
+  var corePinned = null;
 
   var statusEl = document.getElementById("status");
   var stateList = document.getElementById("state-list");
@@ -240,6 +246,141 @@
     return Number(spec.central);
   }
 
+  var CORE_PRESETS = [
+    {
+      id: "default",
+      label: "Full 5-Reform Package",
+      desc: "All five state reforms on at 100% weight and published central assumptions.",
+      weights: { adu: 1, missing_middle: 1, tod: 1, parking: 1, fees: 1 },
+      bounds: {}
+    },
+    {
+      id: "high_adu_fee",
+      label: "High ADU Impact Fees ($20k)",
+      desc: "Raises ADU per-home fee to top of published band ($20,000) to test fee sensitivity.",
+      weights: { adu: 1, missing_middle: 1, tod: 1, parking: 1, fees: 1 },
+      bounds: { adu_fee_per_unit: "high" }
+    },
+    {
+      id: "compromise",
+      label: "Committee 50%-Weight Compromise",
+      desc: "Full ADU and fee reform; 50% partial implementation on middle housing, TOD, and parking.",
+      weights: { adu: 1, missing_middle: 0.5, tod: 0.5, parking: 0.5, fees: 1 },
+      bounds: {}
+    },
+    {
+      id: "fast_track",
+      label: "Fast-Track / Low Cap-Rate",
+      desc: "Lower financing cap rate, lower ADU hard cost, and upper-band ADU adoption.",
+      weights: { adu: 1, missing_middle: 1, tod: 1, parking: 1, fees: 1 },
+      bounds: { cap_rate: "low", adu_cost_psf: "low", adu_hazard0: "high" }
+    }
+  ];
+
+  function findCoreSpec(name) {
+    for (var i = 0; i < parameters.length; i += 1) {
+      if (parameters[i].name === name) return parameters[i];
+    }
+    return null;
+  }
+
+  function applyCorePreset(presetId) {
+    var preset = CORE_PRESETS.filter(function (p) { return p.id === presetId; })[0] || CORE_PRESETS[0];
+    REFORMS.forEach(function (id) {
+      var w = Object.prototype.hasOwnProperty.call(preset.weights, id) ? Number(preset.weights[id]) : 1;
+      reformOn[id] = w > 0;
+      reformWeight[id] = w > 0 ? w : 1;
+    });
+    overrides = {};
+    Object.keys(preset.bounds).forEach(function (name) {
+      var spec = findCoreSpec(name);
+      var key = preset.bounds[name];
+      if (spec && isFinite(Number(spec[key]))) {
+        overrides[name] = Number(spec[key]);
+      }
+    });
+    renderReformMix();
+    renderSliders();
+    schedule();
+  }
+
+  function renderCorePresets() {
+    var box = document.getElementById("core-presets");
+    if (!box) return;
+    box.innerHTML =
+      '<p class="aside-label">Committee amendment presets</p>' +
+      '<p class="hint">Load a common bill configuration inside published assumption bands.</p>' +
+      '<div class="preset-grid">' +
+      CORE_PRESETS.map(function (p) {
+        return '<button type="button" class="preset-btn" data-core-preset="' + escapeHtml(p.id) +
+          '" title="' + escapeHtml(p.desc) + '">' + escapeHtml(p.label) + "</button>";
+      }).join("") +
+      "</div>";
+    box.querySelectorAll("[data-core-preset]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        applyCorePreset(btn.getAttribute("data-core-preset"));
+      });
+    });
+  }
+
+  function pinCoreCurrent() {
+    if (!result) return;
+    var activeCount = REFORMS.filter(function (id) { return !!reformOn[id]; }).length;
+    var ovCount = Object.keys(overrides).length;
+    var label = activeCount + " of 5 reforms" + (ovCount ? " (" + ovCount + " custom)" : "");
+    var byCounty = {};
+    (result.counties || []).forEach(function (c) {
+      byCounty[c.fips] = Number(c.combined) || 0;
+    });
+    corePinned = {
+      state: stateCode,
+      label: label,
+      packageNet: Number(result.scenarios.combined.incremental_completions) || 0,
+      byCounty: byCounty
+    };
+    renderCorePin();
+  }
+
+  function renderCorePin() {
+    var box = document.getElementById("core-pin");
+    if (!box || !result) return;
+    if (!corePinned || corePinned.state !== stateCode) {
+      box.innerHTML =
+        '<div class="pin-head"><span class="aside-label">Compare bills (A vs. B)</span>' +
+        '<button type="button" class="pin-act" id="core-pin-save">Pin current as A</button></div>' +
+        '<p class="hint">Pin this package, then adjust weights or sliders to compare Bill B against Bill A.</p>';
+      var saveBtn = box.querySelector("#core-pin-save");
+      if (saveBtn) saveBtn.addEventListener("click", pinCoreCurrent);
+      return;
+    }
+    var curPkg = Number(result.scenarios.combined.incremental_completions) || 0;
+    var dPkg = curPkg - corePinned.packageNet;
+    var cObj = selectedFips ? countyByFips(selectedFips) : null;
+    var curC = cObj ? (Number(cObj.combined) || 0) : 0;
+    var pinC = (cObj && Object.prototype.hasOwnProperty.call(corePinned.byCounty, cObj.fips)) ? corePinned.byCounty[cObj.fips] : 0;
+    var dC = curC - pinC;
+    var diffStr = (dPkg > 0 ? "+" : "") + integer(dPkg);
+    var cDiffStr = (dC > 0 ? "+" : "") + integer(dC);
+    box.innerHTML =
+      '<div class="pin-head"><span class="aside-label">Pinned A vs. Current B</span>' +
+      '<span class="pin-btns"><button type="button" class="pin-act" id="core-pin-update">Re-pin</button>' +
+      '<button type="button" class="pin-act" id="core-pin-clear">Clear</button></span></div>' +
+      '<p class="hint">Pinned A: <strong>' + escapeHtml(corePinned.label) + "</strong></p>" +
+      '<table class="pin-table" aria-label="Pinned package A versus current package B">' +
+      "<thead><tr><th>Scope (Package)</th><th>Pinned A</th><th>Current B</th><th>Diff (B−A)</th></tr></thead><tbody>" +
+      "<tr><td>" + escapeHtml(stateCode) + " net new</td><td>" + integer(corePinned.packageNet) + "</td><td>" +
+      integer(curPkg) + "</td><td><strong>" + diffStr + "</strong></td></tr>" +
+      (cObj
+        ? "<tr><td>" + escapeHtml(cObj.name) + "</td><td>" + integer(pinC) + "</td><td>" +
+          integer(curC) + "</td><td><strong>" + cDiffStr + "</strong></td></tr>"
+        : "") +
+      "</tbody></table>";
+    var upBtn = box.querySelector("#core-pin-update");
+    var clBtn = box.querySelector("#core-pin-clear");
+    if (upBtn) upBtn.addEventListener("click", pinCoreCurrent);
+    if (clBtn) clBtn.addEventListener("click", function () { corePinned = null; renderCorePin(); });
+  }
+
   function renderReformMix() {
     reformMix.innerHTML = "";
     var wrap = document.createElement("div");
@@ -379,9 +520,18 @@
     var pack = result.scenarios.combined.incremental_completions;
     var answer = "In " + result.name + " over five years, the package adds " +
       integer(pack) + " homes on top of " + integer(result.baseline_completions_5yr) + " expected.";
+    var hasRange = heroBand && isFinite(Number(heroBand.p10)) && isFinite(Number(heroBand.p90));
+    var joiner = hasRange && (Number(heroBand.p10) <= 0 || Number(heroBand.p90) <= 0) ? " to " : "–";
+    var rangeKicker = hasRange
+      ? '<p class="range-kicker">Seeded range (10th–90th percentile, ' + integer(heroBand.draws) + " draws)</p>"
+      : "";
+    var rangeHero = hasRange
+      ? "Likely " + integer(heroBand.p10) + joiner + integer(heroBand.p90) + " extra homes"
+      : (heroBandLoading ? "Calculating likely range…" : "Likely range unavailable");
     headline.innerHTML =
       '<p class="model-badge screening">Screening model · statewide estimate · 11 states</p>' +
-      '<p class="range-hero">Likely range unavailable</p>' +
+      rangeKicker +
+      '<p class="range-hero">' + rangeHero + "</p>" +
       '<p class="middle-est">Middle estimate <span data-bind="scenarios.combined.incremental_completions">' +
       integer(pack) + '</span> extra homes, on top of <span data-bind="baseline_completions_5yr">' +
       integer(result.baseline_completions_5yr) + "</span> expected.</p>" +
@@ -780,6 +930,73 @@
     return "rgb(" + r + "," + g + "," + b + ")";
   }
 
+  var CORE_BOTTLENECKS = {
+    zoning: {
+      id: "zoning",
+      label: "Zoning-locked",
+      color: "#0e6e5c",
+      note: "Zoning reforms (ADUs, middle housing, TOD) drive the majority of potential new homes here."
+    },
+    fee: {
+      id: "fee",
+      label: "Fee-sensitive",
+      color: "#d99116",
+      note: "Pipeline fee and parking cost reductions account for a major share of feasible gains."
+    },
+    market: {
+      id: "market",
+      label: "Rent/cost-constrained",
+      color: "#c8553d",
+      note: "Local rents and home values sit close to construction costs, keeping market-rate lift modest."
+    }
+  };
+
+  function coreCountyBottleneck(county) {
+    if (!county) return CORE_BOTTLENECKS.market;
+    var legalTop = Math.max(Number(county.adu) || 0, Number(county.missing_middle) || 0, Number(county.tod) || 0);
+    var costTop = Math.max(Number(county.fees) || 0, Number(county.parking) || 0);
+    var base = Number(county.baseline_completions) || 0;
+    var pkg = Number(county.combined) || 0;
+    var pkgLift = base > 0 ? pkg / base : 0;
+    if (legalTop > costTop && pkgLift >= 0.08) return CORE_BOTTLENECKS.zoning;
+    if (pkg >= 15 && (costTop >= legalTop || pkgLift >= 0.05)) return CORE_BOTTLENECKS.fee;
+    return CORE_BOTTLENECKS.market;
+  }
+
+  function coreCountyLiftPct(county) {
+    if (!county || scenarioId === "baseline") return 0;
+    var base = Number(county.baseline_completions) || 0;
+    if (base <= 0) return 0;
+    return (metricOf(county) / base) * 100;
+  }
+
+  function renderCoreMapMetrics() {
+    var box = document.getElementById("core-map-metrics");
+    var leg = document.getElementById("core-bottleneck-legend");
+    if (!box) return;
+    if (mapScope === "nation") {
+      box.hidden = true;
+      if (leg) leg.hidden = true;
+      return;
+    }
+    box.hidden = false;
+    var modes = [
+      { id: "homes", label: "Extra homes" },
+      { id: "lift", label: "% Lift vs. baseline" },
+      { id: "bottleneck", label: "Primary bottleneck" }
+    ];
+    box.innerHTML = modes.map(function (m) {
+      return '<button type="button" aria-pressed="' + (coreMapMetric === m.id) + '" data-core-metric="' + m.id + '">' +
+        escapeHtml(m.label) + "</button>";
+    }).join("");
+    box.querySelectorAll("[data-core-metric]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        coreMapMetric = btn.getAttribute("data-core-metric") || "homes";
+        renderMap();
+      });
+    });
+  }
+
   function renderCountyDetail(county) {
     if (!county) {
       countyDetail.hidden = true;
@@ -788,19 +1005,25 @@
     }
     var valueTag = county.value_imputed ? "assumed" : "observed";
     var column = scenarioColumn(scenarioId);
+    var bInfo = coreCountyBottleneck(county);
+    var lift = coreCountyLiftPct(county);
+    var liftText = scenarioId === "baseline" ? "baseline view" : ((lift >= 0 ? "+" : "") + lift.toFixed(1) + "% vs. baseline");
     countyDetail.hidden = false;
     countyDetail.innerHTML =
       "<strong>" + escapeHtml(county.name) + "</strong> " +
+      '<span class="b-pill ' + escapeHtml(bInfo.id) + '">' + escapeHtml(bInfo.label) + "</span> " +
       (county.close_call ? '<span class="badge-uncertain" title="The published assumption range includes both a gain and a loss.">Outcome uncertain</span> ' : "") +
       "<p class='plain'>" + escapeHtml(county.name) + " rolls into " + escapeHtml(result.name) +
       " through the same county pro forma as every other county. The state total is the sum, not a separate model. " +
       (county.close_call_reason || "This county is not sitting on the feasibility hurdle.") + "</p>" +
       "<p>Homes " + tagged(county.housing_units, "observed", integer) +
       ". Median value " + tagged(county.median_value, valueTag, function (value) { return "$" + integer(value); }) +
-      ". Selected scenario " + tagged(county[column], "calculated", integer) + ".</p>";
+      ". Selected scenario " + tagged(county[column], "calculated", integer) +
+      " (" + escapeHtml(liftText) + ") · " + escapeHtml(bInfo.note) + "</p>";
   }
 
   function renderMap() {
+    renderCoreMapMetrics();
     if (!mapDoc || !result) {
       mapStage.textContent = "County interior points are still loading.";
       return;
@@ -820,9 +1043,30 @@
     var width = 800;
     var height = 520;
     var maxMetric = 0;
+    var bCounts = { zoning: 0, fee: 0, market: 0 };
     points.forEach(function (point) {
-      maxMetric = Math.max(maxMetric, metricOf(countyByFips(point.fips)));
+      var c = countyByFips(point.fips);
+      var m = coreMapMetric === "lift" ? coreCountyLiftPct(c) : metricOf(c);
+      maxMetric = Math.max(maxMetric, Math.abs(m));
+      var b = coreCountyBottleneck(c);
+      bCounts[b.id] = (bCounts[b.id] || 0) + 1;
     });
+    var bLeg = document.getElementById("core-bottleneck-legend");
+    if (bLeg) {
+      if (coreMapMetric === "bottleneck") {
+        bLeg.hidden = false;
+        bLeg.innerHTML =
+          '<span class="b-dot zoning"></span> Zoning-locked (' + bCounts.zoning + ") · " +
+          '<span class="b-dot fee"></span> Fee-sensitive (' + bCounts.fee + ") · " +
+          '<span class="b-dot market"></span> Rent/cost-constrained (' + bCounts.market + ")";
+      } else if (coreMapMetric === "lift") {
+        bLeg.hidden = false;
+        bLeg.textContent = "Circle shade shows 5-year % lift over each county's baseline completions.";
+      } else {
+        bLeg.hidden = true;
+        bLeg.textContent = "";
+      }
+    }
     var hull = convexHull(points.map(function (point) { return project(point, box, width, height); }));
     var hullPath = hull.map(function (pair, index) {
       return (index === 0 ? "M" : "L") + pair[0].toFixed(1) + " " + pair[1].toFixed(1);
@@ -831,11 +1075,19 @@
       var county = countyByFips(point.fips);
       var xy = project(point, box, width, height);
       var value = metricOf(county);
+      var lift = coreCountyLiftPct(county);
+      var bInfo = coreCountyBottleneck(county);
+      var fill = coreMapMetric === "bottleneck"
+        ? bInfo.color
+        : colorFor(coreMapMetric === "lift" ? lift : value, maxMetric);
       var radius = 5 + 9 * Math.sqrt((county ? county.housing_units : 1) / result.housing_units);
       var selected = point.fips === selectedFips;
-      var label = (county ? county.name : point.name) + ", " + integer(value) + " calculated";
+      var suffix = coreMapMetric === "bottleneck"
+        ? ", " + bInfo.label + " (" + integer(value) + ")"
+        : (coreMapMetric === "lift" ? ", " + (lift >= 0 ? "+" : "") + lift.toFixed(1) + "% lift (" + integer(value) + ")" : ", " + integer(value) + " calculated");
+      var label = (county ? county.name : point.name) + suffix;
       return '<circle data-fips="' + point.fips + '" cx="' + xy[0].toFixed(1) +
-        '" cy="' + xy[1].toFixed(1) + '" r="' + radius.toFixed(1) + '" fill="' + colorFor(value, maxMetric) +
+        '" cy="' + xy[1].toFixed(1) + '" r="' + radius.toFixed(1) + '" fill="' + fill +
         '" stroke="' + (selected ? "#9a4e24" : "#1c2430") + '" stroke-width="' + (selected ? 2.5 : 0.6) +
         '"><title>' + escapeHtml(label) + "</title></circle>" +
         '<circle class="map-hit" data-fips="' + point.fips + '" cx="' + xy[0].toFixed(1) +
@@ -851,6 +1103,7 @@
     bindRoving(mapStage, "[data-fips]");
     renderCountySelect();
     renderCountyDetail(selectedFips ? countyByFips(selectedFips) : null);
+    renderCorePin();
   }
 
   function stateShape(code, pts, localBox, originX, originY, drawW, drawH) {
@@ -1010,8 +1263,18 @@
     var el = document.getElementById("adu-fee-note");
     if (el && aduCompare) el.innerHTML = aduCompare.notes.core_html;
     var gap = document.getElementById("engine-gap");
-    if (gap && aduCompare && aduCompare.notes.engine_gap_core_html) {
-      gap.innerHTML = aduCompare.notes.engine_gap_core_html;
+    if (!gap) return;
+    if (stateCode === "PA" || stateCode === "NH") {
+      if (aduCompare && aduCompare.notes.engine_gap_core_html) {
+        gap.innerHTML = aduCompare.notes.engine_gap_core_html;
+      }
+    } else if (result) {
+      gap.innerHTML =
+        "<p class='gap-prose'><strong>Model scope (" + escapeHtml(result.name) + " · Tier " + escapeHtml(result.tier) + "):</strong> " +
+        "These figures come from the eleven-state structural screening engine (<code>src/model/equations.py</code>). " +
+        "The lot-competition Small Homes Policy Lab covers Pennsylvania and New Hampshire; " +
+        '<a href="/lab" style="display:inline-block;min-height:24px">open the Lab</a> or ' +
+        '<a href="#adu-fee-note" style="display:inline-block;min-height:24px">see the PA/NH 5-step model bridge</a>.</p>';
     }
   }
 
@@ -1032,6 +1295,7 @@
       LEGEND.assumed = result.provenance_legend.assumed || LEGEND.assumed;
       LEGEND.calculated = result.provenance_legend.calculated || LEGEND.calculated;
     }
+    fillAduFeeNote();
     renderHeadline();
     renderCards();
     renderCompare();
@@ -1040,6 +1304,8 @@
     renderLimits();
     renderBrief();
     renderMap();
+    renderCorePresets();
+    renderCorePin();
     if (!document.getElementById("panel-case").hidden) renderCase();
   }
 
@@ -1102,6 +1368,13 @@
       combined: "Package",
     };
     crossOut.innerHTML = "";
+    var roiBanner = document.createElement("div");
+    roiBanner.className = "callout";
+    roiBanner.innerHTML =
+      "<strong>50-state portability &amp; data-investment ROI.</strong> " +
+      "Every U.S. state can run immediately in Tier-2 mode using free public Census ACS, Building Permits Survey, and TIGER gazetteer files (<code>scripts/get_data.sh</code>) with zero proprietary vendor licenses. " +
+      "Masking statewide parcel extracts on the four Tier-1 states below measures the exact empirical error of running without parcel data versus collapsing county price variation to a single state median.";
+    crossOut.appendChild(roiBanner);
     if (payload.note) {
       var intro = document.createElement("p");
       intro.className = "help";
@@ -1164,19 +1437,59 @@
     });
   }
 
+  async function ensureAduCompare(code) {
+    var target = (code === "NH") ? "NH" : "PA";
+    if (aduCompareCache[target]) {
+      aduCompare = aduCompareCache[target];
+      return;
+    }
+    var doc = await request("/api/adu-compare?state=" + encodeURIComponent(target));
+    aduCompareCache[target] = doc;
+    aduCompare = doc;
+  }
+
   async function selectState(code) {
     stateCode = code;
     overrides = {};
+    corePinned = null;
     tornado.innerHTML = "";
     band.textContent = "";
-    crossOut.innerHTML = "";
     lastBand = null;
+    heroBand = null;
     setStatus("Loading " + code + "…");
-    var spec = await request("/api/assumptions?state=" + encodeURIComponent(code));
+    var specPromise = request("/api/assumptions?state=" + encodeURIComponent(code));
+    var bridgePromise = ensureAduCompare(code);
+    var spec = await specPromise;
+    await bridgePromise;
     parameters = spec.parameters;
     renderSliders();
     await simulate();
     markActiveState();
+  }
+
+  function loadHeroBand() {
+    var bid = ++bandRequestId;
+    heroBandLoading = true;
+    renderHeadline();
+    post("/api/sensitivity", {
+      state: stateCode,
+      scenario: "combined",
+      draws: 80,
+      overrides: overrides,
+      reforms: reformsPayload(),
+    })
+      .then(function (payload) {
+        if (bid !== bandRequestId) return;
+        heroBand = payload && payload.monte_carlo ? payload.monte_carlo : null;
+        heroBandLoading = false;
+        if (result) renderHeadline();
+      })
+      .catch(function () {
+        if (bid !== bandRequestId) return;
+        heroBand = null;
+        heroBandLoading = false;
+        if (result) renderHeadline();
+      });
   }
 
   async function simulate() {
@@ -1189,8 +1502,10 @@
     });
     if (id !== requestId) return;
     result = next;
+    heroBand = null;
     setStatus("");
     render();
+    loadHeroBand();
     if (caseStudy && stateCode === "PA") {
       caseStudy = null;
     }
@@ -1198,6 +1513,16 @@
 
   function fail(error) {
     setStatus(error && error.message ? error.message : "Something went wrong.");
+  }
+
+  function runCrossCheck() {
+    setStatus("Cross-checking CT, WI, UT, and HI. This samples the published bands.");
+    return post("/api/crossval", { scope: "tier1", draws: 40 })
+      .then(function (payload) {
+        renderCross(payload);
+        setStatus("");
+      })
+      .catch(fail);
   }
 
   function activateTab(tab) {
@@ -1214,6 +1539,9 @@
     });
     if (tab.getAttribute("data-tab") === "case" && !caseStudy) {
       loadCaseStudy();
+    }
+    if (tab.getAttribute("data-tab") === "cross" && !crossOut.innerHTML.trim()) {
+      runCrossCheck();
     }
     if (tab.getAttribute("data-tab") === "brief" && result) renderBrief();
   }
@@ -1242,6 +1570,22 @@
       var open = moreList.hidden;
       moreList.hidden = !open;
       moreBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  }
+
+  var openPortability = document.getElementById("open-portability");
+  if (openPortability) {
+    openPortability.addEventListener("click", function () {
+      if (moreList && moreList.hidden) {
+        moreList.hidden = false;
+        if (moreBtn) moreBtn.setAttribute("aria-expanded", "true");
+      }
+      var crossTab = document.getElementById("tab-cross");
+      var crossPanel = document.getElementById("panel-cross");
+      if (crossTab) activateTab(crossTab);
+      if (crossPanel && crossPanel.scrollIntoView) {
+        crossPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     });
   }
 
@@ -1318,13 +1662,7 @@
   });
 
   document.getElementById("run-cross").addEventListener("click", function () {
-    setStatus("Cross-checking CT, WI, UT, and HI. This samples the published bands.");
-    post("/api/crossval", { scope: "tier1", draws: 40 })
-      .then(function (payload) {
-        renderCross(payload);
-        setStatus("");
-      })
-      .catch(fail);
+    runCrossCheck();
   });
 
   async function download(fmt) {
@@ -1357,9 +1695,11 @@
   }
 
   renderReformMix();
+  renderCorePresets();
   Promise.all([request("/api/states"), request("/api/map"), request("/api/adu-compare?state=PA")])
     .then(function (payloads) {
       mapDoc = payloads[1];
+      aduCompareCache.PA = payloads[2];
       aduCompare = payloads[2];
       fillAduFeeNote();
       renderStates(payloads[0].states);

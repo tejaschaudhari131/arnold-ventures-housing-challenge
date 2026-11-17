@@ -43,6 +43,9 @@ STATIC_FILES = {
     "/brief": ("brief.html", "text/html; charset=utf-8"),
     "/brief.html": ("brief.html", "text/html; charset=utf-8"),
     "/brief.js": ("brief.js", "text/javascript; charset=utf-8"),
+    "/inspector.js": ("inspector.js", "text/javascript; charset=utf-8"),
+    "/deck.css": ("deck.css", "text/css; charset=utf-8"),
+    "/deck.js": ("deck.js", "text/javascript; charset=utf-8"),
 }
 MAX_BODY = 64_000
 _ERROR_LIMIT = 160
@@ -308,6 +311,17 @@ class App:
             str(county) if county else None,
         )
 
+    def lab_mix(self, payload: dict[str, Any]) -> dict[str, Any]:
+        from src.lab.explain import clamp_overrides, evaluate_mix
+
+        county = payload.get("county")
+        return evaluate_mix(
+            str(payload.get("state", "PA")),
+            payload.get("reforms"),
+            clamp_overrides(payload.get("overrides")),
+            str(county) if county else None,
+        )
+
     def lab_export(
         self,
         state: str,
@@ -474,6 +488,14 @@ def make_handler(app: App):
             if path == "/favicon.ico":
                 self._send(204, b"", "image/x-icon")
                 return
+            if path in {"/deck", "/deck.html"}:
+                from src.deck import render_deck_html
+                from src.version import build_info
+
+                deck_body = render_deck_html().encode("utf-8")
+                deck_body = _version_asset_urls(deck_body, str(build_info()["short_sha"]))
+                self._send(200, deck_body, "text/html; charset=utf-8", cache_control=HTML_CACHE)
+                return
             if path in STATIC_FILES:
                 name, content_type = STATIC_FILES[path]
                 body = (STATIC_DIR / name).read_bytes()
@@ -554,6 +576,8 @@ def make_handler(app: App):
                     self._json(200, app.crossval(payload))
                 elif parsed.path == "/api/lab/recompute":
                     self._json(200, app.lab_recompute(payload))
+                elif parsed.path == "/api/lab/mix":
+                    self._json(200, app.lab_mix(payload))
                 elif parsed.path == "/api/lab/why":
                     self._json(200, app.lab_why(payload))
                 elif parsed.path == "/api/export":
@@ -597,6 +621,9 @@ _VERSIONED_ASSETS = (
     b"/fmt.js",
     b"/frame.js",
     b"/brief.js",
+    b"/inspector.js",
+    b"/deck.css",
+    b"/deck.js",
 )
 
 

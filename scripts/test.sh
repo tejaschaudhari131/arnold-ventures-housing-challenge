@@ -16,4 +16,6 @@ export PYTHONPATH="$ROOT"
 "$PY" -m pytest
 if [[ -x .venv/bin/ruff ]]; then
   .venv/bin/ruff check src tests
+else
+  "$PY" -m ruff check src tests
 fi

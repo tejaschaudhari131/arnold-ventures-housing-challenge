@@ -12,6 +12,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"
 
   # Python dependencies in requirements.txt (PyYAML, pytest).
   - package-ecosystem: "pip"

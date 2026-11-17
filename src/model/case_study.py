@@ -140,7 +140,7 @@ def build_case_study(
             "Annual permits, all types",
             annual_permits,
             "calculated",
-            "Building Permits Survey, 2022–2024 county files, reconciled to the state file",
+            "Building Permits Survey, 2023–2025 county files",
             "The four permit segments are observed. Adding them is arithmetic, so the total is calculated.",
         ),
         _field(
@@ -208,7 +208,7 @@ def build_case_study(
                 f"Housing units, structure mix, median value (${_fmt(raw['median_value'])}, {value_tag}), "
                 f"median rent (${_fmt(raw['median_rent'])}, observed), income, the pre-1940 share, and the transit-commute share "
                 "come from ACS 2019–2023 summary tables. Annual permits come from the Building Permits Survey "
-                f"for 2022–2024, about {_fmt(annual_permits)} units a year (calculated from observed segments) after the county file is reconciled to the state file. "
+                f"for 2023–2025, about {_fmt(annual_permits)} units a year (calculated from observed county segments). "
                 "Land area and the interior point on the map come from the 2024 Census gazetteer. "
                 "The state price path comes from the FHFA index. None of these is a modeled household."
             ),
@@ -335,13 +335,13 @@ def render_markdown(study: dict[str, Any]) -> str:
         f"| Pre-1940 share of units | {observed['pre1940_share']:.1%} | observed | ACS 2019–2023 B25034 |",
         f"| Public-transit commute share | {observed['transit_commute_share']:.1%} | observed | ACS 2019–2023 B08301 |",
         f"| Land area | {observed['land_sqmi']:,.1f} sq mi | observed | Census 2024 county gazetteer |",
-        f"| Annual single-family permits | {_fmt(observed['bps_sf'], 1)} | observed | BPS 2022–2024, reconciled to the state |",
-        f"| Annual 2-unit permits | {_fmt(observed['bps_two'], 1)} | observed | BPS 2022–2024, reconciled to the state |",
-        f"| Annual 3–4 unit permits | {_fmt(observed['bps_three_four'], 1)} | observed | BPS 2022–2024, reconciled to the state |",
-        f"| Annual 5+ unit permits | {_fmt(observed['bps_five_plus'], 1)} | observed | BPS 2022–2024, reconciled to the state |",
+        f"| Annual single-family permits | {_fmt(observed['bps_sf'], 1)} | observed | BPS 2023–2025 county files |",
+        f"| Annual 2-unit permits | {_fmt(observed['bps_two'], 1)} | observed | BPS 2023–2025 county files |",
+        f"| Annual 3–4 unit permits | {_fmt(observed['bps_three_four'], 1)} | observed | BPS 2023–2025 county files |",
+        f"| Annual 5+ unit permits | {_fmt(observed['bps_five_plus'], 1)} | observed | BPS 2023–2025 county files |",
         f"| Counties in the state sum | {int(observed['county_count'])} | observed | Census geography for Pennsylvania |",
         "",
-        "County permit segments are the Building Permits Survey. They are scaled so the counties add up to the state permit file. That cleaning step is documented in `docs/DATA_PROVENANCE.md`. The segments stay tagged observed because they are the survey, reconciled, not a policy scenario.",
+        "County permit segments are the 2023–2025 Building Permits Survey county files (`data/sample/lab/PA.json`), summed directly into the state permit run-rate (`BPS 2023-2025`). That vintage rule is documented in `docs/DATA_PROVENANCE.md` and `src/model/permits.py`. The segments stay tagged observed because they are the survey, not a policy scenario.",
         "",
         "## 3. Assumed, because a parcel extract is not in the model",
         "",
@@ -402,7 +402,7 @@ def render_markdown(study: dict[str, Any]) -> str:
         f"| assumed | {LEGEND['assumed']} |",
         f"| calculated | {LEGEND['calculated']} |",
         "",
-        "Sources, all on the official data list: ACS 2019–2023 5-year summary file; Building Permits Survey annual state and county files, 2022–2024; Census population estimates NST-EST2024; Census 2024 county gazetteer; FHFA All-Transactions state house-price index. Licenses and vintages are in `docs/DATA_PROVENANCE.md`.",
+        "Sources, all on the official data list: ACS 2019–2023 5-year summary file; Building Permits Survey annual county files, 2023–2025 (`BPS 2023-2025` for Pennsylvania; 2022–2024 for the nine screening-only states); Census population estimates NST-EST2024; Census 2024 county gazetteer; FHFA All-Transactions state house-price index. Licenses and vintages are in `docs/DATA_PROVENANCE.md`.",
         "",
     ]
     return "\n".join(lines)

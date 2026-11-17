@@ -823,6 +823,148 @@ def recompute(code: str, overrides: dict[str, float] | None = None, county_key: 
     }
 
 
+def evaluate_mix(
+    code: str,
+    reforms: Any,
+    overrides: dict[str, float] | None = None,
+    county_key: str | None = None,
+) -> dict[str, Any]:
+    """Exact joint lot-by-lot evaluation for any subset of Handbook Lab reforms."""
+    from src.lab.results import _funnel
+    from src.plain import snap_tree
+
+    code = check_state(code)
+    chosen = _selected_reforms(reforms)
+    overrides = overrides or {}
+    state = load_state(code)
+    picked_fips: str | None = None
+    if county_key:
+        try:
+            picked_fips = state.county(county_key).fips
+        except KeyError:
+            raise AssumptionError("Unknown county.") from None
+    if not chosen:
+        return snap_tree(
+            {
+                "state": code,
+                "reforms": [],
+                "overrides": overrides,
+                "empty": True,
+                "interval_status": "unavailable",
+                "interval_label": "Pick at least one reform to compute a total.",
+                "statewide": {
+                    "central": 0.0,
+                    "baseline": 0.0,
+                    "lift": 0.0,
+                    "eligible": 0.0,
+                    "feasible": 0.0,
+                    "host_delta": 0.0,
+                    "pipeline_delta": 0.0,
+                    "sum_of_separate": 0.0,
+                    "interaction": 0.0,
+                    "zoning_low": 0.0,
+                    "zoning_high": 0.0,
+                    "by_option": {},
+                    "funnel": None,
+                },
+                "counties": [],
+                "county": None,
+            }
+        )
+    p = central_params()
+    p.update(overrides)
+    override_params = overrides or None
+    scenarios_doc = load_scenarios()["scenarios"]
+    econ = _selection_econ(chosen, p)
+    legalize = frozenset(
+        opt for sid in chosen for opt in (scenarios_doc[sid].get("legalize") or [])
+    )
+    variant = {"package_mix": (econ, legalize)}
+    central = evaluate_state(
+        state,
+        override_params,
+        scenarios=["baseline"] + list(chosen),
+        variants=variant,
+    )
+    adu_spec = param_spec("prior_adu_prohibited")
+    mm_spec = param_spec("prior_mm_prohibited")
+    corners = []
+    for pa_val in (float(adu_spec["low"]), float(adu_spec["high"])):
+        for pm_val in (float(mm_spec["low"]), float(mm_spec["high"])):
+            corners.append(
+                evaluate_state(
+                    state,
+                    override_params,
+                    scenarios=["baseline"],
+                    priors={"prior_adu_prohibited": pa_val, "prior_mm_prohibited": pm_val},
+                    variants=variant,
+                )
+            )
+    sw_mix = central["statewide"]["package_mix"]
+    sw_base = float(central["statewide"]["baseline"]["delivery"])
+    sw_sep = sum(float(central["statewide"][sid]["delta"]) for sid in chosen)
+    sw_z = [float(run["statewide"]["package_mix"]["delta"]) for run in corners]
+    has_lot_reform = any(sid in ("adu", "missing_middle") for sid in chosen)
+    sw_funnel = _funnel(sw_mix.get("funnel"), keep_baseline=True) if has_lot_reform else None
+    statewide = {
+        "central": round(float(sw_mix["delta"]), 1),
+        "baseline": round(sw_base, 1),
+        "lift": (float(sw_mix["delta"]) / sw_base) if sw_base else None,
+        "eligible": round(float(sw_mix.get("eligible", 0.0)), 1),
+        "feasible": round(float(sw_mix.get("feasible", 0.0)), 1),
+        "host_delta": round(float(sw_mix.get("host_delta", 0.0)), 1),
+        "pipeline_delta": round(float(sw_mix.get("pipeline_delta", 0.0)), 1),
+        "sum_of_separate": round(sw_sep, 1),
+        "interaction": round(float(sw_mix["delta"]) - sw_sep, 1),
+        "zoning_low": round(min(sw_z), 1),
+        "zoning_high": round(max(sw_z), 1),
+        "by_option": {
+            k: round(float(v), 1)
+            for k, v in sw_mix.get("by_option", {}).items()
+            if abs(float(v)) >= 0.05
+        },
+        "funnel": sw_funnel,
+        "tag": "calculated",
+    }
+    counties = []
+    for idx, row in enumerate(central["counties"]):
+        cmix = row["scenarios"]["package_mix"]
+        cbase = float(row["scenarios"]["baseline"]["delivery"])
+        csep = sum(float(row["scenarios"][sid]["delta"]) for sid in chosen)
+        cz = [float(run["counties"][idx]["scenarios"]["package_mix"]["delta"]) for run in corners]
+        counties.append(
+            {
+                "fips": row["fips"],
+                "name": row["name"],
+                "central": round(float(cmix["delta"]), 1),
+                "baseline": round(cbase, 1),
+                "eligible": round(float(cmix.get("eligible", 0.0)), 1),
+                "feasible": round(float(cmix.get("feasible", 0.0)), 1),
+                "host_delta": round(float(cmix.get("host_delta", 0.0)), 1),
+                "pipeline_delta": round(float(cmix.get("pipeline_delta", 0.0)), 1),
+                "sum_of_separate": round(csep, 1),
+                "interaction": round(float(cmix["delta"]) - csep, 1),
+                "zoning_low": round(min(cz), 1),
+                "zoning_high": round(max(cz), 1),
+                "funnel": _funnel(cmix.get("funnel"), keep_baseline=False) if has_lot_reform else None,
+            }
+        )
+    picked = next((c for c in counties if c["fips"] == picked_fips), None) if picked_fips else None
+    return snap_tree(
+        {
+            "state": code,
+            "reforms": chosen,
+            "overrides": overrides,
+            "empty": False,
+            "interval_status": "unavailable",
+            "interval_label": "Modeled jointly lot by lot. The locked draw range covers single reforms and all four together.",
+            "statewide": statewide,
+            "counties": counties,
+            "county": picked,
+        }
+    )
+
+
 def _fmt(value: float) -> str:
     from src.plain import homes
 

@@ -14,7 +14,7 @@ Pennsylvania is tier 2 (observed classification in the benchmark). The legal scr
 
 ## 2. Observed inputs for Allegheny County
 
-Housing units, structure mix, median value ($216,700, observed), median rent ($1,111, observed), income, the pre-1940 share, and the transit-commute share come from ACS 2019–2023 summary tables. Annual permits come from the Building Permits Survey for 2022–2024, about 3,121 units a year (calculated from observed segments) after the county file is reconciled to the state file. Land area and the interior point on the map come from the 2024 Census gazetteer. The state price path comes from the FHFA index. None of these is a modeled household.
+Housing units, structure mix, median value ($216,700, observed), median rent ($1,111, observed), income, the pre-1940 share, and the transit-commute share come from ACS 2019–2023 summary tables. Annual permits come from the Building Permits Survey for 2023–2025, about 3,121 units a year (calculated from observed county segments). Land area and the interior point on the map come from the 2024 Census gazetteer. The state price path comes from the FHFA index. None of these is a modeled household.
 
 | Figure | Value | Tag | Source |
 | ------ | ----: | --- | ------ |
@@ -27,13 +27,13 @@ Housing units, structure mix, median value ($216,700, observed), median rent ($1
 | Pre-1940 share of units | 28.2% | observed | ACS 2019–2023 B25034 |
 | Public-transit commute share | 6.2% | observed | ACS 2019–2023 B08301 |
 | Land area | 730.0 sq mi | observed | Census 2024 county gazetteer |
-| Annual single-family permits | 1,297.0 | observed | BPS 2022–2024, reconciled to the state |
-| Annual 2-unit permits | 6.7 | observed | BPS 2022–2024, reconciled to the state |
-| Annual 3–4 unit permits | 12.7 | observed | BPS 2022–2024, reconciled to the state |
-| Annual 5+ unit permits | 1,804.7 | observed | BPS 2022–2024, reconciled to the state |
+| Annual single-family permits | 1,297.0 | observed | BPS 2023–2025 county files |
+| Annual 2-unit permits | 6.7 | observed | BPS 2023–2025 county files |
+| Annual 3–4 unit permits | 12.7 | observed | BPS 2023–2025 county files |
+| Annual 5+ unit permits | 1,804.7 | observed | BPS 2023–2025 county files |
 | Counties in the state sum | 67 | observed | Census geography for Pennsylvania |
 
-County permit segments are the Building Permits Survey. They are scaled so the counties add up to the state permit file. That cleaning step is documented in `docs/DATA_PROVENANCE.md`. The segments stay tagged observed because they are the survey, reconciled, not a policy scenario.
+County permit segments are the 2023–2025 Building Permits Survey county files (`data/sample/lab/PA.json`), summed directly into the state permit run-rate (`BPS 2023-2025`). That vintage rule is documented in `docs/DATA_PROVENANCE.md` and `src/model/permits.py`. The segments stay tagged observed because they are the survey, not a policy scenario.
 
 ## 3. Assumed, because a parcel extract is not in the model
 
@@ -94,4 +94,4 @@ A public lot-size extract for Pennsylvania would retag the lot screen from assum
 | assumed | A published assumption or an imputation. It is not a measurement for this place. |
 | calculated | Arithmetic in src/model/equations.py, using observed inputs and published assumptions. |
 
-Sources, all on the official data list: ACS 2019–2023 5-year summary file; Building Permits Survey annual state and county files, 2022–2024; Census population estimates NST-EST2024; Census 2024 county gazetteer; FHFA All-Transactions state house-price index. Licenses and vintages are in `docs/DATA_PROVENANCE.md`.
+Sources, all on the official data list: ACS 2019–2023 5-year summary file; Building Permits Survey annual county files, 2023–2025 (`BPS 2023-2025` for Pennsylvania; 2022–2024 for the nine screening-only states); Census population estimates NST-EST2024; Census 2024 county gazetteer; FHFA All-Transactions state house-price index. Licenses and vintages are in `docs/DATA_PROVENANCE.md`.

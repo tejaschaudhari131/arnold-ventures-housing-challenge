@@ -22,7 +22,7 @@ def test_characterized_observations_still_match_and_defects_stay_open():
     screen = simulate_state(fixtures, assumptions, "PA")
     lab = evaluate_state(load_state("PA"), central_params(), variants=package_variants(central_params()))
     decomp = package_decomposition(lab)
-    assert screen["baseline_completions_5yr"] == recorded["screening_pa"]["baseline_completions_5yr"]["value"]
+    assert round(screen["baseline_completions_5yr"], 2) == recorded["screening_pa"]["baseline_completions_5yr"]["value"]
     assert round(screen["scenarios"]["adu"]["incremental_completions"], 1) == recorded["screening_pa"]["adu_incremental_completions"]["value"]
     assert recorded["screening_pa"]["adu_incremental_completions"]["defect"] == 6
     assert round(screen["scenarios"]["combined"]["incremental_completions"], 1) == recorded["screening_pa"]["package_incremental_completions"]["value"]

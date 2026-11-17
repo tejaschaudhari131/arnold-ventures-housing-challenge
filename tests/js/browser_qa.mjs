@@ -64,6 +64,7 @@ function loadLab(search) {
     fetch() { return Promise.reject(new Error("offline")); },
     localStorage: { getItem() { return "1"; }, setItem() {} },
     URLSearchParams,
+    Array,
     Set,
     Object,
     Number,
@@ -110,6 +111,59 @@ if (cell({ completion: "nope" }, "completion") !== "—") throw new Error("non-n
 if (cell({ go_ahead_share: Infinity }, "go_ahead_share") !== "—") throw new Error("infinite share");
 if (cell({ delivered: 12.4 }, "delivered") !== "12") throw new Error("count " + cell({ delivered: 12.4 }, "delivered"));
 if (cell({ completion: 0.9 }, "completion") !== "90.0%") throw new Error("ratio " + cell({ completion: 0.9 }, "completion"));
+
+const labUsp = loadLab("?st=PA&on=adu,missing_middle,parking,fees&county=42003");
+if (labUsp.countyBottleneck({
+  results: { adu: { eligible: 1000, feasible: 350, central: 40 }, missing_middle: { eligible: 500, feasible: 100, central: 20 }, fees: { central: 10 }, package: { central: 55 } }
+}).id !== "zoning") {
+  throw new Error("expected zoning bottleneck");
+}
+if (labUsp.countyBottleneck({
+  results: { adu: { eligible: 1000, feasible: 100, central: 12 }, missing_middle: { eligible: 800, feasible: 50, central: 10 }, fees: { central: 18 }, package: { central: 30 } }
+}).id !== "fee") {
+  throw new Error("expected fee bottleneck");
+}
+if (labUsp.countyBottleneck({
+  results: { adu: { eligible: 1000, feasible: 20, central: 2 }, missing_middle: { eligible: 500, feasible: 10, central: 1 }, fees: { central: 1 }, package: { central: 4 } }
+}).id !== "market") {
+  throw new Error("expected market bottleneck");
+}
+
+const strictState = labUsp.applyPreset("strict");
+if (strictState.preset !== "strict" || strictState.reforms.length !== 4 || !strictState.overrides.adoption_lag_years) {
+  throw new Error("strict preset failed");
+}
+const pinnedA = labUsp.pinCurrent();
+if (pinnedA.state !== "PA" || pinnedA.reforms.length !== 4 || pinnedA.label.indexOf("custom") < 0) {
+  throw new Error("pinCurrent failed: " + JSON.stringify(pinnedA));
+}
+const compState = labUsp.applyPreset("compromise");
+if (compState.reforms.join(",") !== "adu,fees" || Object.keys(compState.overrides).length !== 0) {
+  throw new Error("compromise preset failed");
+}
+const defState = labUsp.applyPreset("default");
+if (defState.reforms.length !== 4 || Object.keys(defState.overrides).length !== 0) {
+  throw new Error("default preset failed");
+}
+
+const inspSandbox = { window: {}, document: { addEventListener() {}, querySelector() { return null; } }, String, Array };
+inspSandbox.window = inspSandbox;
+inspSandbox.globalThis = inspSandbox;
+createContext(inspSandbox);
+runInContext(readFileSync(new URL("../../src/web/static/inspector.js", import.meta.url), "utf8"), inspSandbox);
+const insp = inspSandbox.StateframeInspector;
+if (insp.classifyPath("counties.42003.results.adu.acs_moe", "", "") !== "observed") {
+  throw new Error("inspector observed classification");
+}
+if (insp.classifyPath("by_name.fee_per_unit.central", "", "") !== "assumed") {
+  throw new Error("inspector assumed classification");
+}
+if (insp.classifyPath("statewide.results.package.central", "", "") !== "calculated") {
+  throw new Error("inspector calculated classification");
+}
+if (!insp.describeOrigin("display_numbers.PA.lab_adu", "", true).code.includes("adu_fee_note.py")) {
+  throw new Error("inspector describeOrigin display_numbers");
+}
 
 const app = readFileSync(new URL("../../src/web/static/app.js", import.meta.url), "utf8");
 const bandSandbox = { Number, Math, Object, isFinite };

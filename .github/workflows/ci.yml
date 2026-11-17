@@ -17,13 +17,17 @@ on:
 jobs:
   # --- Script-based (language-agnostic, default) ------------------------------
   test:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - name: Set up
         run: |
@@ -43,6 +47,17 @@ jobs:
             echo "here (or uncomment the job for your language) so CI runs your tests."
             exit 1
           fi
+
+      - name: Verify locked Lab results and frontend suites
+        run: |
+          if [ -x .venv/bin/python ]; then
+            .venv/bin/python -m src.lab.check
+          else
+            python3 -m src.lab.check
+          fi
+          for suite in tests/js/*.mjs; do
+            node "$suite"
+          done
 
   # --- Python -----------------------------------------------------------------
   # test:
