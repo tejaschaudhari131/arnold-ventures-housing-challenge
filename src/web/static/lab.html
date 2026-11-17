@@ -30,6 +30,7 @@
     <p class="entry-actions">
       <a class="btn pri" href="/brief">Quick answer for my state</a>
       <a class="btn" href="#results">Open the full model</a>
+      <a class="btn" href="/deck">Executive deck (16 slides)</a>
     </p>
     <p id="state-notice" class="callout state-notice" role="status" hidden></p>
   </header>
@@ -49,8 +50,10 @@
       <div class="recon" id="recon"><!-- ENGINE_GAP --></div>
     </div>
     <div class="mapcard">
+      <div class="metric-chips" id="map-metrics" role="group" aria-label="Map color metric"></div>
       <div id="map-stage"></div>
-      <div class="legend"><span>fewer</span><i></i><span>more extra homes</span> · <a class="skip-map" href="#county-table">Skip map — use the table</a></div>
+      <div class="legend" id="map-legend"><span>fewer</span><i></i><span>more extra homes</span> · <a class="skip-map" href="#county-table">Skip map — use the table</a></div>
+      <p class="help bottleneck-legend" id="bottleneck-legend" hidden></p>
           <label class="county-pick" for="county-find">Find a county
         <input id="county-find" type="search" autocomplete="off">
       </label>
@@ -175,6 +178,7 @@
             <h3 id="checked-title">Checked against other data</h3>
             <p id="checked-body">The incomplete-data estimator is compared with the parcel-informed estimate on Connecticut, Wisconsin, Utah, and Hawaii. That is a cross-check of two model runs, not a backtest against homes actually built, so this card is not labeled validated.</p>
             <p id="checked-live"></p>
+            <div id="data-roi" class="data-roi"></div>
           </section>
         </div>
       </section>
@@ -194,6 +198,8 @@
         <button type="button" id="reset">Reset</button>
       </div>
       <p class="help" id="envelope-note">Move one slider. The middle estimate, the local-rules range, and the Census survey error update. The likely range stays on the locked run until a new published run replaces it.</p>
+      <div id="pin-box" class="pin-box"></div>
+      <div id="preset-box" class="preset-box"></div>
       <div id="sliders"></div>
       <div class="walk" id="walk" hidden>
         <p class="aside-label">Allegheny walkthrough</p>
@@ -226,6 +232,7 @@
   </footer>
   <script src="/fmt.js"></script>
   <script src="/frame.js"></script>
+  <script src="/inspector.js"></script>
   <script src="/lab.js"></script>
 </body>
 </html>

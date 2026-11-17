@@ -232,4 +232,39 @@ for (const file of ["src/web/static/lab.js", "src/web/static/frame.js", "src/web
   });
 }
 
+const unavailHead = Frame.headlineParts({
+  sid: "adu", status: "unavailable", stateName: "Pennsylvania", endYear: "2031",
+  low: null, high: null, middle: 2639, baseline: 138471, paths: { middle: "statewide.results.adu.central" }
+});
+if (/Likely\s+Likely/i.test(unavailHead.html) || /Likely\s+Likely/i.test(unavailHead.live)) {
+  throw new Error("duplicate Likely in unavailable headline: " + unavailHead.html);
+}
+const unavailMini = Frame.miniTotal({
+  sid: "adu", status: "unavailable", low: null, high: null, middle: 2639, paths: { middle: "statewide.results.adu.central" }
+});
+if (/Likely\s+Likely/i.test(unavailMini)) {
+  throw new Error("duplicate Likely in unavailable miniTotal: " + unavailMini);
+}
+
+const diffHtml = Frame.modelDiffHtml({
+  completion_ratio_adu: { central: 0.90 },
+  completion_ratio_small: { central: 0.92 }
+});
+if (diffHtml.indexOf("Both models apply the same finish share") < 0 || diffHtml.indexOf("assumes started projects finish") >= 0) {
+  throw new Error("stale modelDiffHtml copy: " + diffHtml);
+}
+
+const zeroScreening = Frame.briefAnswer({
+  screening: true, screeningMiddle: 0, stateName: "Texas", endYear: ""
+});
+if (zeroScreening.indexOf(">0<") < 0 || zeroScreening.indexOf("over five years") < 0 || /by\s+in/.test(zeroScreening)) {
+  throw new Error("zero/blank-year screening briefAnswer broken: " + zeroScreening);
+}
+const bandScreening = Frame.briefAnswer({
+  screening: true, screeningMiddle: 1500, low: 900, high: 2100, stateName: "Texas", endYear: "2030"
+});
+if (bandScreening.indexOf(">900<") < 0 || bandScreening.indexOf(">2,100<") < 0 || bandScreening.indexOf("+1,500") < 0 || bandScreening.indexOf("by 2030") < 0) {
+  throw new Error("banded screening briefAnswer broken: " + bandScreening);
+}
+
 console.log("frame ux ok");

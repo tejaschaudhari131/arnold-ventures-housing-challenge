@@ -72,7 +72,7 @@ Direct dependencies are pinned in `requirements.txt`. `tests/test_licenses.py` r
 | ---------- | ------- | ------------------- | ----- |
 | PyYAML 6.0.2 | MIT | Runtime | `yaml.safe_load` only |
 | pytest 8.3.5 | MIT | Dev | Test runner |
-| ruff 0.14.2 | MIT | Dev | Linter invoked by `scripts/test.sh` when the venv exists |
+| ruff 0.14.2 | MIT | Dev | Linter invoked by `scripts/test.sh` (via `.venv` or `python -m ruff`) |
 | pluggy (pytest) | MIT | Dev, transitive | Not imported by the app |
 | iniconfig (pytest) | MIT | Dev, transitive | Not imported by the app |
 | packaging (pytest) | Apache-2.0 or BSD | Dev, transitive | Not imported by the app |
@@ -83,9 +83,9 @@ The web client has no npm dependencies, no chart library, and no remote font. Py
 
 # Security settings
 
-`SECURITY.md` and `docs/REPO_SETUP_GUIDE.md` describe the dashboard toggles for secret scanning, Dependabot alerts, and CodeQL. This repository commits `.github/workflows/codeql.yml` (Python and JavaScript) and `.github/dependabot.yml` (pip and GitHub Actions). The HTTP server binds to 127.0.0.1 by default, caps JSON bodies at 64 KB, uses a fixed route map (`STATIC_FILES` plus `/api/...` and allowlisted `/docs/*.md`), and clamps assumption overrides to the published band. Responses send `Content-Security-Policy`, `Permissions-Policy`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: no-referrer`. Parcel and WPRDC queries are not allowed to request owner or mailing fields. On Vercel, `GET /api/lab/results` reads committed files only (`allow_compute=False`). Lab acquisition reaches only www2.census.gov, data.wprdc.org, and www.huduser.gov.
+`SECURITY.md` and `docs/REPO_SETUP_GUIDE.md` describe the dashboard toggles for secret scanning, Dependabot alerts, and CodeQL. This repository commits `.github/workflows/codeql.yml` (Python and JavaScript) and `.github/dependabot.yml` (pip and GitHub Actions, with `github/codeql-action*` grouped so `init`, `autobuild`, and `analyze` stay on one version). The HTTP server binds to 127.0.0.1 by default, caps JSON bodies at 64 KB, uses a fixed route map (`STATIC_FILES` plus `/api/...` and allowlisted `/docs/*.md`), and clamps assumption overrides to the published band. Responses send `Content-Security-Policy`, `Permissions-Policy`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: no-referrer`. Parcel and WPRDC queries are not allowed to request owner or mailing fields. On Vercel, `GET /api/lab/results` reads committed files only (`allow_compute=False`). Lab acquisition reaches only www2.census.gov, data.wprdc.org, and www.huduser.gov.
 
-Dependabot has opened version-bump pull requests #2–#5 (pytest, PyYAML, setuptools, ruff). They are left unmerged so the locked pins, the SBOM, and the license test stay on the versions this write-up names.
+Dependabot has opened Python version-bump pull requests (pytest, PyYAML, setuptools, ruff) and GitHub Actions bumps. Python bumps are left unmerged until `requirements.txt`, `docs/sbom.cdx.json`, and `tests/test_licenses.py` are updated in one commit so the locked pins and SBOM stay aligned.
 
 # Other
 

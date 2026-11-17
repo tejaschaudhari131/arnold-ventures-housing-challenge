@@ -118,15 +118,17 @@ def to_json(results: list[dict[str, Any]], scenario: dict[str, Any] | None = Non
 def to_markdown(results: list[dict[str, Any]], note: str = "") -> str:
     """A policymaker table: baseline completions and net new completions by scenario."""
     lines = [
-        "| State | Tier | Baseline completions | ADUs | Missing middle | TOD | Parking | Fees | Package |",
-        "| ----- | ---- | -------------------: | ---: | -------------: | --: | ------: | ---: | ------: |",
+        "| State | Tier | Permit data | Baseline completions | ADUs | Missing middle | TOD | Parking | Fees | Package |",
+        "| ----- | ---- | ----------- | -------------------: | ---: | -------------: | --: | ------: | ---: | ------: |",
     ]
     for result in results:
         scenarios = result["scenarios"]
+        vintage = (result.get("meta") or {}).get("permit_vintage") or "BPS"
         lines.append(
-            "| {state} | {tier} [observed] | {base:,.0f} [calculated] | {adu:,.0f} [calculated] | {mm:,.0f} [calculated] | {tod:,.0f} [calculated] | {park:,.0f} [calculated] | {fee:,.0f} [calculated] | {pkg:,.0f} [calculated] |".format(
+            "| {state} | {tier} [classification] | {vintage} [observed] | {base:,.0f} [calculated] | {adu:,.0f} [calculated] | {mm:,.0f} [calculated] | {tod:,.0f} [calculated] | {park:,.0f} [calculated] | {fee:,.0f} [calculated] | {pkg:,.0f} [calculated] |".format(
                 state=result["state"],
                 tier=result["tier"],
+                vintage=vintage,
                 base=result["baseline_completions_5yr"],
                 adu=scenarios["adu"]["incremental_completions"],
                 mm=scenarios["missing_middle"]["incremental_completions"],

@@ -27,9 +27,13 @@ def format_table(result: dict, county: str | None = None) -> str:
         title = f"{result['state']} statewide"
     lines = [title, f"{'Scenario':44s} {'Delivered 5y':>13s} {'vs Baseline':>12s} {'Eligible':>12s} {'Feasible':>10s}"]
     for sid, row in source.items():
+        delivery = round(float(row["delivery"]), 1)
+        delta = round(float(row["delta"]), 1)
+        eligible = round(float(row.get("eligible", 0.0)), 1)
+        feasible = round(float(row.get("feasible", 0.0)), 1)
         lines.append(
-            f"{scenarios[sid]['label']:44s} {row['delivery']:>13,.0f} {row['delta']:>+12,.0f} "
-            f"{row.get('eligible', 0):>12,.0f} {row.get('feasible', 0):>10,.0f}"
+            f"{scenarios[sid]['label']:44s} {delivery:>13,.0f} {delta:>+12,.0f} "
+            f"{eligible:>12,.0f} {feasible:>10,.0f}"
         )
     return "\n".join(lines)
 

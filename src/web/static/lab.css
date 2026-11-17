@@ -730,3 +730,24 @@ html { scroll-padding-top: 120px; }
     transition: none !important;
   }
 }
+.mapcard .metric-chips button {
+  background: rgba(255, 253, 248, 0.92);
+  color: var(--navy);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+.mapcard .metric-chips button[aria-pressed="true"] {
+  background: var(--sun);
+  border-color: var(--sun);
+  color: var(--navy);
+  font-weight: 700;
+}
+.mapcard .bottleneck-legend {
+  background: rgba(251, 246, 236, 0.96);
+  color: var(--ink);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.hero .recon .tag {
+  color: var(--tag-calculated-fg);
+}
+

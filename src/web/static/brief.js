@@ -85,15 +85,55 @@
     return String(start + Number(catalog.horizon_years) - 1);
   }
 
-  function renderCounty() {
+  function screeningReforms() {
+    return {
+      adu: selected.has("adu") ? 1 : 0,
+      missing_middle: selected.has("missing_middle") ? 1 : 0,
+      tod: 0,
+      parking: selected.has("parking") ? 1 : 0,
+      fees: selected.has("fees") ? 1 : 0
+    };
+  }
+
+  function renderCounty(mixDoc) {
     var id = sid();
     var sw = doc.statewide.results;
     var row = id && id !== "selection" ? sw[id] : null;
     var name = COUNTY[stateCode];
-    if (selected.size > 1 && selected.size < 4) {
-      answer.innerHTML = "<p>Pick one change, or all four. A mix is not modeled.</p>";
+    if (!selected.size) {
+      answer.innerHTML = Frame.briefAnswer({ sid: "" });
       higher.innerHTML = "";
-      limits.innerHTML = "";
+      limits.innerHTML = Frame.limitsHtml({ sid: "", ratios: catalog.completion_ratios });
+      return;
+    }
+    if (selected.size > 1 && selected.size < 4) {
+      if (!mixDoc || !mixDoc.statewide) {
+        answer.innerHTML = "<p>Pick one change, or all four, to see a number.</p>";
+        higher.innerHTML = "";
+        limits.innerHTML = "";
+        return;
+      }
+      var msw = mixDoc.statewide;
+      answer.innerHTML = Frame.briefAnswer({
+        sid: "mix",
+        status: "unavailable",
+        stateName: name,
+        endYear: endYear(),
+        label: "Your mix",
+        low: null,
+        high: null,
+        middle: msw.central,
+        baseline: msw.baseline,
+        draws: doc.draws,
+        paths: {
+          middle: "mix.statewide.central",
+          baseline: "statewide.results.baseline.central",
+          pct: "mix.statewide.lift",
+          endYear: "assumptions.end_year"
+        }
+      });
+      higher.innerHTML = "<li>Pick one change, or all four, to rank what moves the result most.</li>";
+      limits.innerHTML = Frame.limitsHtml({ sid: "package", ratios: catalog.completion_ratios });
       return;
     }
     var opts = {
@@ -143,17 +183,36 @@
     return String(Math.round(Number(spec.central) * 100) / 100);
   }
 
-  function renderScreening(payload) {
+  function renderScreening(payload, sens) {
+    if (!selected.size) {
+      answer.innerHTML = Frame.briefAnswer({ sid: "" });
+      higher.innerHTML = "";
+      limits.innerHTML = "";
+      return;
+    }
     var name = SCREENING[stateCode] || COUNTY[stateCode] || stateCode;
     var middle = payload.scenarios && payload.scenarios.combined
       ? payload.scenarios.combined.incremental_completions : null;
+    var mc = sens && sens.monte_carlo ? sens.monte_carlo : null;
     answer.innerHTML = Frame.briefAnswer({
       screening: true,
       screeningMiddle: middle,
+      low: mc ? mc.p10 : null,
+      high: mc ? mc.p90 : null,
       stateName: name,
-      endYear: ""
+      endYear: endYear()
     });
-    higher.innerHTML = "<li>A rough estimate does not rank assumptions.</li>";
+    var topRows = (sens && sens.tornado && sens.tornado.parameters ? sens.tornado.parameters : []).slice(0, 3);
+    if (topRows.length && window.StateframeFmt) {
+      higher.innerHTML = topRows.map(function (row) {
+        var reach = Math.max(Number(row.low) || 0, Number(row.high) || 0);
+        return "<li>Changing " + esc(String(row.label || row.name).toLowerCase()) +
+          " within its tested range could push the total to about " +
+          window.StateframeFmt.signedHomes(reach) + ".</li>";
+      }).join("");
+    } else {
+      higher.innerHTML = "<li>Open the full model to test each setting on its own.</li>";
+    }
     limits.innerHTML = "<section class=\"limits\"><h3>What this can't tell you</h3><ul>" +
       "<li>These are estimates under stated assumptions, not predictions.</li>" +
       "<li>They say nothing about prices, rents, or who gets the homes.</li></ul>" +
@@ -162,21 +221,49 @@
 
   function load() {
     writeUrl();
+    var assumptions = catalog ? Promise.resolve(catalog) : fetch("/api/lab/assumptions").then(function (res) { return res.json(); });
+    if (model !== "county" && !selected.size) {
+      setStatus("Updating results");
+      answer.setAttribute("aria-busy", "true");
+      assumptions.then(function (cat) {
+        catalog = cat;
+        renderScreening({}, null);
+        answer.setAttribute("aria-busy", "false");
+        setStatus("");
+      }).catch(function () {
+        answer.setAttribute("aria-busy", "false");
+        setStatus("");
+      });
+      return;
+    }
     setStatus("Updating results");
     answer.setAttribute("aria-busy", "true");
+    var reforms = screeningReforms();
     var pending = model === "county"
       ? fetch("/api/lab/results?state=" + stateCode).then(function (res) { return res.json(); })
       : fetch("/api/simulate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ state: stateCode })
+        body: JSON.stringify({ state: stateCode, reforms: reforms })
       }).then(function (res) { return res.json(); });
-    var assumptions = catalog ? Promise.resolve(catalog) : fetch("/api/lab/assumptions").then(function (res) { return res.json(); });
-    Promise.all([pending, assumptions]).then(function (parts) {
+    var extra = model === "county"
+      ? (selected.size > 1 && selected.size < 4
+        ? fetch("/api/lab/mix", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ state: stateCode, reforms: Array.from(selected) })
+        }).then(function (res) { return res.ok ? res.json() : null; }).catch(function () { return null; })
+        : Promise.resolve(null))
+      : fetch("/api/sensitivity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: stateCode, scenario: "combined", draws: 80, reforms: reforms })
+      }).then(function (res) { return res.ok ? res.json() : null; }).catch(function () { return null; });
+    Promise.all([pending, assumptions, extra]).then(function (parts) {
       doc = parts[0];
       catalog = parts[1];
-      if (model === "county") renderCounty();
-      else renderScreening(doc);
+      if (model === "county") renderCounty(parts[2]);
+      else renderScreening(doc, parts[2]);
       answer.setAttribute("aria-busy", "false");
       setStatus("");
     }).catch(function () {

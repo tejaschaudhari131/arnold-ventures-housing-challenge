@@ -30,7 +30,7 @@ All eleven challenge states run through one schema (`src/data/schema.py`) and on
 
 ## 3. Baseline
 
-Let \(B_s\) be the 2022–2024 average annual permits in segment \(s\) (single-family, 2–4 units, 5+ units). Over \(T = 5\) years at annual trend \(g\),
+Let \(B_s\) be the multi-year average annual permits in segment \(s\) (single-family, 2–4 units, 5+ units; 2023–2025 for Pennsylvania and New Hampshire, 2022–2024 for the other nine states). Over \(T = 5\) years at annual trend \(g\),
 
 \[
 H(g, T) = \begin{cases} T & \text{if } g = 0 \\ \dfrac{(1+g)^T - 1}{g} & \text{otherwise.} \end{cases}
@@ -78,7 +78,7 @@ Cost is hard cost per square foot (central $250) times the state's single-family
 
 Annual adoption hazard is \(\min(0.06,\ 0.004 \times e^{1.2 \times \text{margin}})\). The five-year share is \(1 - e^{-\text{hazard} \times 5}\). Permits are eligible homes times that share, then capped at 4.5 percent of eligible homes so the central hazard does not silently hit a ceiling. The high hazard band does hit it in some states. Completions apply the 0.92 ADU ratio.
 
-Already-legal shares, central: Pennsylvania 0.15, Connecticut 0.75 (Public Act 21-29; the result is the residual gap), Wisconsin 0.10, Utah 0.35, Oregon 0.70, Hawaii 0.40, Arizona 0.25, Virginia 0.20, Tennessee 0.15, Rhode Island 0.30, New Hampshire 0.45 (RSA 674:72). These are assumptions with low/high bands, not a measurement of each ordinance.
+Already-legal shares, central: Pennsylvania 0.15, Connecticut 0.67 (Public Act 21-29 with municipal opt-outs; band 0.32–0.75; the result is the residual gap), Wisconsin 0.10, Utah 0.35, Oregon 0.70, Hawaii 0.40, Arizona 0.25, Virginia 0.20, Tennessee 0.15, Rhode Island 0.30, New Hampshire 0.45 (RSA 674:72). These are assumptions with low/high bands, not a measurement of each ordinance.
 
 ## 6. Scenario 2 — missing middle
 
@@ -94,7 +94,7 @@ Both pathways are paced by a cumulative hazard (central annual pace 0.08). Compl
 
 ## 7. Scenario 3 — transit-oriented density
 
-Major transit stops are defined in `data/sample/transit_inventory.json` and justified as follows. A major stop is a local fixed-guideway station (heavy rail, light rail, commuter rail, streetcar) or a bus-rapid-transit station, or a stop on a bus corridor with scheduled headway of 15 minutes or better. Intercity Amtrak-only stops are excluded. New Hampshire has zero rail and zero BRT stations under that definition, so its transit scenario is about 8 completions. Downeaster stops are intercity and are not reclassified to manufacture a result.
+Major transit stops are defined in `data/sample/transit_inventory.json` and justified as follows. A major stop is a local fixed-guideway station (heavy rail, light rail, commuter rail, streetcar) or a bus-rapid-transit station, or a stop on a bus corridor with scheduled headway of 15 minutes or better. Intercity Amtrak-only stops are excluded. New Hampshire has zero rail and zero BRT stations under that definition, so its transit scenario is about 5 completions. Downeaster stops are intercity and are not reclassified to manufacture a result.
 
 Walkshed area is
 
@@ -134,20 +134,20 @@ Missing middle and transit then share one absorption cap. The five components su
 
 | State | Screen | ADUs | Missing middle | TOD | Package |
 | ----- | ------ | ---: | -------------: | --: | ------: |
-| CT | Full | 3,077 | 4,813 | 2,514 | 11,033 |
-| CT | Hidden parcels | 2,856 (−7.2%) | 4,813 (0) | 2,514 (0) | 10,812 (−2.0%) |
-| CT | State median | 2,694 (−12%) | 1,524 (−68%) | 359 (−86%) | 7,446 (−33%) |
-| WI | Full | 15,846 | 1,798 | 56 | 25,445 |
-| WI | Hidden parcels | 16,002 (+1.0%) | 1,798 | 56 | 25,602 (+0.6%) |
-| WI | State median | 16,246 | 693 (−61%) | 24 (−56%) | 23,420 (−8%) |
-| UT | Full | 8,576 | 10,300 | 1,091 | 27,809 |
-| UT | Hidden parcels | 7,929 (−7.5%) | 10,300 | 1,091 | 27,161 (−2.3%) |
-| UT | State median | 7,850 (−8.5%) | 8,787 (−15%) | 459 (−58%) | 24,828 (−11%) |
-| HI | Full | 2,378 | 5,425 | 118 | 8,958 |
-| HI | Hidden parcels | 2,557 (+7.5%) | 5,834 (+7.5%) | 118 | 9,558 (+6.7%) |
-| HI | State median | 2,636 (+11%) | 5,459 (+0.6%) | 77 (−35%) | 9,171 (+2.4%) |
+| CT | Full | 2,650 | 3,452 | 1,481 | 8,469 |
+| CT | Hidden parcels | 2,460 (−7.2%) | 3,452 (0) | 1,481 (0) | 8,278 (−2.3%) |
+| CT | State median | 2,319 (−12.5%) | 986 (−71%) | 212 (−86%) | 4,598 (−46%) |
+| WI | Full | 10,329 | 1,164 | 33 | 14,103 |
+| WI | Hidden parcels | 10,431 (+1.0%) | 1,164 | 33 | 14,205 (+0.7%) |
+| WI | State median | 10,589 (+2.5%) | 506 (−57%) | 14 (−57%) | 12,945 (−8.2%) |
+| UT | Full | 5,656 | 6,662 | 643 | 16,386 |
+| UT | Hidden parcels | 5,230 (−7.5%) | 6,662 | 643 | 15,956 (−2.6%) |
+| UT | State median | 5,126 (−9.4%) | 5,522 (−17%) | 270 (−58%) | 14,408 (−12.1%) |
+| HI | Full | 1,552 | 3,511 | 70 | 5,873 |
+| HI | Hidden parcels | 1,669 (+7.5%) | 3,777 (+7.6%) | 70 | 6,296 (+7.2%) |
+| HI | State median | 1,720 (+10.9%) | 3,581 (+2.0%) | 45 (−35%) | 6,030 (+2.7%) |
 
-Hiding Hawaii's land-use wall sets the geography-eligible share to 1.0 (the tier-2 default) instead of 0.93. That is why ADUs and missing middle rise there, and why the Monte Carlo band is not wider (0.93× the full band). Connecticut's band widens by 1.07× and Wisconsin's by 1.26× when the extract is hidden and the feasibility dispersion is scaled by the tier-2 multiplier 1.35. The practical recommendation: do not wait for a statewide parcel file to rank these reforms. County ACS prices and county permits already carry the variation that moves missing middle and transit. Lot-size microdata moves the ADU pathway by a few percent inside this five-year stock model.
+Hiding Hawaii's land-use wall sets the geography-eligible share to 1.0 (the tier-2 default) instead of 0.93. That is why ADUs and missing middle rise there, and why its package Monte Carlo band widens modestly (1.09× the full band). Connecticut's band widens by 1.17×, Wisconsin's by 1.27×, and Utah's changes to 0.92× when the extract is hidden and the feasibility dispersion is scaled by the tier-2 multiplier 1.35. The practical recommendation: do not wait for a statewide parcel file to rank these reforms. County ACS prices and county permits already carry the variation that moves missing middle and transit. Lot-size microdata moves the ADU pathway by a few percent inside this five-year stock model.
 
 ## 11. Calibration anchors
 

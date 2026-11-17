@@ -443,3 +443,314 @@ input[type="range"]::-moz-range-thumb {
 @media (max-width: 640px) {
   .county-pick { display: block; }
 }
+
+/* --- Model-to-model ADU bridge & package comparison bars --- */
+.bridge-waterfall,
+.gap-bars {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0 0 10px;
+}
+.bridge-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.bridge-row {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.4fr) minmax(80px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  margin: 5px 0;
+  font-size: 13px;
+}
+.bridge-label {
+  color: var(--ink);
+  line-height: 1.3;
+}
+.bridge-track {
+  display: block;
+  height: 12px;
+  background: #ece5d8;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.bridge-track i {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+}
+.bridge-bar-county { background: var(--teal); }
+.bridge-bar-step { background: var(--navy); }
+.bridge-bar-core { background: var(--copper); }
+.bridge-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--ink);
+}
+.bridge-prose,
+.gap-prose {
+  margin: 6px 0 0;
+}
+
+/* --- Live Click-Any-Number Provenance & Lineage Inspector --- */
+.inspect-toggle {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  min-height: 28px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--navy);
+  background: var(--paper-2);
+  color: var(--navy);
+  cursor: pointer;
+}
+.inspect-toggle[aria-pressed="true"] {
+  background: var(--navy);
+  color: #fff;
+}
+body.inspect-on [data-bind],
+body.inspect-on [data-derived],
+body.inspect-on .num {
+  outline: 1.5px dashed var(--teal);
+  outline-offset: 2px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.lineage-popover {
+  position: fixed;
+  z-index: 80;
+  width: min(350px, calc(100vw - 32px));
+  background: #fffdf8;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-top: 5px solid var(--navy);
+  border-radius: 12px;
+  box-shadow: 0 14px 36px rgba(28, 36, 48, 0.22);
+  padding: 12px 14px;
+  font-size: 13px;
+}
+.lineage-popover[hidden] { display: none; }
+.lineage-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.lineage-val {
+  font: 700 22px/1.2 var(--serif);
+  color: var(--navy);
+  margin: 4px 0 8px;
+}
+.lineage-meta {
+  margin: 4px 0;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.lineage-meta span {
+  color: var(--muted);
+  font-weight: 600;
+}
+.lineage-meta code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: #f3ede0;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.lineage-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.lineage-actions button {
+  font: inherit;
+  font-size: 12px;
+  min-height: 30px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+}
+.lineage-actions button.pri {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* --- Committee Amendment Presets & Pin-Compare (A vs. B) --- */
+.pin-box,
+.preset-box {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  margin: 0 0 10px;
+}
+.pin-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pin-btns {
+  display: inline-flex;
+  gap: 4px;
+}
+.pin-act,
+.preset-btn {
+  font: inherit;
+  font-size: 12px;
+  min-height: 28px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+.pin-act:hover,
+.preset-btn:hover {
+  border-color: var(--navy);
+  background: var(--sky);
+}
+.preset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 6px;
+}
+.pin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 6px;
+}
+.pin-table th,
+.pin-table td {
+  padding: 4px 4px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.pin-table th:first-child,
+.pin-table td:first-child {
+  text-align: left;
+}
+
+/* --- 3-Mode County Map Toggle & Bottleneck Archetype Badges --- */
+.metric-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+.metric-chips button {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 28px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fffdf8;
+  color: var(--ink);
+  cursor: pointer;
+}
+.metric-chips button[aria-pressed="true"] {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+.bottleneck-legend {
+  margin: 4px 0 8px;
+  font-size: 12px;
+}
+.b-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 3px;
+}
+.b-dot.zoning { background: #0e6e5c; }
+.b-dot.fee { background: #d99116; }
+.b-dot.market { background: #c8553d; }
+
+.b-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #fff;
+}
+.b-pill.zoning { background: #0e6e5c; }
+.b-pill.fee { background: #8a5a12; }
+.b-pill.market { background: #a83c28; }
+.bottleneck-note {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+
+/* --- Uncertainty Source Breakdown & Data-ROI Card --- */
+.data-roi {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.roi-title {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+.roi-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.3fr) minmax(70px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  margin: 5px 0;
+  font-size: 12px;
+}
+.roi-track {
+  display: block;
+  height: 10px;
+  background: #ece5d8;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.roi-track i {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+}
+.roi-behav { background: var(--navy); }
+.roi-zoning { background: var(--teal); }
+.roi-census { background: var(--copper); }
+.roi-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .bridge-row,
+  .roi-row {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+  .bridge-val { text-align: left; }
+  .preset-grid { grid-template-columns: 1fr; }
+}
+

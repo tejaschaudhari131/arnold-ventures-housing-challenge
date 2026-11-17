@@ -341,7 +341,8 @@ def _compose(doc: dict[str, Any], audience: str, html: bool = False) -> str:
         other = f"See the {_link(href, label)}."
         # The bridge stays outside <details> so the two fee figures are explained on screen.
         gap = f"<p class='baseline-gap'>{_baseline_note_html(doc)}</p>"
-        return f"{_fees_html(doc)} {_lead_html(doc, audience)} {handbook} {_walk_html(doc)} {other} {gap}"
+        bridge = _waterfall_html(doc)
+        return f"{bridge}<p class='bridge-prose'>{_fees_html(doc)} {_lead_html(doc, audience)} {handbook} {_walk_html(doc)} {other}</p>{gap}"
     if audience == "docs":
         # engine_gap_text already names the Handbook scenarios and links both pages.
         return f"{fees} {lead} {walk} {engine_gap_text(doc, 'docs')} {doc['baseline_note']}"
@@ -350,6 +351,66 @@ def _compose(doc: dict[str, Any], audience: str, html: bool = False) -> str:
 
 def _num(doc: dict[str, Any], key: str, text: str) -> str:
     return _bind(_display_path(doc, key), text)
+
+
+def _waterfall_html(doc: dict[str, Any]) -> str:
+    """Visual 5-step ADU bridge from county lot-level model to statewide screening model."""
+    place = escape(str(doc.get("state_name") or doc["state"]))
+    lab_fee = _money(doc["lab_fee"])
+    core_fee = _money(doc["core_fee"])
+    rows = [
+        (
+            "lab_adu",
+            f"1. County model · Handbook {lab_fee} fee",
+            int(doc["lab_adu"]),
+            "bridge-bar-county",
+        ),
+        (
+            "after_fee",
+            f"2. County model · {core_fee} ADU fee",
+            int(doc["after_fee"]),
+            "bridge-bar-step",
+        ),
+        (
+            "after_yield",
+            "3. + Homeowner cap rate & zero opex",
+            int(doc["after_yield"]),
+            "bridge-bar-step",
+        ),
+        (
+            "after_lags",
+            "4. + Drop adoption & build lags",
+            int(doc["after_lags"]),
+            "bridge-bar-step",
+        ),
+        (
+            "core_adu",
+            f"5. Screening model · {core_fee} ADU fee",
+            int(doc["core_adu"]),
+            "bridge-bar-core",
+        ),
+    ]
+    peak = max([abs(val) for _, _, val, _ in rows] + [1])
+    items = []
+    for key, step_label, val, cls in rows:
+        pct_w = max(2.0, min(100.0, (max(0, val) / peak) * 100.0))
+        bound_val = _num(doc, key, _homes(val))
+        items.append(
+            f'<div class="bridge-row">'
+            f'<span class="bridge-label">{escape(step_label)}</span>'
+            f'<span class="bridge-track" aria-hidden="true">'
+            f'<i class="{cls}" style="width:{pct_w:.1f}%"></i></span>'
+            f'<span class="bridge-val">{bound_val} <abbr class="tag calculated">calculated</abbr></span>'
+            f"</div>"
+        )
+    return (
+        f'<div class="bridge-waterfall" role="group" '
+        f'aria-label="Why {place} ADU estimates differ between the county model and the screening model">'
+        f'<p class="bridge-title"><strong>Model-to-model ADU bridge ({place})</strong> · '
+        f"Walking the county lot model to the statewide screening model one assumption at a time</p>"
+        + "".join(items)
+        + "</div>"
+    )
 
 
 def _fees_html(doc: dict[str, Any]) -> str:
@@ -447,6 +508,19 @@ def _engine_gap_html(doc: dict[str, Any], audience: str, href: str, label: str) 
     core_fee = _num(doc, "core_fee", _money(doc["core_fee"]))
     lab_pkg = _num(doc, "lab_package", _homes(doc["lab_package"]))
     core_pkg = _num(doc, "core_package", _homes(doc["core_package"]))
+    peak = max(abs(int(doc["lab_package"])), abs(int(doc["core_package"])), 1)
+    lab_w = max(2.0, min(100.0, (max(0, int(doc["lab_package"])) / peak) * 100.0))
+    core_w = max(2.0, min(100.0, (max(0, int(doc["core_package"])) / peak) * 100.0))
+    mini = (
+        f'<div class="gap-bars" role="group" aria-label="Package comparison between county Lab and screening model">'
+        f'<div class="bridge-row"><span class="bridge-label">County Lab (Handbook fees, lot competition)</span>'
+        f'<span class="bridge-track" aria-hidden="true"><i class="bridge-bar-county" style="width:{lab_w:.1f}%"></i></span>'
+        f'<span class="bridge-val">{lab_pkg}</span></div>'
+        f'<div class="bridge-row"><span class="bridge-label">11-State Screening (includes TOD, lower ADU fee)</span>'
+        f'<span class="bridge-track" aria-hidden="true"><i class="bridge-bar-core" style="width:{core_w:.1f}%"></i></span>'
+        f'<span class="bridge-val">{core_pkg}</span></div>'
+        f"</div>"
+    )
     if audience == "core":
         text = (
             f"These headline numbers are the core screening model. It uses a {core_fee} ADU fee. "
@@ -461,7 +535,7 @@ def _engine_gap_html(doc: dict[str, Any], audience: str, href: str, label: str) 
             f"{core_fee} ADU fee and a statewide screening model. For {place} that core package "
             f"is {core_pkg}, against {lab_pkg} here."
         )
-    return f"{text} {_link(href, label)}."
+    return f"{mini}<p class='gap-prose'>{text} {_link(href, label)}. <a href=\"#adu-fee-note\" style=\"display:inline-block;min-height:24px\">See 5-step bridge</a>.</p>"
 
 
 def note_text(audience: str = "docs") -> str:
