@@ -47,9 +47,9 @@ def _county_archetypes(doc: dict[str, Any]) -> dict[str, int]:
         legal_top = max(float(adu.get("central", 0.0)), float(mm.get("central", 0.0)))
         pkg_c = float(pkg.get("central", 0.0))
         fee_c = float(fees.get("central", 0.0))
-        if share >= 0.25:
+        if share >= 0.06 and legal_top > fee_c:
             counts["zoning"] += 1
-        elif pkg_c >= 15.0 and (fee_c >= legal_top or pkg_c >= 1.4 * max(legal_top, 1.0)):
+        elif pkg_c >= 15.0 and (fee_c >= 0.6 * max(legal_top, 1.0) or pkg_c >= 1.35 * max(legal_top, 1.0)):
             counts["fee"] += 1
         else:
             counts["market"] += 1
@@ -203,7 +203,7 @@ def render_deck_html() -> str:
         f"""<section class="slide" data-slide="3">
           <p class="kicker">2 · Benchmark Scenarios Addressed</p>
           <h2>All Five Handbook Reforms + Joint Package (5-Year Horizon)</h2>
-          <table>
+          <div class="deck-table-wrap"><table>
             <thead><tr><th>Scenario</th><th>Policy Mechanism Modeled</th><th>Where Modeled</th></tr></thead>
             <tbody>
               <tr><td><strong>Baseline</strong></td><td>Current permit run-rate, completion shares, and statutory legal baseline</td><td>11 States + PA/NH Lab</td></tr>
@@ -214,7 +214,7 @@ def render_deck_html() -> str:
               <tr><td><strong>5. 50% Fee Reduction</strong></td><td>Cut {_m(bridge['lab_fee'])} per-unit development fees by 50% across categories</td><td>11 States + PA/NH Lab</td></tr>
               <tr><td><strong>Combined Package</strong></td><td>Joint pro forma + single-lot best-use competition (never a naive sum)</td><td>11 States + PA/NH Lab</td></tr>
             </tbody>
-          </table>
+          </table></div>
         </section>""",
         # Slide 4
         f"""<section class="slide" data-slide="4">
@@ -246,11 +246,11 @@ def render_deck_html() -> str:
           <p class="kicker">3 · How It Works (Policymaker View)</p>
           <h2>Five Transparent Steps From Lots to Completed Homes</h2>
           <ol class="step-list">
-            <li><strong>1. Observed Stock &amp; Permits:</strong> Start with Census ACS housing structures, rents, values, and 3-year Building Permits Survey county averages.</li>
-            <li><strong>2. Legal &amp; Physical Fit:</strong> Filter out lots where reform is already legal (e.g., Pittsburgh ADUs, NH RSA 674:72, CT PA 21-29) or lot geometry cannot fit the building.</li>
-            <li><strong>3. Pro Forma Feasibility:</strong> Compare capitalized rent / sale value against hard cost, soft cost, parking stalls, and fees; compute feasible share via normal margin dispersion.</li>
-            <li><strong>4. Lot Competition:</strong> When ADUs and 2–6 unit multiplexes are both legal, each lot picks at most one best option—eliminating double-counting.</li>
-            <li><strong>5. Adoption, Lags &amp; Completion:</strong> Apply post-reform annual start hazards, rulemaking &amp; build lags inside the 5-year window, and completion ratios ({cr_sf:.2f} SF / {cr_sm:.2f} small MF / {cr_adu:.2f} ADU).</li>
+            <li><strong>Observed Stock &amp; Permits:</strong> Start with Census ACS housing structures, rents, values, and 3-year Building Permits Survey county averages.</li>
+            <li><strong>Legal &amp; Physical Fit:</strong> Filter out lots where reform is already legal (e.g., Pittsburgh ADUs, NH RSA 674:72, CT PA 21-29) or lot geometry cannot fit the building.</li>
+            <li><strong>Pro Forma Feasibility:</strong> Compare capitalized rent / sale value against hard cost, soft cost, parking stalls, and fees; compute feasible share via normal margin dispersion.</li>
+            <li><strong>Lot Competition:</strong> When ADUs and 2–6 unit multiplexes are both legal, each lot picks at most one best option—eliminating double-counting.</li>
+            <li><strong>Adoption, Lags &amp; Completion:</strong> Apply post-reform annual start hazards, rulemaking &amp; build lags inside the 5-year window, and completion ratios ({cr_sf:.2f} SF / {cr_sm:.2f} small MF / {cr_adu:.2f} ADU).</li>
           </ol>
         </section>""",
         # Slide 6
@@ -258,10 +258,10 @@ def render_deck_html() -> str:
           <p class="kicker">4 · Key Findings — Pennsylvania County Lab (2027–2031)</p>
           <h2>Pennsylvania Adds {_h(pa_sw['package']['central'], True)} Homes Under the Joint Package</h2>
           <p class="lead-note">Baseline 5-year completions: <strong>{_h(pa_sw['baseline']['central'])}</strong> · Top standalone benchmark is a statistical <strong>Too Close to Call</strong> tie between Missing Middle and Fee Cut.</p>
-          <table>
+          <div class="deck-table-wrap"><table>
             <thead><tr><th>Scenario</th><th>Middle Estimate</th><th>Likely Range (p10–p90)</th><th>Local-Rules Range</th><th>Census MOE</th></tr></thead>
             <tbody>{pa_rows_html}</tbody>
-          </table>
+          </table></div>
         </section>""",
         # Slide 7
         f"""<section class="slide" data-slide="7">
@@ -279,7 +279,7 @@ def render_deck_html() -> str:
         f"""<section class="slide" data-slide="8">
           <p class="kicker">4 · Policy Insight — Committee Poison Pills</p>
           <h2>How a {_m(bridge['lab_fee'])} Impact Fee Cuts ADU Supply in Half</h2>
-          <table>
+          <div class="deck-table-wrap"><table>
             <thead><tr><th>Step-by-Step Model Bridge (Pennsylvania ADUs)</th><th>5-Year Net Homes</th><th>What Changed</th></tr></thead>
             <tbody>
               <tr><td>1. County Lab at Handbook {_m(bridge['lab_fee'])} per-unit fee</td><td><strong>{_h(bridge['lab_adu'], True)}</strong></td><td>Full municipal impact-fee stack applied to backyard cottages</td></tr>
@@ -288,14 +288,14 @@ def render_deck_html() -> str:
               <tr><td>4. + Drop rulemaking &amp; build schedule lags</td><td><strong>{_h(bridge['after_lags'], True)}</strong></td><td>Steady-state 5-year pace vs. Year 1–2 ramp-up</td></tr>
               <tr><td>5. 11-State Screening Engine ADU total</td><td><strong>{_h(bridge['core_adu'], True)}</strong></td><td>Remaining gap (~{int(round(bridge['close_share'] * 100))}%) is county vs. screening aggregation</td></tr>
             </tbody>
-          </table>
+          </table></div>
         </section>""",
         # Slide 9
         f"""<section class="slide" data-slide="9">
           <p class="kicker">4 · Substate Geography — Pennsylvania's 67 Counties</p>
           <h2>Different Counties Hit Different Binding Constraints</h2>
           <div class="kpi-row">
-            <div class="kpi good"><strong>{pa_arch['zoning']} counties</strong><span>Zoning-Locked (≥25% of legal lots pencil today)</span></div>
+            <div class="kpi good"><strong>{pa_arch['zoning']} counties</strong><span>Zoning-Locked (≥6% of lots pencil &amp; zoning leads)</span></div>
             <div class="kpi"><strong>{pa_arch['fee']} counties</strong><span>Fee-Sensitive (need 50% fee cut to unlock margin)</span></div>
             <div class="kpi warn"><strong>{pa_arch['market']} counties</strong><span>Rent/Cost-Constrained (rents below build cost)</span></div>
           </div>
@@ -306,26 +306,26 @@ def render_deck_html() -> str:
           <p class="kicker">4 · Portability Test — New Hampshire (10 Counties)</p>
           <h2>Statutory Baselines Matter: Modeling NH After RSA 674:72 &amp; HB 577</h2>
           <p class="lead-note">New Hampshire already legalized one ADU by statute (RSA 674:72) and expanded detached ADUs in 2025. Stateframe credits only the remaining incremental legal expansion—preventing false credit for already-enacted laws.</p>
-          <table>
+          <div class="deck-table-wrap"><table>
             <thead><tr><th>New Hampshire Scenario</th><th>Middle Estimate</th><th>Likely Range (p10–p90)</th><th>Local-Rules Range</th></tr></thead>
             <tbody>{nh_rows_html}</tbody>
-          </table>
+          </table></div>
         </section>""",
         # Slide 11
         f"""<section class="slide" data-slide="11">
           <p class="kicker">4 · Cross-State Screening — All 11 Challenge States</p>
           <h2>Five-Year Net Completions Across All Eleven Official States</h2>
-          <table class="compact-table">
+          <div class="deck-table-wrap"><table class="compact-table">
             <thead><tr><th>State</th><th>Data</th><th>Permits</th><th>Baseline</th><th>ADUs</th><th>Middle</th><th>TOD</th><th>Parking</th><th>Fees</th><th>Package</th></tr></thead>
             <tbody>{eleven_rows}</tbody>
-          </table>
+          </table></div>
         </section>""",
         # Slide 12
         f"""<section class="slide" data-slide="12">
           <p class="kicker">5 · Replicability &amp; Data-Procurement Value</p>
           <h2>Tested Against Real Parcel Extracts — Where Does Better Data Pay Off?</h2>
           <div class="two-col">
-            <div>
+            <div class="deck-table-wrap">
               <table>
                 <thead><tr><th>Tier-1 State</th><th>Observed Fit</th><th>Imputed Fit</th><th>ADU Diff</th><th>Pkg Diff</th><th>Band Ratio</th></tr></thead>
                 <tbody>{xval_rows}</tbody>
@@ -346,10 +346,10 @@ def render_deck_html() -> str:
         f"""<section class="slide" data-slide="13">
           <p class="kicker">5 · Sensitivity &amp; Switching Thresholds</p>
           <h2>Assumptions That Move the Pennsylvania Package Most</h2>
-          <table>
+          <div class="deck-table-wrap"><table>
             <thead><tr><th>Published Assumption (<code>config/lab/assumptions.yaml</code>)</th><th>At Low Band</th><th>At High Band</th><th>Total Swing</th></tr></thead>
             <tbody>{top_drivers_html}</tbody>
-          </table>
+          </table></div>
           <p class="lead-note">Every assumption slider is clamped to its published literature/empirical range and updates central, zoning-prior, and Census-MOE bounds live.</p>
         </section>""",
         # Slide 14
@@ -422,11 +422,15 @@ bash scripts/run.sh            # starts stdlib server at http://127.0.0.1:8080 (
   <link rel="stylesheet" href="/deck.css">
 </head>
 <body class="deck-body">
-  <header class="deck-bar no-print">
-    <a class="deck-brand" href="/lab">← Back to Policy Lab</a>
-    <a class="deck-link" href="/">11-State Simulator</a>
-    <a class="deck-link" href="/brief">Quick Brief</a>
-    <span class="deck-spacer"></span>
+  <header class="suite-bar deck-bar no-print">
+    <a class="suite-brand" href="/">Stateframe <span class="suite-tag">Policy Suite</span></a>
+    <nav class="suite-nav" aria-label="Stateframe workspaces">
+      <a href="/">11-State Screening</a>
+      <a href="/lab">PA &amp; NH County Lab</a>
+      <a href="/brief">1-Page Brief</a>
+      <a href="/deck" aria-current="page">Executive Deck</a>
+    </nav>
+    <span class="suite-spacer deck-spacer"></span>
     <span id="deck-counter" class="deck-counter" aria-live="polite">All 16 slides</span>
     <button type="button" id="deck-mode" class="btn">Slide-by-slide view</button>
     <button type="button" id="deck-prev" class="btn" hidden>Prev</button>

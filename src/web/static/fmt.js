@@ -95,6 +95,8 @@
     var nodes = root.querySelectorAll("[title]");
     Array.prototype.forEach.call(nodes, function (node) {
       if (!node.getAttribute) return;
+      if (/^(BUTTON|A|INPUT|SELECT|TEXTAREA)$/i.test(node.tagName || "")) return;
+      if (node.closest && node.closest("button, a")) return;
       if (node.namespaceURI && String(node.namespaceURI).indexOf("svg") >= 0) return;
       if (node.closest && node.closest("svg")) return;
       var tip = node.getAttribute("title");

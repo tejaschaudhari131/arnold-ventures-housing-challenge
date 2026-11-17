@@ -1,40 +1,17 @@
 /* Executive presentation deck styles + crisp landscape PDF print layout */
 .deck-body {
-  background: #efe8db;
+  background: #ede6d8;
   color: var(--ink, #1c2430);
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
 }
 
 .deck-bar {
   position: sticky;
   top: 0;
-  z-index: 40;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 1.25rem;
-  background: #1d3557;
-  color: #ffffff;
-  border-bottom: 2px solid #f2b632;
-}
-
-.deck-bar a {
-  color: #fbf6ec;
-  text-decoration: none;
-  font-weight: 600;
-  min-height: 24px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-}
-
-.deck-bar a:hover,
-.deck-bar a:focus-visible {
-  background: rgba(255, 255, 255, 0.14);
-  outline: 2px solid #f2b632;
+  z-index: 50;
+  gap: 8px 10px;
+  padding: 8px 18px;
 }
 
 .deck-spacer {
@@ -42,44 +19,60 @@
 }
 
 .deck-counter {
-  font-size: 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
   color: #e6eef8;
+  white-space: nowrap;
 }
 
 .deck-bar .btn {
-  min-height: 28px;
-  padding: 0.3rem 0.75rem;
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: #27466e;
+  min-height: 32px;
+  padding: 0.25rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
   cursor: pointer;
+  font-size: 12.5px;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.deck-bar .btn:hover {
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .deck-bar .btn.pri {
   background: #f2b632;
-  color: #1c2430;
+  color: #142640;
   border-color: #f2b632;
+  font-weight: 700;
+}
+
+.deck-bar .btn.pri:hover {
+  filter: brightness(0.96);
+  background: #f2b632;
 }
 
 .deck-main {
   max-width: 1060px;
-  margin: 1.5rem auto 3rem;
-  padding: 0 1rem;
+  margin: 1.75rem auto 3.25rem;
+  padding: 0 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.65rem;
 }
 
 .slide {
-  background: #fbf6ec;
-  border: 1px solid #d7cbb8;
+  background: #fffdf9;
+  border: 1px solid #ddd3c2;
   border-top: 6px solid #1d3557;
-  border-radius: 8px;
-  padding: 2rem 2.4rem;
-  box-shadow: 0 6px 20px rgba(28, 36, 48, 0.08);
+  border-radius: 14px;
+  padding: 2.1rem 2.5rem 2.7rem;
+  box-shadow: 0 10px 28px rgba(20, 38, 64, 0.08);
   min-height: 470px;
+  max-width: 100%;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -96,7 +89,8 @@
 }
 
 .slide-cover {
-  background: linear-gradient(155deg, #1d3557 0%, #152842 100%);
+  background-color: #1d3557;
+  background-image: linear-gradient(155deg, #1d3557 0%, #152842 100%);
   color: #fbf6ec;
   border-top-color: #f2b632;
 }
@@ -231,6 +225,13 @@
   opacity: 0.9;
 }
 
+.deck-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .slide table {
   width: 100%;
   border-collapse: collapse;
@@ -239,7 +240,7 @@
 }
 
 .slide table.compact-table {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
 }
 
 .slide th,
@@ -247,6 +248,14 @@
   padding: 0.45rem 0.6rem;
   border-bottom: 1px solid #e6dccb;
   text-align: left;
+  position: static;
+  white-space: normal;
+}
+
+.slide table.compact-table th,
+.slide table.compact-table td {
+  padding: 0.35rem 0.45rem;
+  white-space: nowrap;
 }
 
 .slide th {
@@ -260,6 +269,7 @@
   color: #fbf6ec;
   padding: 1rem 1.25rem;
   border-radius: 6px;
+  max-width: 100%;
   overflow-x: auto;
   font-size: 0.9rem;
   line-height: 1.55;
@@ -267,6 +277,43 @@
 
 .deck-single .slide[hidden] {
   display: none;
+}
+
+@media (max-width: 700px) {
+  .deck-main {
+    padding: 0 0.65rem;
+    margin: 1rem auto 2rem;
+    gap: 1rem;
+  }
+  .slide {
+    padding: 1.25rem 1rem 2.3rem;
+    min-height: auto;
+  }
+  .slide::after {
+    right: 1rem;
+    bottom: 0.65rem;
+    font-size: 0.72rem;
+  }
+  .slide-cover h1 {
+    font-size: 2.1rem;
+  }
+  .slide-cover .subtitle {
+    font-size: 1.08rem;
+  }
+  .slide h2 {
+    font-size: 1.3rem;
+  }
+  .two-col,
+  .kpi-row {
+    grid-template-columns: 1fr;
+  }
+  .slide table {
+    font-size: 0.82rem;
+  }
+  .slide th,
+  .slide td {
+    padding: 0.35rem 0.45rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

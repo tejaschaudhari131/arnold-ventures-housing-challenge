@@ -140,3 +140,49 @@ def test_standalone_deck_builder_and_demo_script(tmp_path: Path):
     demo_text = demo.read_text(encoding="utf-8")
     assert "/deck" in demo_text
     assert "/lab" in demo_text
+
+
+def test_ui_ux_regression_guards():
+    styles_css = (ROOT / "src" / "web" / "static" / "styles.css").read_text(encoding="utf-8")
+    lab_css = (ROOT / "src" / "web" / "static" / "lab.css").read_text(encoding="utf-8")
+    deck_css = (ROOT / "src" / "web" / "static" / "deck.css").read_text(encoding="utf-8")
+    fmt_js = (ROOT / "src" / "web" / "static" / "fmt.js").read_text(encoding="utf-8")
+    app_js = (ROOT / "src" / "web" / "static" / "app.js").read_text(encoding="utf-8")
+    lab_js = (ROOT / "src" / "web" / "static" / "lab.js").read_text(encoding="utf-8")
+    index_html = (ROOT / "src" / "web" / "static" / "index.html").read_text(encoding="utf-8")
+    lab_html = (ROOT / "src" / "web" / "static" / "lab.html").read_text(encoding="utf-8")
+    brief_html = (ROOT / "src" / "web" / "static" / "brief.html").read_text(encoding="utf-8")
+
+    # 1. Core 11-state county map hit targets must stay transparent (never default SVG black).
+    assert "#map-stage svg .map-hit" in styles_css and "fill: transparent" in styles_css
+    assert 'class="map-hit"' in app_js and 'fill="transparent"' in app_js
+
+    # 2. Tooltip upgrader must never inject nested <button class="tip"> inside interactive buttons/links.
+    assert "BUTTON|A|INPUT|SELECT|TEXTAREA" in fmt_js
+
+    # 3. Reform cards & pill badges must stay compact with expandable drawers and nowrap tags.
+    assert "align-content: start;" in lab_css
+    assert "button.tip.tag" in lab_css
+    assert 'class="card-drawer"' in lab_js
+    assert 'class="hero-summary"' in app_js
+    assert "#drivers-mount" in lab_css
+    assert '.brief-sheet input[type="checkbox"]' in lab_css
+
+    # 4. Unified suite bar across all 4 routes + separated cross-model disclosures (no workspace mixing).
+    from src.deck import render_deck_html
+
+    render_deck_html.cache_clear()
+    deck_html = render_deck_html()
+    for doc in (index_html, lab_html, brief_html, deck_html):
+        assert 'class="suite-nav"' in doc
+    assert 'class="bridge-disclosure' in index_html
+    assert 'class="bridge-disclosure' in lab_html
+    assert 'class="hero-bridge' in lab_html
+
+    # 5. Executive deck wraps wide tables and avoids duplicate <ol> numbering.
+    assert ".deck-table-wrap" in deck_css
+    assert 'class="deck-table-wrap"' in deck_html
+    assert "<li><strong>1. " not in deck_html
+    assert "7 counties" in deck_html
+
+

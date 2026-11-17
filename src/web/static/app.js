@@ -313,7 +313,7 @@
       '<div class="preset-grid">' +
       CORE_PRESETS.map(function (p) {
         return '<button type="button" class="preset-btn" data-core-preset="' + escapeHtml(p.id) +
-          '" title="' + escapeHtml(p.desc) + '">' + escapeHtml(p.label) + "</button>";
+          '" aria-label="' + escapeHtml(p.label + " — " + p.desc) + '">' + escapeHtml(p.label) + "</button>";
       }).join("") +
       "</div>";
     box.querySelectorAll("[data-core-preset]").forEach(function (btn) {
@@ -359,6 +359,7 @@
     var curC = cObj ? (Number(cObj.combined) || 0) : 0;
     var pinC = (cObj && Object.prototype.hasOwnProperty.call(corePinned.byCounty, cObj.fips)) ? corePinned.byCounty[cObj.fips] : 0;
     var dC = curC - pinC;
+    var cShort = cObj ? String(cObj.name || "").replace(/ County$/i, "") : "";
     var diffStr = (dPkg > 0 ? "+" : "") + integer(dPkg);
     var cDiffStr = (dC > 0 ? "+" : "") + integer(dC);
     box.innerHTML =
@@ -366,15 +367,15 @@
       '<span class="pin-btns"><button type="button" class="pin-act" id="core-pin-update">Re-pin</button>' +
       '<button type="button" class="pin-act" id="core-pin-clear">Clear</button></span></div>' +
       '<p class="hint">Pinned A: <strong>' + escapeHtml(corePinned.label) + "</strong></p>" +
-      '<table class="pin-table" aria-label="Pinned package A versus current package B">' +
-      "<thead><tr><th>Scope (Package)</th><th>Pinned A</th><th>Current B</th><th>Diff (B−A)</th></tr></thead><tbody>" +
-      "<tr><td>" + escapeHtml(stateCode) + " net new</td><td>" + integer(corePinned.packageNet) + "</td><td>" +
+      '<div class="pin-table-wrap"><table class="pin-table" aria-label="Pinned package A versus current package B">' +
+      "<thead><tr><th>Scope</th><th>Bill A</th><th>Bill B</th><th>Δ (B−A)</th></tr></thead><tbody>" +
+      "<tr><td>" + escapeHtml(stateCode) + " net</td><td>" + integer(corePinned.packageNet) + "</td><td>" +
       integer(curPkg) + "</td><td><strong>" + diffStr + "</strong></td></tr>" +
       (cObj
-        ? "<tr><td>" + escapeHtml(cObj.name) + "</td><td>" + integer(pinC) + "</td><td>" +
+        ? "<tr><td>" + escapeHtml(cShort) + "</td><td>" + integer(pinC) + "</td><td>" +
           integer(curC) + "</td><td><strong>" + cDiffStr + "</strong></td></tr>"
         : "") +
-      "</tbody></table>";
+      "</tbody></table></div>";
     var upBtn = box.querySelector("#core-pin-update");
     var clBtn = box.querySelector("#core-pin-clear");
     if (upBtn) upBtn.addEventListener("click", pinCoreCurrent);
@@ -522,35 +523,39 @@
       integer(pack) + " homes on top of " + integer(result.baseline_completions_5yr) + " expected.";
     var hasRange = heroBand && isFinite(Number(heroBand.p10)) && isFinite(Number(heroBand.p90));
     var joiner = hasRange && (Number(heroBand.p10) <= 0 || Number(heroBand.p90) <= 0) ? " to " : "–";
-    var rangeKicker = hasRange
-      ? '<p class="range-kicker">Seeded range (10th–90th percentile, ' + integer(heroBand.draws) + " draws)</p>"
-      : "";
-    var rangeHero = hasRange
-      ? "Likely " + integer(heroBand.p10) + joiner + integer(heroBand.p90) + " extra homes"
-      : (heroBandLoading ? "Calculating likely range…" : "Likely range unavailable");
+    var rangeLine = hasRange
+      ? '<p class="range-hero">Likely ' + integer(heroBand.p10) + joiner + integer(heroBand.p90) +
+        ' extra homes <span class="range-kicker">(10th–90th percentile · ' + integer(heroBand.draws) + " draws)</span></p>"
+      : '<p class="range-hero is-loading">' +
+        (heroBandLoading ? "Sampling 80-draw assumption band…" : "Likely range unavailable") + "</p>";
+    var funnelNote = window.StateframeFrame ? window.StateframeFrame.FUNNEL_UNAVAILABLE : "";
     headline.innerHTML =
-      '<p class="model-badge screening">Screening model · statewide estimate · 11 states</p>' +
-      rangeKicker +
-      '<p class="range-hero">' + rangeHero + "</p>" +
+      '<div class="hero-summary">' +
+      '<div class="hero-summary-top">' +
+      '<span class="step-kicker">Step 1 · Statewide 5-Year Answer</span>' +
+      '<span class="model-badge screening">Screening model · statewide estimate · 11 states</span>' +
+      "</div>" +
+      '<p class="headline-answer">' + escapeHtml(answer) + badge("calculated") + "</p>" +
+      rangeLine +
       '<p class="middle-est">Middle estimate <span data-bind="scenarios.combined.incremental_completions">' +
       integer(pack) + '</span> extra homes, on top of <span data-bind="baseline_completions_5yr">' +
-      integer(result.baseline_completions_5yr) + "</span> expected.</p>" +
-      '<p>' + (window.StateframeFrame ? window.StateframeFrame.FUNNEL_UNAVAILABLE : "") + "</p>" +
-      '<p class="headline-answer">' + escapeHtml(answer) + badge("calculated") + "</p>" +
+      integer(result.baseline_completions_5yr) + "</span> expected." +
+      (funnelNote ? ' <span class="funnel-note">· ' + escapeHtml(funnelNote) + "</span>" : "") + "</p>" +
+      "</div>" +
       card(
         "Baseline completions",
         tagged(result.baseline_completions_5yr, tagOf(result, "baseline_completions_5yr"), integer),
-        "Five-year homes completed if today's permit pace continues. This is the core baseline, calculated from observed permits and assumed completion ratios."
+        "Five-year homes completed if today's permit pace continues, calculated from observed permits and assumed completion ratios."
       ) +
       card(
         "Package, net new",
         tagged(pack, "calculated", integer),
-        signedPercent(lift) + " versus baseline. The package is not the sum of the five reforms. Overlap among the reforms that are switched on is removed."
+        signedPercent(lift) + " versus baseline. Overlap among switched-on reforms is removed."
       ) +
       card(
         "Walkshed",
         tagged(result.walkshed_sqmi, tagOf(result, "walkshed_sqmi"), function (value) { return oneDecimal(value) + " sq mi"; }),
-        "Calculated area around major transit stops, after an assumed overlap discount."
+        "Calculated area around major transit stops after an assumed overlap discount."
       ) +
       card(
         "Lot screen",
@@ -1091,7 +1096,7 @@
         '" stroke="' + (selected ? "#9a4e24" : "#1c2430") + '" stroke-width="' + (selected ? 2.5 : 0.6) +
         '"><title>' + escapeHtml(label) + "</title></circle>" +
         '<circle class="map-hit" data-fips="' + point.fips + '" cx="' + xy[0].toFixed(1) +
-        '" cy="' + xy[1].toFixed(1) + '" r="12"><title>' + escapeHtml(label) + "</title></circle>";
+        '" cy="' + xy[1].toFixed(1) + '" r="12" fill="transparent"><title>' + escapeHtml(label) + "</title></circle>";
     }).join("");
     mapStage.innerHTML =
       '<svg viewBox="0 0 ' + width + " " + height + '" role="group" aria-label="Map of ' + escapeHtml(result.name) + ' counties, colored by the selected scenario">' +

@@ -107,7 +107,11 @@
     if (!popover || popover.hidden) return;
     popover.hidden = true;
     if (lastTrigger && typeof lastTrigger.focus === "function") {
-      lastTrigger.focus();
+      try {
+        lastTrigger.focus({ preventScroll: true });
+      } catch (_err) {
+        lastTrigger.focus();
+      }
     }
     lastTrigger = null;
   }
@@ -169,8 +173,19 @@
     box.hidden = false;
     lastTrigger = target;
 
+    var minTop = 16;
+    var suiteBar = document.querySelector(".suite-bar");
+    if (suiteBar && typeof suiteBar.getBoundingClientRect === "function") {
+      var sbRect = suiteBar.getBoundingClientRect();
+      if (sbRect.height > 4 && sbRect.bottom > 0) minTop = Math.max(minTop, Math.ceil(sbRect.bottom) + 10);
+    }
+    var miniBar = document.getElementById("mini-total");
+    if (miniBar && !miniBar.hidden && typeof miniBar.getBoundingClientRect === "function") {
+      var barRect = miniBar.getBoundingClientRect();
+      if (barRect.height > 4) minTop = Math.max(minTop, Math.ceil(barRect.bottom) + 12);
+    }
     var rect = target.getBoundingClientRect ? target.getBoundingClientRect() : { left: 24, bottom: 80 };
-    var top = Math.min(window.innerHeight - 240, Math.max(16, rect.bottom + 8));
+    var top = Math.min(Math.max(minTop, window.innerHeight - 250), Math.max(minTop, rect.bottom + 8));
     var left = Math.min(window.innerWidth - 360, Math.max(16, rect.left));
     box.style.top = top + "px";
     box.style.left = left + "px";
@@ -195,7 +210,11 @@
     var closeBtn = box.querySelector(".lineage-close");
     if (closeBtn) {
       closeBtn.addEventListener("click", closePopover);
-      closeBtn.focus();
+      try {
+        closeBtn.focus({ preventScroll: true });
+      } catch (_err) {
+        closeBtn.focus();
+      }
     }
     if (event) {
       event.preventDefault();

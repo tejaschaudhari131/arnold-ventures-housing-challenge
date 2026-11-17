@@ -1096,9 +1096,11 @@
             ? "Reference range — from default assumptions, not recomputed "
             : "Likely ") + api.rangeSpans(prefix + ".p10", prefix + ".p90", row.p10, row.p90) + " extra homes")
         : describeRange(row);
+      var badges = closeBadgeHtml(k, sw) + outcomeBadgeHtml(row);
+      var extras = cardExtras(k, row);
       return '<div class="card" role="listitem">' +
         '<button type="button" class="tog" aria-pressed="' + pressed + '" data-k="' + k + '">' +
-        "<span><span class='help'>" + escapeHtml(placeLabel(i, k, sw)) + "</span><span class='card-title'>" +
+        "<span class='tog-text'><span class='card-rank'>" + escapeHtml(placeLabel(i, k, sw)) + "</span><span class='card-title'>" +
         escapeHtml(PLAIN[k]) + "</span></span><span class='sw' aria-hidden='true'></span></button>" +
         '<p class="card-range">' + rangeHtml + "</p>" +
         '<div class="n">Middle estimate ' + bound(prefix + ".central", signed(row.central)) + tag("calculated") + "</div>" +
@@ -1107,7 +1109,9 @@
         (Math.max(0, row.central) / mx * 100) + '%"></b></div>' +
         '<div class="r">' + (row.interval_status === "reference"
           ? "Reference range (defaults)" : "Likely range (10th–90th percentile, model-conditional)") + "</div>" +
-        closeBadgeHtml(k, sw) + outcomeBadgeHtml(row) + cardExtras(k, row) + "</div>";
+        (badges ? '<div class="card-badges">' + badges + "</div>" : "") +
+        (extras ? '<details class="card-drawer"><summary>Lot-by-lot funnel &amp; model limits</summary><div class="card-drawer-body">' + extras + "</div></details>" : "") +
+        "</div>";
     }).join("");
     extraCards.innerHTML = (locked.scenarios || []).filter(function (s) {
       return s.id === "approval";
@@ -1292,7 +1296,7 @@
       id: "zoning",
       label: "Zoning-locked",
       color: "#0e6e5c",
-      note: "Rents and home values clear construction cost on at least a quarter of eligible lots; legalizing small homes is the primary lever."
+      note: "Rents and home values clear construction cost on a solid share of eligible lots and legalization leads fee relief; zoning is the primary lever."
     },
     fee: {
       id: "fee",
@@ -1321,8 +1325,8 @@
     var legalTop = Math.max(Number(adu.central) || 0, Number(mm.central) || 0);
     var pkgC = Number(pkg.central) || 0;
     var feeC = Number(fees.central) || 0;
-    if (share >= 0.25) return BOTTLENECK_META.zoning;
-    if (pkgC >= 15 && (feeC >= legalTop || pkgC >= 1.4 * Math.max(legalTop, 1))) {
+    if (share >= 0.06 && legalTop > feeC) return BOTTLENECK_META.zoning;
+    if (pkgC >= 15 && (feeC >= 0.6 * Math.max(legalTop, 1) || pkgC >= 1.35 * Math.max(legalTop, 1))) {
       return BOTTLENECK_META.fee;
     }
     return BOTTLENECK_META.market;
@@ -1397,6 +1401,10 @@
       var b = countyBottleneck(c);
       bCounts[b.id] = (bCounts[b.id] || 0) + 1;
     });
+    var mapLeg = document.getElementById("map-legend");
+    if (mapLeg && mapLeg.classList) {
+      mapLeg.classList.toggle("is-bottleneck", mapMetric === "bottleneck");
+    }
     var bLegend = document.getElementById("bottleneck-legend");
     if (bLegend) {
       if (mapMetric === "bottleneck") {
@@ -1861,7 +1869,8 @@
       '<p class="hint">One click loads a legislative scenario inside published assumption bands.</p>' +
       '<div class="preset-grid">' +
       LAB_PRESETS.map(function (p) {
-        return '<button type="button" class="preset-btn" data-preset="' + escapeHtml(p.id) + '" title="' + escapeHtml(p.desc) + '">' +
+        return '<button type="button" class="preset-btn" data-preset="' + escapeHtml(p.id) +
+          '" aria-label="' + escapeHtml(p.label + " — " + p.desc) + '">' +
           escapeHtml(p.label) + "</button>";
       }).join("") +
       "</div>";
@@ -1930,15 +1939,15 @@
       '<span class="pin-btns"><button type="button" class="pin-act" id="pin-update">Re-pin</button>' +
       '<button type="button" class="pin-act" id="pin-clear">Clear</button></span></div>' +
       '<p class="hint">Pinned A: <strong>' + escapeHtml(pinnedView.label) + "</strong></p>" +
-      '<table class="pin-table" aria-label="Pinned baseline A versus current view B">' +
-      "<thead><tr><th>Scope</th><th>Pinned A</th><th>Current B</th><th>Diff (B−A)</th></tr></thead><tbody>" +
+      '<div class="pin-table-wrap"><table class="pin-table" aria-label="Pinned baseline A versus current view B">' +
+      "<thead><tr><th>Scope</th><th>Bill A</th><th>Bill B</th><th>Δ (B−A)</th></tr></thead><tbody>" +
       "<tr><td>" + escapeHtml(stateCode) + " total</td><td>" + signed(pinnedView.total) + "</td><td>" + signed(curTotal) +
       "</td><td><strong>" + signed(dState) + "</strong></td></tr>" +
       (cRow
         ? "<tr><td>" + escapeHtml(cName) + "</td><td>" + signed(pinCounty) + "</td><td>" + signed(curCounty) +
           "</td><td><strong>" + signed(dCounty) + "</strong></td></tr>"
         : "") +
-      "</tbody></table>";
+      "</tbody></table></div>";
     var upBtn = box.querySelector("#pin-update");
     var clBtn = box.querySelector("#pin-clear");
     if (upBtn) upBtn.addEventListener("click", pinCurrent);
@@ -2725,6 +2734,7 @@
     var node = event.target;
     if (!bar || bar.hidden || !node || typeof node.getBoundingClientRect !== "function") return;
     if (bar.contains(node)) return;
+    if (node.closest && node.closest("#lineage-popover, #tour")) return;
     var barBox = bar.getBoundingClientRect();
     if (barBox.height < 8) return;
     var box = node.getBoundingClientRect();

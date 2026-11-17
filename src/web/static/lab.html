@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Small Homes Policy Lab — county-by-county micro-simulation of housing reforms for Pennsylvania and New Hampshire.">
   <title>Small Homes Policy Lab — Stateframe</title>
   <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/styles.css">
@@ -11,55 +12,76 @@
 <body class="lab-body">
   <a class="skip" href="#main">Skip to results</a>
   <div class="mini-total" id="mini-total" role="region" aria-label="Running total" hidden></div>
-  <header class="sf-top">
-    <a class="sf-brand" href="/lab">Stateframe</a>
-    <nav aria-label="Main">
-      <a href="#package" aria-current="page">Build a package</a>
-      <a href="#where">Where</a>
-      <a href="#methods">Methods</a>
+
+  <div class="suite-bar no-print">
+    <a class="suite-brand" href="/lab">Stateframe <span class="suite-tag">Policy Suite</span></a>
+    <nav class="suite-nav" aria-label="Stateframe workspaces">
+      <a href="/">11-State Screening</a>
+      <a href="/lab" aria-current="page">PA &amp; NH County Lab</a>
+      <a href="/brief">1-Page Brief</a>
+      <a href="/deck">Executive Deck</a>
     </nav>
-    <span class="sp"></span>
+    <span class="suite-spacer"></span>
     <label class="sr" for="state-select">State</label>
-    <select id="state-select">
-      <option value="PA">Pennsylvania</option>
-      <option value="NH">New Hampshire</option>
+    <select id="state-select" class="suite-select">
+      <option value="PA">Pennsylvania (67 counties)</option>
+      <option value="NH">New Hampshire (10 counties)</option>
     </select>
     <button type="button" class="btn pri" id="try-pa">Try Pennsylvania 2027–31</button>
     <button type="button" class="btn ghost" id="tour-btn">Take the 1-minute tour</button>
-    <p class="start-here" id="start-here">Start here: compare the reforms below, ranked by homes added. Then see where they land by county, open Why on any number, and print a one-page brief.</p>
-    <p class="entry-actions">
-      <a class="btn pri" href="/brief">Quick answer for my state</a>
-      <a class="btn" href="#results">Open the full model</a>
-      <a class="btn" href="/deck">Executive deck (16 slides)</a>
-    </p>
+  </div>
+
+  <header class="sf-top no-print">
+    <nav aria-label="Lab sections">
+      <a href="#package" aria-current="page">1 · Pick reforms</a>
+      <a href="#overlap-panel">2 · Package overlap</a>
+      <a href="#where">3 · County map &amp; Why</a>
+      <a href="#methods">4 · Methods</a>
+    </nav>
+    <span class="sp"></span>
+    <div class="entry-actions lab-entry-actions">
+      <a class="btn-pill" href="#county-table">County table</a>
+      <a class="btn-pill" href="#adjust">Bill &amp; assumptions</a>
+    </div>
+    <p class="start-here" id="start-here"><strong>Start here:</strong> Toggle the county-by-county reforms below (ranked by homes added), inspect where homes land on the map, open <strong>Why</strong> on any county, or print a one-page brief.</p>
     <p id="state-notice" class="callout state-notice" role="status" hidden></p>
   </header>
 
   <section class="hero" id="hero" aria-labelledby="hero-title">
-    <div id="results">
-      <p class="kicker" id="kicker">Your package</p>
+    <div class="hero-copy" id="results">
+      <div class="hero-meta-top">
+        <p class="kicker" id="kicker">Your package</p>
+        <span class="model-badge county" id="model-badge">County Policy Lab · Lot-by-lot simulation · PA &amp; NH</span>
+      </div>
       <h1 id="hero-title">Turn reforms on and watch how many extra homes <span id="state-name">Pennsylvania</span> could get.</h1>
-      <p class="model-badge county" id="model-badge">County model · county by county · PA, NH</p>
-      <div class="count range-hero" id="count"></div>
-      <div class="bandwrap" aria-hidden="true"><div class="band" id="band"></div><div class="tick" id="tick"></div></div>
-      <p class="middle-est" id="middle-est"></p>
       <section class="headline" id="headline" aria-label="Statewide answer"></section>
-      <p class="sr" id="count-live" aria-live="polite"></p>
+      <div class="bandwrap" aria-hidden="true"><div class="band" id="band"></div><div class="tick" id="tick"></div></div>
       <p class="rangeline" id="rangeline"></p>
-      <p class="sub" id="relate"></p>
-      <div class="recon" id="recon"><!-- ENGINE_GAP --></div>
+      <div class="count range-hero hero-dup" id="count" aria-hidden="true"></div>
+      <p class="middle-est hero-dup" id="middle-est" aria-hidden="true"></p>
+      <p class="sub hero-dup" id="relate" aria-hidden="true"></p>
+      <p class="sr" id="count-live" aria-live="polite"></p>
+      <details class="hero-bridge no-print">
+        <summary>Using both workspaces? Why County Lab totals differ from 11-State Screening</summary>
+        <div class="recon" id="recon"><!-- ENGINE_GAP --></div>
+      </details>
     </div>
+
     <div class="mapcard">
       <div class="metric-chips" id="map-metrics" role="group" aria-label="Map color metric"></div>
       <div id="map-stage"></div>
-      <div class="legend" id="map-legend"><span>fewer</span><i></i><span>more extra homes</span> · <a class="skip-map" href="#county-table">Skip map — use the table</a></div>
+      <div class="legend" id="map-legend">
+        <span>fewer</span><i></i><span>more extra homes</span><span class="sep">·</span><a class="skip-map" href="#county-table">Skip map — use the table</a>
+      </div>
       <p class="help bottleneck-legend" id="bottleneck-legend" hidden></p>
-          <label class="county-pick" for="county-find">Find a county
-        <input id="county-find" type="search" autocomplete="off">
-      </label>
-      <label class="county-pick" for="county-select">Jump to a county
-        <select id="county-select"></select>
-      </label>
+      <div class="map-pick-grid">
+        <label class="county-pick" for="county-find">Find a county
+          <input id="county-find" type="search" placeholder="Type county name…" autocomplete="off">
+        </label>
+        <label class="county-pick" for="county-select">Jump to a county
+          <select id="county-select"></select>
+        </label>
+      </div>
       <p id="county-detail" class="countyline" hidden></p>
     </div>
   </section>
@@ -68,27 +90,32 @@
     <main id="main" tabindex="-1">
       <section class="status" id="status" aria-live="polite"></section>
 
-      <p class="legend-bar no-print">
-        Every displayed number is tagged
-        <abbr class="tag observed" title="Measured in a public dataset and stored for this place.">observed</abbr>
-        <abbr class="tag assumed" title="A published assumption or an imputation.">assumed</abbr>
-        <abbr class="tag calculated" title="Calculated from the inputs shown.">calculated</abbr>
-      </p>
+      <div class="workspace-bar lab-provenance-bar no-print">
+        <p class="legend-bar">
+          <span class="legend-prefix">Every displayed number is tagged:</span>
+          <abbr class="tag observed" title="Measured in a public dataset and stored for this place.">observed</abbr>
+          <abbr class="tag assumed" title="A published assumption or an imputation.">assumed</abbr>
+          <abbr class="tag calculated" title="Calculated from the inputs shown.">calculated</abbr>
+        </p>
+      </div>
 
-      <section id="package" class="no-print" aria-labelledby="package-title">
+      <section id="package" class="section-card lab-section no-print" aria-labelledby="package-title">
         <div class="panel-head">
-          <h2 id="package-title">1 · Pick reforms</h2>
-          <p class="help">Extra homes over 5 years · bar = likely range</p>
+          <div>
+            <span class="step-kicker">Step 1 · Build Your Reform Package</span>
+            <h2 id="package-title">1 · Pick reforms</h2>
+          </div>
+          <p class="help">Extra homes over 5 years · bar = likely range (10th–90th percentile)</p>
         </div>
         <div class="cards" id="cards" role="list"></div>
         <section id="extra-scenarios" aria-label="Also modeled, not a Handbook benchmark">
           <h3>Also modeled, not a Handbook benchmark</h3>
           <div class="cards extra" id="extra-cards"></div>
         </section>
-        <div id="adu-fee-note" class="adu-fee-note callout"><!-- ADU_FEE_NOTE --></div>
       </section>
 
       <section class="panel overlap-panel" id="overlap-panel" aria-labelledby="overlap-title">
+        <span class="step-kicker">Step 2 · Lot Competition &amp; Sensitivity Drivers</span>
         <h2 id="overlap-title">2 · Why the total isn't a simple sum</h2>
         <p id="package-not-sum" class="sr">Package is not a sum</p>
         <div id="drivers-mount"></div>
@@ -103,9 +130,12 @@
       </section>
 
       <section class="where" id="where" aria-labelledby="where-title">
-        <div class="where-map">
+        <div class="where-map section-card">
           <div class="panel-head">
-            <h2 id="where-title">Where homes would land</h2>
+            <div>
+              <span class="step-kicker">Step 3 · County Breakdown &amp; Exports</span>
+              <h2 id="where-title">3 · Where homes would land</h2>
+            </div>
             <p class="help" id="map-help">Census cartographic boundaries, simplified. Color is extra homes under the selected reform or package.</p>
           </div>
           <h2 id="map-title" class="sr">Counties</h2>
@@ -151,9 +181,15 @@
         </div>
 
         <div class="where-why">
-          <section class="panel-head">
-            <h2>Why this result?</h2>
-            <button type="button" id="why-toggle" aria-expanded="false" aria-controls="why">Open the Why drawer</button>
+          <section class="why-head-card">
+            <div class="panel-head">
+              <div>
+                <span class="step-kicker">County Audit</span>
+                <h2>Why this result?</h2>
+              </div>
+              <button type="button" class="btn pri" id="why-toggle" aria-expanded="false" aria-controls="why">Open the Why drawer</button>
+            </div>
+            <p class="help">Inspect observed Census inputs, local-rules range, and an illustrative ADU worksheet for any county.</p>
           </section>
           <aside class="why-drawer" id="why" hidden tabindex="-1">
             <p class="help">Each input is labeled observed, assumed, or calculated. The ADU cost-and-value worksheet is illustrative — not a construction bid.</p>
@@ -184,17 +220,24 @@
       </section>
 
       <section class="panel" id="methods" aria-labelledby="methods-title">
-        <h2 id="methods-title">Methods, tags, and downloads</h2>
-        <p class="help">The Lab sits beside the eleven-state screening view. Equations live in <code>src/lab/engine.py</code>. Locked defaults live in <code>config/lab/assumptions.yaml</code>. Full write-up: <a href="/docs/SMALL_HOMES_LAB.md">docs/SMALL_HOMES_LAB.md</a>.</p>
-        <div id="methods-recon"><!-- ENGINE_GAP --></div>
-        <div id="model-diff"></div>
+        <span class="step-kicker">Step 4 · Documentation &amp; Model Architecture</span>
+        <h2 id="methods-title">4 · Methods, tags, and downloads</h2>
+        <p class="help">Equations live in <code>src/lab/engine.py</code>. Locked defaults live in <code>config/lab/assumptions.yaml</code>. Full write-up: <a href="/docs/SMALL_HOMES_LAB.md">docs/SMALL_HOMES_LAB.md</a>.</p>
         <p>County shapes are U.S. Census Bureau cartographic boundary file <code>cb_2024_us_county_5m</code>, public domain, Douglas–Peucker simplified. See <code>docs/DATA_PROVENANCE.md</code>.</p>
+        <details class="bridge-disclosure">
+          <summary>Technical comparison: How this County Policy Lab relates to the 11-State Screening workspace</summary>
+          <div class="bridge-disclosure-body">
+            <div id="methods-recon"><!-- ENGINE_GAP --></div>
+            <div id="adu-fee-note" class="adu-fee-note callout"><!-- ADU_FEE_NOTE --></div>
+            <div id="model-diff"></div>
+          </div>
+        </details>
       </section>
     </main>
 
     <aside class="assumptions" id="adjust" aria-label="Assumptions">
       <div class="aside-head">
-        <h2>Change one assumption</h2>
+        <h2>Bill &amp; Assumptions</h2>
         <button type="button" id="reset">Reset</button>
       </div>
       <p class="help" id="envelope-note">Move one slider. The middle estimate, the local-rules range, and the Census survey error update. The likely range stays on the locked run until a new published run replaces it.</p>
@@ -226,7 +269,7 @@
   </aside>
 
   <footer>
-    <p>The Lab sits beside Stateframe. Equations live in <code>src/lab/engine.py</code>. Locked defaults live in <code>config/lab/assumptions.yaml</code>. Method: <a href="/docs/SMALL_HOMES_LAB.md">docs/SMALL_HOMES_LAB.md</a>. Apache License 2.0.</p>
+    <p>Small Homes Policy Lab · Stateframe. Equations live in <code>src/lab/engine.py</code>. Locked defaults live in <code>config/lab/assumptions.yaml</code>. Method: <a href="/docs/SMALL_HOMES_LAB.md">docs/SMALL_HOMES_LAB.md</a>. Apache License 2.0.</p>
     <p>Tejas Chaudhari (tchaudha@andrew.cmu.edu), Yoon Yik Ng (yoonyikn@andrew.cmu.edu), Christopher Severns (cseverns@andrew.cmu.edu), Carnegie Mellon University.</p>
     <p class="build-stamp">Build <!-- BUILD_STAMP --></p>
   </footer>
