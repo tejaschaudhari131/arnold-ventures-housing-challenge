@@ -17,9 +17,9 @@ authors = [
 dependencies = ["PyYAML==6.0.2"]
 
 [project.optional-dependencies]
-dev = ["pytest==8.3.5", "ruff==0.14.2"]
+dev = ["pytest==9.2.0", "ruff==0.14.2"]
 # pandas is test-only (see requirements-dev.txt): NumPy's license expression includes CC0.
-test = ["pytest==8.3.5", "ruff==0.14.2", "pandas==2.2.3"]
+test = ["pytest==9.2.0", "ruff==0.14.2", "pandas==2.2.3"]
 
 [project.scripts]
 stateframe = "src.cli:main"
