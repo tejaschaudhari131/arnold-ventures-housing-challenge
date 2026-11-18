@@ -1080,18 +1080,117 @@ button.tip.tag.calculated {
   background: var(--paper);
 }
 .brief-body .brief-sheet {
-  max-width: 720px;
-  margin: 28px auto 56px;
+  max-width: 860px;
+  margin: 26px auto 56px;
   padding: 28px 32px 36px;
   background: #ffffff;
   border: 1px solid var(--line-soft);
-  border-top: 5px solid var(--navy);
+  border-top: 6px solid var(--navy);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
 }
+.memo-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+.memo-seal {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e8f3ee;
+  color: #0b5244;
+  border: 1px solid #9fd4c2;
+  font: 700 11.5px/1.2 var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.memo-masthead {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 16px;
+  padding: 12px 14px;
+  background: #f5f2e9;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+}
+.memo-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.memo-cell > span {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.memo-cell > strong {
+  font-size: 13.5px;
+  color: var(--navy-deep);
+  overflow-wrap: anywhere;
+}
+.impact-note-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+.note-card {
+  background: var(--surface-warm);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  padding: 14px 16px;
+  min-width: 0;
+}
+.note-card h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: var(--navy-deep);
+}
+.note-sub {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.note-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.note-table th,
+.note-table td {
+  padding: 6px 6px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: right;
+  color: var(--ink);
+}
+.note-table th:first-child,
+.note-table td:first-child {
+  text-align: left;
+}
+.note-table th {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+.note-foot,
+.note-empty {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
 .brief-sheet h1 {
-  margin: 0 0 6px;
-  font-size: 32px;
+  margin: 2px 0 6px;
+  font-size: 30px;
 }
 .brief-sheet form {
   background: var(--surface-warm);
@@ -1198,6 +1297,8 @@ button.tip.tag.calculated {
   .tour { left: 12px; right: auto; width: min(340px, calc(100% - 24px)); bottom: 12px; top: auto; }
   .mini-total:not([hidden]) { display: block; }
   .brief-body .brief-sheet { margin: 14px 12px 36px; padding: 20px 16px; }
+  .memo-masthead { grid-template-columns: 1fr 1fr; }
+  .impact-note-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 599px) {
@@ -1220,6 +1321,7 @@ button.tip.tag.calculated {
   .hero, .lab-body .panel, .sf-top, .lab-body main { padding-left: 12px; padding-right: 12px; }
   .card .n, .card-range { max-width: 100%; }
   .suite-bar button, .suite-select, .btn { max-width: 100%; white-space: normal; }
+  .memo-masthead { grid-template-columns: 1fr; }
 }
 
 /* --- Print Styles for /brief and /lab --- */
@@ -1236,11 +1338,14 @@ button.tip.tag.calculated {
     padding: 0;
     border: 0;
     box-shadow: none;
-    font-size: 10.5pt;
-    line-height: 1.3;
+    font-size: 10pt;
+    line-height: 1.28;
   }
+  .memo-masthead { margin: 6px 0 10px; padding: 8px 10px; background: #ffffff; border: 1px solid #bbbbbb; }
+  .impact-note-grid { gap: 10px; margin: 10px 0; }
+  .note-card { background: #ffffff; border: 1px solid #cccccc; padding: 8px 10px; }
   .brief-sheet h1 { font-size: 16pt; margin: 0 0 6px; }
-  .brief-sheet h2, .brief-sheet h3 { font-size: 12pt; margin: 8px 0 4px; }
+  .brief-sheet h2, .brief-sheet h3 { font-size: 11.5pt; margin: 6px 0 4px; }
   .brief-sheet li { margin: 0; }
 
   .lab-body .suite-bar, .sf-top, .start-here, .hero, .lab-layout, .studio-drawer, .studio-backdrop, .tour, footer, .no-print { display: none !important; }

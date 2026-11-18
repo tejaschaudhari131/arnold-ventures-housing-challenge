@@ -85,7 +85,7 @@ body {
   display: inline-flex;
   align-items: center;
   min-height: 30px;
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 999px;
   font: 600 12.5px/1.2 var(--sans);
   color: #e6eef8;
@@ -2001,6 +2001,145 @@ body.inspect-on .hero [data-bind] {
 }
 tr.selected-row td { background: var(--green-soft); }
 
+/* --- Real State Legislation Selector, Citation Card & Step 1 <-> Step 2 County Handoff --- */
+.real-bill-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  padding: 12px 14px;
+  margin: 8px 0 10px;
+  background: var(--surface-warm);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-width: 0;
+}
+.real-bill-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 240px;
+  min-width: 0;
+  cursor: pointer;
+}
+.real-bill-sub {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.real-bill-bar select {
+  flex: 1 1 260px;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--navy);
+  background: #ffffff;
+  color: var(--ink);
+  font: 600 13px/1.3 var(--sans);
+  cursor: pointer;
+}
+.bill-citation-card {
+  margin: 0 0 12px;
+  padding: 13px 15px;
+  border-left: 4px solid var(--teal);
+  background: #f3faf7;
+  border-radius: 10px;
+}
+.bill-citation-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 6px;
+}
+.bill-citation-title {
+  margin: 4px 0 0;
+  font-size: 15.5px;
+  color: var(--navy-deep);
+}
+.bill-status-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.bill-status-pill.enacted {
+  background: #d8f3ea;
+  color: #084c38;
+  border: 1px solid #96d7c3;
+}
+.bill-status-pill.proposed {
+  background: #fef1d2;
+  color: #6b4300;
+  border: 1px solid #ecc678;
+}
+.bill-session {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.bill-citation-ref {
+  margin: 4px 0 6px;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+.bill-clause-list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  color: var(--ink);
+  display: grid;
+  gap: 3px;
+}
+.county-handoff-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--teal);
+  color: #ffffff !important;
+  font: 700 13px/1.25 var(--sans);
+  text-decoration: none;
+  border: 1px solid #095244;
+}
+.county-handoff-cta:hover {
+  background: #0a5849;
+  color: #ffffff !important;
+}
+.county-handoff-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 5px 12px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--navy-deep);
+  border: 1px solid var(--navy);
+  font: 700 12.5px/1.25 var(--sans);
+  text-decoration: none;
+}
+.county-handoff-back:hover {
+  background: var(--sky);
+}
+.handoff-tier-note {
+  margin: 6px 0 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #f5f2e9;
+  border: 1px solid var(--line-soft);
+  font-size: 12.5px;
+  color: var(--ink);
+}
+
 /* --- Responsive Breakpoints & Print --- */
 @media (max-width: 1140px) {
   .studio-split,
@@ -2026,6 +2165,8 @@ tr.selected-row td { background: var(--green-soft); }
   .section-card, .map-wrap, .analysis-shell, .hero-summary { padding: 14px; }
   .county-pick { width: 100%; justify-content: space-between; }
   .county-pick select { max-width: none; flex: 1; }
+  .real-bill-bar { flex-direction: column; align-items: stretch; }
+  .real-bill-label, .real-bill-bar select { flex: 1 1 auto; width: 100%; }
   .bridge-row, .roi-row, .tornado-row {
     grid-template-columns: 1fr;
     gap: 3px;

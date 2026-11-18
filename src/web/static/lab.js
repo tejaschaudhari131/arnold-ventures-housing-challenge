@@ -86,6 +86,8 @@
   var pinnedView = null;
   var labDepth = "briefing";
   var labAdjustOpen = false;
+  var labBills = [];
+  var activeLabBill = null;
 
   var statusEl = document.getElementById("status");
   var headline = document.getElementById("headline");
@@ -106,6 +108,102 @@
   var labBackdrop = document.getElementById("lab-backdrop");
   var labAdjustBtn = document.getElementById("toggle-lab-adjust");
   var labOverrideBadge = document.getElementById("lab-override-badge");
+  var labBillSelect = document.getElementById("lab-bill-select");
+  var labBillBanner = document.getElementById("lab-bill-banner");
+
+  function syncLabWorkspaceLinks(onStr) {
+    var chosenStr = onStr || (selectedIds().length ? selectedIds().map(function (id) { return SHORT[id]; }).join(",") : "none");
+    var screenerLink = document.getElementById("lab-nav-screener");
+    if (screenerLink) {
+      screenerLink.href = "/?st=" + encodeURIComponent(stateCode) +
+        (selectedFips ? "&county=" + encodeURIComponent(selectedFips) : "") +
+        "&on=" + encodeURIComponent(chosenStr);
+    }
+    var noteLink = document.getElementById("lab-nav-impact-note");
+    if (noteLink) {
+      noteLink.href = "/brief?st=" + encodeURIComponent(stateCode) + "&model=county&on=" + encodeURIComponent(chosenStr);
+    }
+  }
+
+  function renderLabBillSelect() {
+    if (!labBillSelect) return;
+    var activeId = activeLabBill ? activeLabBill.id : "";
+    var html = '<option value="">Custom / Manual bill selection</option>';
+    labBills.forEach(function (b) {
+      var sel = b.id === activeId ? " selected" : "";
+      html += '<option value="' + escapeHtml(b.id) + '"' + sel + ">[" + escapeHtml(b.state) + "] " +
+        escapeHtml(b.bill_number) + " (" + escapeHtml(b.status) + ")</option>";
+    });
+    labBillSelect.innerHTML = html;
+  }
+
+  function renderLabBillBanner() {
+    if (!labBillBanner) return;
+    if (!activeLabBill) {
+      labBillBanner.hidden = true;
+      labBillBanner.innerHTML = "";
+      return;
+    }
+    var isEnacted = /enacted/i.test(activeLabBill.status || "");
+    var clausesHtml = (activeLabBill.clauses || []).map(function (c) {
+      return "<li>" + escapeHtml(c) + "</li>";
+    }).join("");
+    labBillBanner.hidden = false;
+    labBillBanner.innerHTML =
+      '<div class="bill-citation-head">' +
+        "<div>" +
+          '<span class="bill-status-pill ' + (isEnacted ? "enacted" : "proposed") + '">' + escapeHtml(activeLabBill.status) + "</span> " +
+          '<span class="bill-session">' + escapeHtml(activeLabBill.state_name + " · " + activeLabBill.session) + "</span>" +
+          '<h3 class="bill-citation-title">' + escapeHtml(activeLabBill.bill_number) + "</h3>" +
+        "</div>" +
+        '<button type="button" class="btn-pill" id="clear-lab-bill">Clear bill preset</button>' +
+      "</div>" +
+      '<p class="bill-citation-ref"><strong>Statutory citation:</strong> ' + escapeHtml(activeLabBill.citation) + "</p>" +
+      '<p class="plain">' + escapeHtml(activeLabBill.summary) + "</p>" +
+      (clausesHtml ? '<ul class="bill-clause-list">' + clausesHtml + "</ul>" : "");
+    var clearBtn = document.getElementById("clear-lab-bill");
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function () {
+        applyLabBill("");
+      });
+    }
+  }
+
+  function applyLabBill(billId) {
+    if (!billId) {
+      activeLabBill = null;
+      renderLabBillSelect();
+      renderLabBillBanner();
+      return;
+    }
+    var found = labBills.filter(function (b) { return b.id === billId; })[0];
+    if (!found) return;
+    activeLabBill = found;
+    on = new Set(found.lab_reforms || BENCHMARKS);
+    if (on.size === 1) scenarioId = selectedIds()[0];
+    else if (on.size === 4) scenarioId = "package";
+    else scenarioId = "selection";
+    mapId = scenarioId === "selection" ? "" : scenarioId;
+    if (found.state !== stateCode && (found.state === "PA" || found.state === "NH")) {
+      changeState(found.state);
+      return;
+    }
+    renderAll();
+    loadMix();
+    loadLabInsights();
+    if (whyOpen) loadWhy();
+  }
+
+  function loadLabLegislation() {
+    get("/api/legislation").then(function (doc) {
+      var list = (doc && doc.bills) || [];
+      labBills = list.filter(function (b) { return b.state === "PA" || b.state === "NH"; });
+      renderLabBillSelect();
+      renderLabBillBanner();
+    }).catch(function () {
+      return null;
+    });
+  }
 
   function setLabDepth(next) {
     if (next !== "briefing" && next !== "markup" && next !== "audit") next = "briefing";
@@ -587,13 +685,15 @@
     var q = new URLSearchParams();
     q.set("st", stateCode);
     var chosen = selectedIds();
-    q.set("on", chosen.length ? chosen.map(function (id) { return SHORT[id]; }).join(",") : "none");
+    var onStr = chosen.length ? chosen.map(function (id) { return SHORT[id]; }).join(",") : "none";
+    q.set("on", onStr);
     var ov = encodeOverrides(overrides);
     if (ov) q.set("ov", ov);
     if (mapId) q.set("map", mapId === "package" ? "package" : (SHORT[mapId] || mapId));
     if (selectedFips) q.set("county", selectedFips);
     q.set("view", view);
     history.replaceState(null, "", "?" + q.toString() + location.hash);
+    syncLabWorkspaceLinks(onStr);
     renderStateNotice();
   }
 
@@ -717,6 +817,8 @@
   function renderAll() {
     renderStateNotice();
     updateLabOverrideBadge();
+    renderLabBillSelect();
+    renderLabBillBanner();
     if (!locked || locked.state !== stateCode) return;
     renderHeadline();
     renderCount();
@@ -745,6 +847,9 @@
   function changeState(code) {
     unknownState = "";
     stateCode = code;
+    if (activeLabBill && activeLabBill.state !== code) {
+      activeLabBill = null;
+    }
     selectedFips = code === "PA" ? "42003" : null;
     pinnedView = null;
     walkStep = 0;
@@ -1167,6 +1272,7 @@
     cards.querySelectorAll(".tog").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var k = btn.getAttribute("data-k");
+        activeLabBill = null;
         if (on.has(k)) on.delete(k);
         else on.add(k);
         scenarioId = k;
@@ -1573,9 +1679,15 @@
     var b = countyBottleneck(row);
     var lift = countyLiftPct(row);
     var liftStr = (lift >= 0 ? "+" : "") + lift.toFixed(1) + "%";
+    var chosen = selectedIds();
+    var onStr = chosen.length ? chosen.map(function (id) { return SHORT[id]; }).join(",") : "none";
+    var macroHref = "/?st=" + encodeURIComponent(stateCode) + "&amp;county=" + encodeURIComponent(row.fips) +
+      "&amp;on=" + encodeURIComponent(onStr);
     return '<p class="bottleneck-note"><span class="b-pill ' + escapeHtml(b.id) + '">' + escapeHtml(b.label) +
       "</span> · <span data-derived=\"county-lift\" data-from=\"counties." + escapeHtml(row.fips) + ".results.baseline.central\">" +
-      escapeHtml(liftStr) + " vs. county baseline</span> · " + escapeHtml(b.note) + "</p>";
+      escapeHtml(liftStr) + " vs. county baseline</span> · " + escapeHtml(b.note) + "</p>" +
+      '<div class="county-handoff-row"><a class="county-handoff-back" href="' + macroHref +
+      '">Compare ' + escapeHtml(row.name) + " in Step 1 Macro Screener (incl. TOD) →</a></div>";
   }
 
   function renderCountyDetail() {
@@ -2944,8 +3056,14 @@
       changeState(stateSelect.value);
     });
   }
+  if (labBillSelect) {
+    labBillSelect.addEventListener("change", function () {
+      applyLabBill(labBillSelect.value);
+    });
+  }
 
   document.getElementById("reset").addEventListener("click", function () {
+    activeLabBill = null;
     overrides = {};
     live = null;
     envelopeNote.textContent = drawsNote();
@@ -3003,12 +3121,14 @@
   }
 
   parseUrl();
+  syncLabWorkspaceLinks();
   renderStateNotice();
   var bootName = document.getElementById("state-name");
   if (bootName) bootName.textContent = stateNameOf(stateCode);
   if (stateSelect) stateSelect.value = stateCode;
   var q = new URLSearchParams(location.search);
   var shouldTry = q.get("try") === "1";
+  loadLabLegislation();
   loadAll().then(function () {
     if (shouldTry) tryPennsylvania();
     loadChecked();

@@ -15,9 +15,9 @@
   <div class="suite-bar no-print">
     <a class="suite-brand" href="/lab">Stateframe <span class="suite-tag">Legislative Studio</span></a>
     <nav class="suite-nav" aria-label="Stateframe workspaces">
-      <a href="/" title="Macro cross-state screening across all 11 Challenge states">11-State Screening</a>
-      <a href="/lab" aria-current="page" title="Micro lot-by-lot discrete-choice simulation for PA and NH">PA &amp; NH County Lab</a>
-      <a href="/brief" title="Plain-English one-page legislative handout">1-Page Brief</a>
+      <a href="/" id="lab-nav-screener" title="Step 1: Macro cross-state screening across all 11 Challenge states">1 · Macro Screener</a>
+      <a href="/lab" aria-current="page" title="Step 2: Micro lot-by-lot discrete-choice simulation for PA and NH">2 · Lot-by-Lot Lab</a>
+      <a href="/brief" id="lab-nav-impact-note" title="Step 3: Official one-page legislative housing impact note">3 · Impact Note</a>
     </nav>
     <span class="suite-spacer"></span>
     <label class="sr" for="state-select">State</label>
@@ -36,7 +36,7 @@
   </div>
 
   <header class="sf-top studio-lens-strip no-print">
-    <span class="lens-isolation-pill">Micro Lens · County Policy Lab (<code>src/lab/engine.py</code> · Lot-by-lot discrete-choice simulation · PA &amp; NH)</span>
+    <span class="lens-isolation-pill">Step 2 Lot-by-Lot Lab · County Parcel Simulation (<code>src/lab/engine.py</code> · Discrete-choice funnel · PA &amp; NH)</span>
     <nav aria-label="Lab sections">
       <a href="#package" aria-current="page">1 · Pick reforms</a>
       <a href="#overlap-panel" data-lab-jump="markup">2 · Package overlap</a>
@@ -74,7 +74,7 @@
         <p class="sub hero-dup" id="relate" aria-hidden="true"></p>
         <p class="sr" id="count-live" aria-live="polite"></p>
         <details class="hero-bridge no-print">
-          <summary>Using both workspaces? Why County Lab totals differ from 11-State Screening</summary>
+          <summary>Using both workspaces? Why Step 2 Lot Lab totals differ from Step 1 Macro Screener</summary>
           <div class="recon" id="recon"><!-- ENGINE_GAP --></div>
         </details>
       </div>
@@ -87,6 +87,16 @@
           </div>
           <p class="help">Extra homes over 5 years · bar = likely range (10th–90th percentile)</p>
         </div>
+        <div class="real-bill-bar">
+          <label class="real-bill-label" for="lab-bill-select">
+            <span class="step-kicker">Test Real PA &amp; NH Legislation</span>
+            <span class="real-bill-sub">Load an enacted or proposed PA / NH bill onto the lot-by-lot model</span>
+          </label>
+          <select id="lab-bill-select" aria-label="Test real PA or NH housing legislation">
+            <option value="">Custom / Manual bill selection</option>
+          </select>
+        </div>
+        <div id="lab-bill-banner" class="callout bill-citation-card" hidden></div>
         <div class="cards" id="cards" role="list"></div>
         <section id="extra-scenarios" aria-label="Also modeled, not a Handbook benchmark">
           <h3>Also modeled, not a Handbook benchmark</h3>

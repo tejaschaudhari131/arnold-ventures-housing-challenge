@@ -24,6 +24,8 @@
   var parameters = [];
   var overrides = {};
   var reformOn = { adu: true, missing_middle: true, tod: true, parking: true, fees: true };
+  var initialCountyFips = null;
+  var initialBillId = "";
   (function readEntry() {
     var q = new URLSearchParams(location.search);
     var st = (q.get("st") || "").toUpperCase();
@@ -32,6 +34,10 @@
     if (depthParam === "briefing" || depthParam === "markup" || depthParam === "audit") {
       studioDepth = depthParam;
     }
+    var cParam = (q.get("county") || "").trim();
+    if (cParam) initialCountyFips = cParam;
+    var bParam = (q.get("bill") || "").trim();
+    if (bParam) initialBillId = bParam;
     if (q.has("on")) {
       var raw = q.get("on") || "";
       REFORMS.forEach(function (id) { reformOn[id] = false; });
@@ -45,6 +51,8 @@
   })();
   var reformWeight = { adu: 1, missing_middle: 1, tod: 1, parking: 1, fees: 1 };
   var stateCatalog = [];
+  var legislationCatalog = [];
+  var activeBill = null;
   var result = null;
   var mapDoc = null;
   var geoAllDoc = null;
@@ -96,9 +104,37 @@
   var caseProgress = document.getElementById("case-progress");
   var insightsMount = document.getElementById("insights-mount");
   var briefingStripMount = document.getElementById("briefing-strip-mount");
+  var realBillSelect = document.getElementById("real-bill-select");
+  var activeBillBanner = document.getElementById("active-bill-banner");
 
   function setStatus(text) {
     if (statusEl) statusEl.textContent = text || "";
+  }
+
+  function activeLabOnParam() {
+    var keys = [];
+    if (reformOn.missing_middle) keys.push("mm");
+    if (reformOn.fees) keys.push("fees");
+    if (reformOn.adu) keys.push("adu");
+    if (reformOn.parking) keys.push("parking");
+    return keys.length ? keys.join(",") : "none";
+  }
+
+  function syncWorkspaceNavLinks() {
+    var onParam = activeLabOnParam();
+    var labLink = document.getElementById("nav-lot-lab");
+    if (labLink) {
+      var labSt = stateCode === "NH" ? "NH" : "PA";
+      var countyPart = (selectedFips && (stateCode === "PA" || stateCode === "NH"))
+        ? "&county=" + encodeURIComponent(selectedFips)
+        : "";
+      labLink.href = "/lab?st=" + encodeURIComponent(labSt) + countyPart + "&on=" + encodeURIComponent(onParam);
+    }
+    var noteLink = document.getElementById("nav-impact-note");
+    if (noteLink) {
+      var noteModel = (stateCode === "PA" || stateCode === "NH") ? "county" : "screening";
+      noteLink.href = "/brief?st=" + encodeURIComponent(stateCode) + "&model=" + noteModel + "&on=" + encodeURIComponent(onParam);
+    }
   }
 
   function setStudioDepth(nextDepth, skipTabSwitch) {
@@ -372,7 +408,107 @@
     return null;
   }
 
+  function renderRealBillSelect() {
+    if (!realBillSelect) return;
+    var activeId = activeBill ? activeBill.id : "";
+    var currentStateBills = legislationCatalog.filter(function (b) { return b.state === stateCode; });
+    var otherBills = legislationCatalog.filter(function (b) { return b.state !== stateCode; });
+    var html = '<option value="">Custom / Manual bill settings</option>';
+    function optHtml(b) {
+      var sel = b.id === activeId ? " selected" : "";
+      return '<option value="' + escapeHtml(b.id) + '"' + sel + ">[" + escapeHtml(b.state) + "] " +
+        escapeHtml(b.bill_number) + " (" + escapeHtml(b.status) + ")</option>";
+    }
+    if (currentStateBills.length) {
+      html += '<optgroup label="Active State (' + escapeHtml(stateCode) + ')">' +
+        currentStateBills.map(optHtml).join("") + "</optgroup>";
+    }
+    if (otherBills.length) {
+      html += '<optgroup label="' + (currentStateBills.length ? "Other Challenge States" : "Challenge State Bills") + '">' +
+        otherBills.map(optHtml).join("") + "</optgroup>";
+    }
+    realBillSelect.innerHTML = html;
+  }
+
+  function renderActiveBillBanner() {
+    if (!activeBillBanner) return;
+    if (!activeBill) {
+      activeBillBanner.hidden = true;
+      activeBillBanner.innerHTML = "";
+      return;
+    }
+    var isEnacted = /enacted/i.test(activeBill.status || "");
+    var clausesHtml = (activeBill.clauses || []).map(function (c) {
+      return "<li>" + escapeHtml(c) + "</li>";
+    }).join("");
+    var stairTag = activeBill.single_stair
+      ? '<span class="pill t1">6-story single-stair screen on</span> '
+      : "";
+    activeBillBanner.hidden = false;
+    activeBillBanner.innerHTML =
+      '<div class="bill-citation-head">' +
+        '<div>' +
+          '<span class="bill-status-pill ' + (isEnacted ? "enacted" : "proposed") + '">' + escapeHtml(activeBill.status) + "</span> " +
+          '<span class="bill-session">' + escapeHtml(activeBill.state_name + " · " + activeBill.session) + "</span> " +
+          stairTag +
+          '<h3 class="bill-citation-title">' + escapeHtml(activeBill.bill_number) + "</h3>" +
+        "</div>" +
+        '<button type="button" class="btn-pill" id="clear-real-bill">Clear bill preset</button>' +
+      "</div>" +
+      '<p class="bill-citation-ref"><strong>Statutory citation:</strong> ' + escapeHtml(activeBill.citation) + "</p>" +
+      '<p class="plain">' + escapeHtml(activeBill.summary) + "</p>" +
+      (clausesHtml ? '<ul class="bill-clause-list">' + clausesHtml + "</ul>" : "");
+    var clearBtn = document.getElementById("clear-real-bill");
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function () {
+        applyRealBill("");
+      });
+    }
+  }
+
+  function applyRealBill(billId) {
+    if (!billId) {
+      activeBill = null;
+      singleStairOn = false;
+      REFORMS.forEach(function (id) {
+        reformOn[id] = true;
+        reformWeight[id] = 1;
+      });
+      updateOverrideBadge();
+      renderReformMix();
+      renderRealBillSelect();
+      renderActiveBillBanner();
+      simulate().catch(fail);
+      return;
+    }
+    var found = legislationCatalog.filter(function (b) { return b.id === billId; })[0];
+    if (!found) return;
+    activeBill = found;
+    overrides = {};
+    singleStairOn = !!found.single_stair;
+    scenarioId = "combined";
+    mapScope = "state";
+    REFORMS.forEach(function (id) {
+      var w = found.reforms && Object.prototype.hasOwnProperty.call(found.reforms, id)
+        ? Number(found.reforms[id])
+        : 0;
+      reformOn[id] = w > 0;
+      reformWeight[id] = w > 0 ? w : 1;
+    });
+    updateOverrideBadge();
+    renderReformMix();
+    if (found.state !== stateCode) {
+      selectState(found.state).catch(fail);
+      return;
+    }
+    renderRealBillSelect();
+    renderActiveBillBanner();
+    renderSliders();
+    simulate().catch(fail);
+  }
+
   function applyCorePreset(presetId) {
+    activeBill = null;
     var preset = CORE_PRESETS.filter(function (p) { return p.id === presetId; })[0] || CORE_PRESETS[0];
     REFORMS.forEach(function (id) {
       var w = Object.prototype.hasOwnProperty.call(preset.weights, id) ? Number(preset.weights[id]) : 1;
@@ -389,6 +525,8 @@
     });
     updateOverrideBadge();
     renderReformMix();
+    renderRealBillSelect();
+    renderActiveBillBanner();
     renderSliders();
     schedule();
   }
@@ -1160,6 +1298,7 @@
   }
 
   function renderCountyDetail(county) {
+    syncWorkspaceNavLinks();
     if (!county) {
       countyDetail.hidden = true;
       countyDetail.innerHTML = "";
@@ -1171,6 +1310,16 @@
     var bInfo = coreCountyBottleneck(county);
     var lift = coreCountyLiftPct(county);
     var liftText = scenarioId === "baseline" ? "baseline view" : ((lift >= 0 ? "+" : "") + lift.toFixed(1) + "% vs. baseline");
+    var hasLotLab = stateCode === "PA" || stateCode === "NH";
+    var handoffCta = hasLotLab
+      ? '<a class="btn-try county-handoff-cta" href="/lab?st=' + encodeURIComponent(stateCode) +
+        "&amp;county=" + encodeURIComponent(county.fips) + "&amp;on=" + encodeURIComponent(activeLabOnParam()) +
+        '">Deep-dive ' + escapeHtml(county.name) + " in Step 2 Lot Lab →</a>"
+      : "";
+    var tierScopeNote = hasLotLab
+      ? ""
+      : '<p class="handoff-tier-note"><strong>Step 1 Macro Screen:</strong> County-aggregate structural lens shown for ' +
+        escapeHtml(result.name) + ". Step 2 parcel-competing Lot Lab covers PA &amp; NH.</p>";
     countyDetail.hidden = false;
     countyDetail.innerHTML =
       '<div class="receipt-card-head">' +
@@ -1191,7 +1340,9 @@
       "</div>" +
       "<p class='plain'>" + escapeHtml(bInfo.note) + " " +
       escapeHtml(county.close_call_reason || "County integers sum to the statewide total.") + "</p>" +
+      tierScopeNote +
       '<div class="exports">' +
+        handoffCta +
         '<button type="button" class="btn-pill" id="county-open-insights">Inspect ' + escapeHtml(county.name) + " HUD AMI breakeven &amp; GIS</button>" +
         '<button type="button" class="btn-pill" id="county-open-math">Trace county-to-state equations</button>' +
       "</div>";
@@ -1573,6 +1724,9 @@
       LEGEND.calculated = result.provenance_legend.calculated || LEGEND.calculated;
     }
     fillAduFeeNote();
+    syncWorkspaceNavLinks();
+    renderRealBillSelect();
+    renderActiveBillBanner();
     renderHeadline();
     renderCards();
     renderCompare();
@@ -1727,12 +1881,23 @@
     aduCompare = doc;
   }
 
-  async function selectState(code) {
+  async function selectState(code, keepCountyFips) {
     stateCode = code;
+    if (activeBill && activeBill.state !== code) {
+      activeBill = null;
+      singleStairOn = false;
+      REFORMS.forEach(function (id) {
+        reformOn[id] = true;
+        reformWeight[id] = 1;
+      });
+      renderReformMix();
+    }
     overrides = {};
     corePinned = null;
-    selectedFips = null;
+    selectedFips = keepCountyFips || null;
     updateOverrideBadge();
+    renderRealBillSelect();
+    renderActiveBillBanner();
     tornado.innerHTML = "";
     band.textContent = "";
     lastBand = null;
@@ -2304,7 +2469,14 @@
     });
   }
 
+  if (realBillSelect) {
+    realBillSelect.addEventListener("change", function () {
+      applyRealBill(realBillSelect.value);
+    });
+  }
+
   document.getElementById("reset").addEventListener("click", function () {
+    activeBill = null;
     overrides = {};
     singleStairOn = false;
     REFORMS.forEach(function (id) {
@@ -2313,6 +2485,8 @@
     });
     updateOverrideBadge();
     renderReformMix();
+    renderRealBillSelect();
+    renderActiveBillBanner();
     renderSliders();
     simulate().catch(fail);
   });
@@ -2341,7 +2515,7 @@
     if (caseStep >= 1 && stateCode !== "PA") {
       mapScope = "state";
       selectedFips = "42003";
-      selectState("PA").then(function () { renderCase(); }).catch(fail);
+      selectState("PA", "42003").then(function () { renderCase(); }).catch(fail);
       return;
     }
     if (caseStep >= 3) {
@@ -2407,12 +2581,14 @@
   setStudioDepth(studioDepth, true);
   renderReformMix();
   renderCorePresets();
+  syncWorkspaceNavLinks();
   Promise.all([
     request("/api/states"),
     request("/api/map"),
     request("/api/adu-compare?state=PA"),
     request("/api/data-sources").catch(function () { return null; }),
-    request("/api/geo").catch(function () { return null; })
+    request("/api/geo").catch(function () { return null; }),
+    request("/api/legislation").catch(function () { return null; })
   ])
     .then(function (payloads) {
       mapDoc = payloads[1];
@@ -2420,10 +2596,29 @@
       aduCompare = payloads[2];
       dataSourcesDoc = payloads[3];
       geoAllDoc = payloads[4];
+      legislationCatalog = (payloads[5] && payloads[5].bills) ? payloads[5].bills : [];
       fillAduFeeNote();
       renderStates(payloads[0].states);
+      renderRealBillSelect();
+      if (initialBillId) {
+        var matchedBill = legislationCatalog.filter(function (b) { return b.id === initialBillId; })[0];
+        if (matchedBill) {
+          activeBill = matchedBill;
+          stateCode = matchedBill.state;
+          singleStairOn = !!matchedBill.single_stair;
+          REFORMS.forEach(function (id) {
+            var w = matchedBill.reforms && Object.prototype.hasOwnProperty.call(matchedBill.reforms, id)
+              ? Number(matchedBill.reforms[id])
+              : 0;
+            reformOn[id] = w > 0;
+            reformWeight[id] = w > 0 ? w : 1;
+          });
+          updateOverrideBadge();
+          renderReformMix();
+        }
+      }
       var known = (payloads[0].states || []).some(function (row) { return row.code === stateCode; });
-      return selectState(known ? stateCode : "PA");
+      return selectState(known ? stateCode : "PA", initialCountyFips);
     })
     .catch(fail);
 })();

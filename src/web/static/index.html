@@ -14,9 +14,9 @@
   <div class="suite-bar no-print">
     <a class="suite-brand" href="/">Stateframe <span class="suite-tag">Legislative Studio</span></a>
     <nav class="suite-nav" aria-label="Stateframe workspaces">
-      <a href="/" aria-current="page" title="Macro cross-state screening across all 11 Challenge states">11-State Screening</a>
-      <a href="/lab" title="Micro lot-by-lot discrete-choice simulation for PA and NH">PA &amp; NH County Lab</a>
-      <a href="/brief" title="Plain-English one-page legislative handout">1-Page Brief</a>
+      <a href="/" aria-current="page" title="Step 1: Macro cross-state screening across all 11 Challenge states">1 · Macro Screener</a>
+      <a href="/lab" id="nav-lot-lab" title="Step 2: Micro lot-by-lot discrete-choice simulation for PA and NH">2 · Lot-by-Lot Lab</a>
+      <a href="/brief" id="nav-impact-note" title="Step 3: Official one-page legislative housing impact note">3 · Impact Note</a>
     </nav>
 
     <div class="studio-cmd-group">
@@ -41,17 +41,17 @@
   <header class="top studio-lens-strip">
     <div class="brand">
       <div class="lens-pill-row">
-        <span class="lens-isolation-pill">Macro Lens · 11-State Structural Screening (<code>src/model/equations.py</code>)</span>
-        <span class="lens-isolation-note">Cross-state county-aggregate screening (5 reforms incl. TOD) · Zoom into PA/NH Lab for lot-by-lot competition</span>
+        <span class="lens-isolation-pill">Step 1 Macro Screener · 11-State Structural Lens (<code>src/model/equations.py</code>)</span>
+        <span class="lens-isolation-note">Cross-state county-aggregate screening (5 reforms incl. TOD) · Hand off PA/NH counties to Step 2 Lot-by-Lot Lab</span>
       </div>
       <h1>Stateframe <span class="h1-sub">· 11-State Legislative Studio</span></h1>
-      <p class="lede">Screen state housing bills across eleven states, compare county choropleths and primary bottlenecks, then step into the PA &amp; NH Lot Lab for parcel-level reform competition.</p>
+      <p class="lede">Screen real and proposed housing bills across eleven states, inspect county choropleths and bottlenecks, then hand off any PA or NH county into the Step 2 Lot-by-Lot Lab.</p>
     </div>
     <div class="top-right-meta">
       <a class="btn-try suite-cta no-print" href="/lab?st=PA&amp;on=mm,fees,adu,parking&amp;try=1">Try Pennsylvania 2027–31</a>
       <div class="team lens-guide-box">
-        <p class="team-names">Macro Screener → Micro Lot Lab</p>
-        <p class="org">11-state aggregate screen here · Lot-competing funnel in PA &amp; NH Lab</p>
+        <p class="team-names">Step 1 Screener → Step 2 Lot Lab</p>
+        <p class="org">Screen 11 states &amp; TOD here · Deep-dive PA &amp; NH parcels in Step 2</p>
       </div>
     </div>
   </header>
@@ -111,6 +111,16 @@
               </div>
               <button type="button" class="btn-pill" id="inline-tune-btn">Tune weights &amp; sliders ▸</button>
             </div>
+            <div class="real-bill-bar">
+              <label class="real-bill-label" for="real-bill-select">
+                <span class="step-kicker">Test Real Enacted &amp; Proposed State Bills</span>
+                <span class="real-bill-sub">Load an actual state statute or active bill onto the deterministic levers (switches state &amp; recalculates live)</span>
+              </label>
+              <select id="real-bill-select" aria-label="Test real state housing legislation">
+                <option value="">Custom / Manual bill settings</option>
+              </select>
+            </div>
+            <div id="active-bill-banner" class="callout bill-citation-card" hidden></div>
             <p class="help studio-bill-hint">Click a reform title to focus the county choropleth and equation trace on that bill. Toggle <strong>In package</strong> to include or exclude it from the joint package.</p>
             <div class="cards studio-bill-stack" id="cards"></div>
           </section>

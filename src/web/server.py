@@ -377,6 +377,14 @@ class App:
 
         return official_sources_catalog(self.fixtures)
 
+    def legislation(self, state: str | None = None) -> dict[str, Any]:
+        from src.data.legislation import load_legislation
+
+        if not state or state.strip().upper() == "ALL":
+            return load_legislation(None)
+        code = self._check_state(state)
+        return load_legislation(code)
+
     def insights(self, payload: dict[str, Any] | None = None) -> dict[str, Any]:
         from src.model.playhouse_insights import build_state_insights
 
@@ -614,6 +622,9 @@ def make_handler(app: App):
                     self._json(200, app.adu_compare(query.get("state", ["PA"])[0]))
                 elif path == "/api/data-sources":
                     self._json(200, app.data_sources(), cache_control=ASSET_CACHE)
+                elif path == "/api/legislation":
+                    raw_state = query.get("state", [None])[0]
+                    self._json(200, app.legislation(raw_state), cache_control=ASSET_CACHE)
                 elif path == "/api/insights":
                     insights_payload: dict[str, Any] = {
                         "state": query.get("state", ["PA"])[0],
