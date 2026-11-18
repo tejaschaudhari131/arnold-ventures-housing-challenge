@@ -437,13 +437,8 @@ bash scripts/run.sh            # starts stdlib server at http://127.0.0.1:8080 (
 </head>
 <body class="deck-body">
   <header class="suite-bar deck-bar no-print">
-    <a class="suite-brand" href="/">Stateframe <span class="suite-tag">Legislative Studio</span></a>
-    <nav class="suite-nav" aria-label="Stateframe workspaces">
-      <a href="/">11-State Screening</a>
-      <a href="/lab">PA &amp; NH County Lab</a>
-      <a href="/brief">1-Page Brief</a>
-      <a href="/deck" aria-current="page">Executive Deck</a>
-    </nav>
+    <a class="suite-brand" href="/deck">Stateframe <span class="suite-tag">Legislative Studio · Pitch Deck</span></a>
+    <a class="suite-drawer-btn" href="/">Open Live Product →</a>
     <span class="suite-spacer deck-spacer"></span>
     <span id="deck-counter" class="deck-counter" aria-live="polite">All 16 slides</span>
     <button type="button" id="deck-mode" class="btn">Slide-by-slide view</button>

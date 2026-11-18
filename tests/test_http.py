@@ -43,9 +43,9 @@ def test_pages_name_the_team_and_simulate_pennsylvania():
         text = page.decode("utf-8")
         assert status == 200
         assert "Stateframe" in text
-        assert "Tejas Chaudhari" in text
-        assert "Yoon Yik Ng" in text
-        assert "Christopher Severns" in text
+        assert "Tejas Chaudhari" not in text
+        assert "Yoon Yik Ng" not in text
+        assert "Christopher Severns" not in text
         assert "YY Ng" not in text
         assert "observed" in text
         assert "assumed" in text

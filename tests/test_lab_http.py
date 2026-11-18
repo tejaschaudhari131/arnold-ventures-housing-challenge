@@ -41,7 +41,7 @@ def test_lab_page_and_locked_results_leave_home_intact():
         home_text = home.decode("utf-8")
         assert home_status == 200
         assert "Stateframe" in home_text
-        assert "Tejas Chaudhari" in home_text
+        assert "Tejas Chaudhari" not in home_text
         assert 'href="/lab"' in home_text
         assert home_headers.get("X-Frame-Options") == "DENY"
         assert home_headers.get("Referrer-Policy") == "no-referrer"
@@ -52,7 +52,7 @@ def test_lab_page_and_locked_results_leave_home_intact():
         assert "Small Homes Policy Lab" in text
         assert "Why this result?" in text
         assert "illustrative" in text.lower()
-        assert "Tejas Chaudhari" in text
+        assert "Tejas Chaudhari" not in text
         assert "Try Pennsylvania 2027–31" in text
 
         token_status, token_body, _ = _get(base, "/tokens.css")

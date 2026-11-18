@@ -14,10 +14,9 @@
   <div class="suite-bar no-print">
     <a class="suite-brand" href="/">Stateframe <span class="suite-tag">Legislative Studio</span></a>
     <nav class="suite-nav" aria-label="Stateframe workspaces">
-      <a href="/" aria-current="page">11-State Screening</a>
-      <a href="/lab">PA &amp; NH County Lab</a>
-      <a href="/brief">1-Page Brief</a>
-      <a href="/deck">Executive Deck</a>
+      <a href="/" aria-current="page" title="Macro cross-state screening across all 11 Challenge states">11-State Screening</a>
+      <a href="/lab" title="Micro lot-by-lot discrete-choice simulation for PA and NH">PA &amp; NH County Lab</a>
+      <a href="/brief" title="Plain-English one-page legislative handout">1-Page Brief</a>
     </nav>
 
     <div class="studio-cmd-group">
@@ -42,17 +41,17 @@
   <header class="top studio-lens-strip">
     <div class="brand">
       <div class="lens-pill-row">
-        <span class="lens-isolation-pill">Active Engine Lens · 11-State Structural Screening (<code>src/model/equations.py</code>)</span>
-        <span class="lens-isolation-note">Statewide county-sum screening across 11 Challenge states · Distinct from PA/NH lot-competition Lab</span>
+        <span class="lens-isolation-pill">Macro Lens · 11-State Structural Screening (<code>src/model/equations.py</code>)</span>
+        <span class="lens-isolation-note">Cross-state county-aggregate screening (5 reforms incl. TOD) · Zoom into PA/NH Lab for lot-by-lot competition</span>
       </div>
       <h1>Stateframe <span class="h1-sub">· 11-State Legislative Studio</span></h1>
-      <p class="lede">Toggle state housing bills, compare county choropleths and bottlenecks side-by-side, and trace every number from observed public data to five-year completions.</p>
+      <p class="lede">Screen state housing bills across eleven states, compare county choropleths and primary bottlenecks, then step into the PA &amp; NH Lot Lab for parcel-level reform competition.</p>
     </div>
     <div class="top-right-meta">
       <a class="btn-try suite-cta no-print" href="/lab?st=PA&amp;on=mm,fees,adu,parking&amp;try=1">Try Pennsylvania 2027–31</a>
-      <div class="team">
-        <p class="team-names">Tejas Chaudhari · Yoon Yik Ng · Christopher Severns</p>
-        <p class="org">Carnegie Mellon University · Arnold Ventures Challenge</p>
+      <div class="team lens-guide-box">
+        <p class="team-names">Macro Screener → Micro Lot Lab</p>
+        <p class="org">11-state aggregate screen here · Lot-competing funnel in PA &amp; NH Lab</p>
       </div>
     </div>
   </header>
@@ -331,7 +330,6 @@
 
   <footer>
     <p>Stateframe is open source under the Apache License 2.0. Structural equations live in <code>src/model/equations.py</code>. Default values live in <code>config/assumptions.yaml</code>. No machine-learning model is used. County choropleth boundaries are simplified public-domain Census <code>cb_2024_us_county_5m</code> polygons.</p>
-    <p>Tejas Chaudhari (tchaudha@andrew.cmu.edu), Yoon Yik Ng (yoonyikn@andrew.cmu.edu), Christopher Severns (cseverns@andrew.cmu.edu), Carnegie Mellon University.</p>
     <p class="build-stamp">Build <!-- BUILD_STAMP --></p>
   </footer>
   <script src="/fmt.js"></script>

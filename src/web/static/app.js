@@ -980,7 +980,7 @@
       "<p>" + badge("calculated") + " " + escapeHtml(LEGEND.calculated) + "</p>" +
       "<p><strong>What this cannot tell you.</strong> " + escapeHtml((chosen.cannot && chosen.cannot[0]) || "") + "</p>" +
       (aduCompare ? "<p class='adu-fee-note'>" + escapeHtml(aduCompare.notes.docs) + "</p>" : "") +
-      "<p>Housing stock and prices are Census ACS figures. Permits are the Building Permits Survey. County boundaries are Census cb_2024_us_county_5m cartographic polygons. County integers sum to the rounded state total. Tejas Chaudhari, Yoon Yik Ng, and Christopher Severns, Carnegie Mellon University. Apache-2.0.</p>" +
+      "<p>Housing stock and prices are Census ACS figures. Permits are the Building Permits Survey. County boundaries are Census cb_2024_us_county_5m cartographic polygons. County integers sum to the rounded state total. Open-source under Apache-2.0.</p>" +
       "</div>";
   }
 

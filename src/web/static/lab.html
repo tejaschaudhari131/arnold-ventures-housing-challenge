@@ -15,10 +15,9 @@
   <div class="suite-bar no-print">
     <a class="suite-brand" href="/lab">Stateframe <span class="suite-tag">Legislative Studio</span></a>
     <nav class="suite-nav" aria-label="Stateframe workspaces">
-      <a href="/">11-State Screening</a>
-      <a href="/lab" aria-current="page">PA &amp; NH County Lab</a>
-      <a href="/brief">1-Page Brief</a>
-      <a href="/deck">Executive Deck</a>
+      <a href="/" title="Macro cross-state screening across all 11 Challenge states">11-State Screening</a>
+      <a href="/lab" aria-current="page" title="Micro lot-by-lot discrete-choice simulation for PA and NH">PA &amp; NH County Lab</a>
+      <a href="/brief" title="Plain-English one-page legislative handout">1-Page Brief</a>
     </nav>
     <span class="suite-spacer"></span>
     <label class="sr" for="state-select">State</label>
@@ -37,7 +36,7 @@
   </div>
 
   <header class="sf-top studio-lens-strip no-print">
-    <span class="lens-isolation-pill">Active Engine Lens · County Policy Lab (<code>src/lab/engine.py</code> · Lot-by-lot simulation · PA &amp; NH)</span>
+    <span class="lens-isolation-pill">Micro Lens · County Policy Lab (<code>src/lab/engine.py</code> · Lot-by-lot discrete-choice simulation · PA &amp; NH)</span>
     <nav aria-label="Lab sections">
       <a href="#package" aria-current="page">1 · Pick reforms</a>
       <a href="#overlap-panel" data-lab-jump="markup">2 · Package overlap</a>
@@ -314,7 +313,6 @@
 
   <footer>
     <p>Small Homes Policy Lab · Stateframe. Equations live in <code>src/lab/engine.py</code>. Locked defaults live in <code>config/lab/assumptions.yaml</code>. Method: <a href="/docs/SMALL_HOMES_LAB.md">docs/SMALL_HOMES_LAB.md</a>. Apache License 2.0.</p>
-    <p>Tejas Chaudhari (tchaudha@andrew.cmu.edu), Yoon Yik Ng (yoonyikn@andrew.cmu.edu), Christopher Severns (cseverns@andrew.cmu.edu), Carnegie Mellon University.</p>
     <p class="build-stamp">Build <!-- BUILD_STAMP --></p>
   </footer>
   <script src="/fmt.js"></script>

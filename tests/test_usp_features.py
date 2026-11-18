@@ -73,11 +73,11 @@ def test_home_and_lab_expose_inspector_presets_pins_bottleneck_and_portability()
         home = home_raw.decode("utf-8")
         lab = lab_raw.decode("utf-8")
 
-        # Click-any-number lineage inspector + executive deck links on both pages.
+        # Click-any-number lineage inspector on both pages; pitch deck stays decoupled from product nav.
         assert "/inspector.js" in home
         assert "/inspector.js" in lab
-        assert 'href="/deck"' in home
-        assert 'href="/deck"' in lab
+        assert 'href="/deck"' not in home
+        assert 'href="/deck"' not in lab
 
         # 3-mode map toggle + bottleneck legend + presets + A/B pin on both pages.
         assert 'id="core-map-metrics"' in home
@@ -168,13 +168,15 @@ def test_ui_ux_regression_guards():
     assert "#drivers-mount" in lab_css
     assert '.brief-sheet input[type="checkbox"]' in lab_css
 
-    # 4. Unified suite bar across all 4 routes + separated cross-model disclosures (no workspace mixing).
+    # 4. Unified suite nav across the 3 product routes + standalone pitch deck header + separated cross-model disclosures.
     from src.deck import render_deck_html
 
     render_deck_html.cache_clear()
     deck_html = render_deck_html()
-    for doc in (index_html, lab_html, brief_html, deck_html):
+    for doc in (index_html, lab_html, brief_html):
         assert 'class="suite-nav"' in doc
+        assert 'href="/deck"' not in doc
+    assert 'class="suite-bar deck-bar no-print"' in deck_html
     assert 'class="bridge-disclosure' in index_html
     assert 'class="bridge-disclosure' in lab_html
     assert 'class="hero-bridge' in lab_html
