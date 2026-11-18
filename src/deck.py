@@ -17,6 +17,7 @@ from src.bundle import load_bundle
 from src.export.report import simulate_many
 from src.lab.explain import assumption_catalog, locked_results
 from src.model.crossval import cross_validate_tier1
+from src.model.playhouse_insights import build_state_insights, official_sources_catalog
 from src.plain import homes, money
 from src.version import stamp_html
 
@@ -66,6 +67,16 @@ def render_deck_html() -> str:
     fixtures, assumptions = load_bundle()
     all_states = simulate_many(fixtures, assumptions)
     xval = cross_validate_tier1(fixtures, assumptions, draws=40)
+    off_cat = official_sources_catalog(fixtures)
+    pa_ins = build_state_insights(fixtures, assumptions, "PA", single_stair=True)
+    off_sum = off_cat["summary"]
+    pa_stair_lift = float(
+        pa_ins["building_code_and_capacity"]["single_stair_impact"]["incremental_homes_from_single_stair"]
+    )
+    pa_bls_jobs = float(pa_ins["official_data_card"]["observed"]["bls_jobs_latest_thousands"])
+    pa_adu_proto = next(
+        p["metrics"] for p in pa_ins["affordability_screen"]["prototypes"] if p["id"] == "adu"
+    )
 
     pa_sw = pa["statewide"]["results"]
     pa_decomp = pa["statewide"]["package_decomposition"]
@@ -322,14 +333,15 @@ def render_deck_html() -> str:
         </section>""",
         # Slide 12
         f"""<section class="slide" data-slide="12">
-          <p class="kicker">5 · Replicability &amp; Data-Procurement Value</p>
-          <h2>Tested Against Real Parcel Extracts — Where Does Better Data Pay Off?</h2>
+          <p class="kicker">5 · Replicability, Official Data Hub &amp; Procurement Value</p>
+          <h2>Tested Against Real Parcel Extracts — Plus All 11 Official State GIS Portals</h2>
           <div class="two-col">
             <div class="deck-table-wrap">
               <table>
                 <thead><tr><th>Tier-1 State</th><th>Observed Fit</th><th>Imputed Fit</th><th>ADU Diff</th><th>Pkg Diff</th><th>Band Ratio</th></tr></thead>
                 <tbody>{xval_rows}</tbody>
               </table>
+              <p class="lead-note"><strong>Full Official Data Coverage:</strong> Integrates all <strong>{int(off_sum['handbook_families_integrated'])} Handbook dataset families</strong> and all <strong>{int(off_sum['states_covered'])} state GIS portals</strong> ({int(off_sum['total_gis_records_observed']):,} observed parcel/zoning records, {int(off_sum['total_ntad_transit_stops']):,} USDOT transit stops, and {float(off_sum['total_bls_construction_jobs_thousands']):,.1f}k BLS construction jobs).</p>
             </div>
             <div class="card-box">
               <h3>PA ADU Uncertainty Widths</h3>
@@ -376,7 +388,7 @@ def render_deck_html() -> str:
           </div>
         </section>""",
         # Slide 15
-        """<section class="slide" data-slide="15">
+        f"""<section class="slide" data-slide="15">
           <p class="kicker">6 · Usability — Built for Live Committee Markup</p>
           <h2>Interactive Workflow From 30-Second Brief to Equation Audit</h2>
           <div class="two-col">
@@ -386,6 +398,7 @@ def render_deck_html() -> str:
                 <li><strong>Quick Answer (<code>/brief</code>):</strong> Plain-English, ≤8th-grade reading level one-page sheet for any state and reform mix.</li>
                 <li><strong>Bill Amendment Presets &amp; Pin-and-Compare:</strong> Pin Baseline Bill A, apply a committee amendment, and read exact Δ homes live.</li>
                 <li><strong>3-Mode County Map:</strong> Switch between <em>Extra Homes</em>, <em>% Lift</em>, and <em>Primary County Bottleneck</em>.</li>
+                <li><strong>HUD AMI Breakeven &amp; Priority Stances:</strong> Screens 30–120% AMI monthly budgets (PA ADU breakeven {_m(pa_adu_proto['breakeven_rent_before'])} → {_m(pa_adu_proto['breakeven_rent_after'])}/mo) across 5 stakeholder stances with a 3-point caution band.</li>
               </ul>
             </div>
             <div class="card-box">
@@ -393,6 +406,7 @@ def render_deck_html() -> str:
               <ul>
                 <li><strong>Click-Any-Number Lineage Inspector:</strong> Click any figure on screen to inspect its JSON path, engine module, and data vintage.</li>
                 <li><strong>County Why Drawer &amp; Show-the-Math:</strong> Full substituted equations and illustrative pro forma receipts.</li>
+                <li><strong>Single-Stair Code &amp; BLS Workforce Screen:</strong> Models 6-story point-access code reform ({_h(pa_stair_lift, True)} PA package homes) against {pa_bls_jobs:,.1f}k observed PA construction jobs.</li>
                 <li><strong>Provenance-Tagged Exports:</strong> CSV, JSON, Markdown, PNG, and 1-page print-to-PDF briefs.</li>
               </ul>
             </div>

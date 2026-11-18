@@ -17,6 +17,10 @@ export PYTHONPATH="$ROOT"
 set +e
 "$PY" -m src.data.acquire "$@"
 code=$?
+if [[ "$code" -eq 0 ]]; then
+  "$PY" -m src.data.official_sources "$@"
+  code=$?
+fi
 set -e
 if [[ "$code" -ne 0 ]]; then
   echo "Live acquisition failed (exit ${code}). Using the committed benchmark in data/sample/."

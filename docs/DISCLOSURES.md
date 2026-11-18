@@ -10,6 +10,8 @@ The PlayHouse license was rechecked on 2026-11-01. GitHub still reports `license
 
 Stateframe also borrows interaction ideas from that project: a map a person can click, before-and-after numbers, plain language next to a result, controls that reset, a flag when a result is close, and a one-page brief. Yoon Yik Ng and Christopher Severns are co-authors of Stateframe. The eleven-state screening map is generated in the browser from Census gazetteer interior points in `data/sample/county_points.json`. The Lab map uses public-domain Census cartographic boundary rings in `data/sample/lab/{PA,NH}_counties.geo.json`. The scenario arithmetic is the county pro forma in `src/model/` and `src/lab/`.
 
+`src/model/playhouse_insights.py` adds three clean-room Apache-2.0 policy screens inspired by housing-policy concepts explored in PlayHouse — a 30–120% HUD Area Median Income (AMI) breakeven rent screen, a single-stair point-access building code (up to 6 stories) and BLS construction workforce absorption screen, and five stakeholder priority stances with a 3.0-point caution band. All equations, weights, and UI components in `src/model/playhouse_insights.py` and `src/web/static/` were written from scratch in this repository on top of Stateframe's county pro forma and `data/sample/official_sources.json`, with zero PlayHouse code, styles, or data copied.
+
 # AI-Assisted Code Generation
 
 Cursor cloud agents and Grok Bot assistants drafted code, tests, the web client, and documentation under the authors' specification. The authors are responsible for the equations, the committed figures, and the Apache-2.0 license on the output. Cursor's terms, as used for this challenge submission, permit the authors to own and openly license the generated source. No prompt, weight, or hidden chain is required to run, test, or modify Stateframe. A reviewer can recompute every published integer from `bash scripts/test.sh` and the files in `config/` and `data/sample/`.
@@ -35,6 +37,8 @@ The installed app runs offline on `data/sample/`. Live refresh is optional.
 | api.census.gov | Not called. The API now requires a key and is avoided on purpose | No | Optional `CENSUS_API_KEY` is unused |
 | ArcGIS / Hawaii GIS feature services | One-time aggregate counts stored in `tier1_benchmarks.json` | No | Public open-data services; only aggregates are stored |
 | National Transit Database SODA | Attempted; endpoints returned 404. Not a runtime dependency | No | Replaced by the screened inventory |
+| BLS v2 Public Data API (`api.bls.gov`) | Optional refresh of state construction jobs (`SMU`) and materials `PPI` (`WPUSI012011`) in `official_sources.json` | No. Fallback is `data/sample/official_sources.json` | Public domain, unauthenticated v2 query |
+| USDOT NTAD ArcGIS & 11 State GIS Open-Data Services | Optional refresh of aggregate transit stop, parcel, zoning, UGB, conservation, and footprint counts in `official_sources.json` | No. Fallback is `data/sample/official_sources.json` | Public federal and state open-data services; aggregate counts only |
 
 No paid API, no authentication token, and no service whose disappearance changes a result the tests already locked. `scripts/get_data.sh` exits 0 when the network fails and leaves the sample benchmark in place.
 
@@ -61,6 +65,7 @@ Every series below is public and is on the challenge data list, except the team-
 | WPRDC Allegheny assessments, lot-area bins only | CC0 1.0; 2012 base-year land values | `data/sample/lab/allegheny_lots.json` |
 | HUD FY2026 FMR workbook (optional Lab context) | Public domain; not a model input | committed extract, vintage labeled |
 | Lab zoning evidence | Team summaries of public law with source URLs | `config/lab/evidence/{PA,NH}.yaml` |
+| ACS B25004 vacancy breakdown, BLS CES construction jobs & materials PPI, USDOT NTAD transit stops, 2024 Gazetteer water/land, VGIN & Microsoft v2 footprint counts, and 11 official state GIS portal counts | Public domain federal series and public state open-data aggregates; zero PII or raw geometry | `data/sample/official_sources.json` |
 
 No raw parcel geometry, owner table, or household microdata is committed. `scripts/get_data.sh` refreshes the Census and FHFA portion, including gazetteer interior points, and falls back to `data/sample/` when the network is unavailable.
 

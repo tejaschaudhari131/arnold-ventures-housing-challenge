@@ -60,6 +60,7 @@
           <a class="btn-pill" href="#map-title">2 · County map</a>
           <a class="btn-pill" href="#cards">3 · Benchmark scenarios</a>
           <a class="btn-pill" href="#panel-compare">4 · Equations &amp; exports</a>
+          <button type="button" class="btn-pill" id="open-insights">Data hub, AMI &amp; code screen</button>
           <button type="button" class="btn-pill" id="open-portability">50-state portability &amp; data ROI</button>
         </div>
       </div>
@@ -110,6 +111,7 @@
               <button type="button" class="tab active" role="tab" id="tab-compare" data-tab="compare" aria-selected="true" aria-controls="panel-compare">Compare</button>
               <button type="button" class="tab" role="tab" id="tab-math" data-tab="math" aria-selected="false" aria-controls="panel-math">Show the math</button>
               <button type="button" class="tab" role="tab" id="tab-counties" data-tab="counties" aria-selected="false" aria-controls="panel-counties">Counties</button>
+              <button type="button" class="tab" role="tab" id="tab-insights" data-tab="insights" aria-selected="false" aria-controls="panel-insights">Data hub &amp; affordability</button>
               <button type="button" class="tab" role="tab" id="tab-brief" data-tab="brief" aria-selected="false" aria-controls="panel-brief">One-page brief</button>
             </div>
             <div class="tabs-more">
@@ -219,6 +221,16 @@
           </div>
           <p class="help" id="case-progress">Allegheny County is the worked example. The state total is the sum of Pennsylvania's counties.</p>
           <div id="case-body"></div>
+        </section>
+
+        <section class="panel" id="panel-insights" role="tabpanel" aria-labelledby="tab-insights" hidden>
+          <div class="panel-head">
+            <div>
+              <h2>Official data hub, HUD AMI breakeven &amp; building-code screen</h2>
+              <p class="help">Integrates every official Challenge GIS portal in <code>data/DATA_SOURCES.md</code> and all ten Handbook public dataset families with cost-based HUD AMI breakeven rents, single-stair code modernization, BLS workforce capacity, and stakeholder priority stances.</p>
+            </div>
+          </div>
+          <div id="insights-mount" class="insights-stack"></div>
         </section>
 
         <section class="panel" id="panel-brief" role="tabpanel" aria-labelledby="tab-brief" hidden>

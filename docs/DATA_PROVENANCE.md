@@ -83,6 +83,22 @@ The Lab (`src/lab/`, https://stateframe-housing.vercel.app/lab in the simulator)
 
 **Allowlist.** Lab acquisition reaches only www2.census.gov, data.wprdc.org, and www.huduser.gov.
 
+# Extended Official State Portals and Challenge Handbook Datasets
+
+`python -m src.data.official_sources` (chained inside `bash scripts/get_data.sh`) queries the remaining Challenge Handbook public dataset families and all 11 official state GIS / open-data portals listed in `data/DATA_SOURCES.md`. It writes `data/cache/official_sources.json` (or refreshes the committed `data/sample/official_sources.json` with `--write-sample`) and passes every record through `assert_no_pii`.
+
+| Dataset / Portal Family | Source & Endpoint Host | Version / vintage | Access date | License / terms | Aggregate Stored |
+| ----------------------- | ---------------------- | ----------------- | ----------- | --------------- | ---------------- |
+| ACS Vacancy Status Breakdown (`B25004`) | U.S. Census Bureau, `www2.census.gov` summary file | 2019–2023 5-year | 2026-11-17 | Public domain, U.S. government work | State `for_rent`, `for_sale`, `seasonal`, `other_vacant`, and market-available share (11 states) |
+| BLS State Construction Workforce (`CES`) | U.S. Bureau of Labor Statistics, `api.bls.gov` (`SMU{FIPS}000002000000001`) | 2020–2025 annual / latest month | 2026-11-17 | Public domain, U.S. government work | Construction employment in thousands (`1,442.5k` across 11 states) and 2020–2025 % change |
+| BLS Construction Materials `PPI` | U.S. Bureau of Labor Statistics, `api.bls.gov` (`WPUSI012011`) | 2020–2025 | 2026-11-17 | Public domain, U.S. government work | National construction materials index (`+41.3%` cumulative 2020–2025) |
+| National Transit Map Stops (`NTAD`) | USDOT Bureau of Transportation Statistics / FTA, `services.arcgis.com` (`NTAD_National_Transit_Map_Stops`) | 2025–2026 GTFS compilation | 2026-11-17 | Public domain, U.S. government work | `178,621` observed GTFS transit stops across the 11 states (alongside screened rail/BRT stations) |
+| Gazetteer Land & Water Coverage | U.S. Census Bureau, `2024_Gaz_counties_national.zip` | 2024 | 2026-11-17 | Public domain | State `ALAND_SQMI`, `AWATER_SQMI`, and water share |
+| Building Footprints (Live VGIN + Microsoft v2) | Virginia VGIN (`vginmaps.vdem.virginia.gov`) + Microsoft `USBuildingFootprints` v2 state release summary | 2024–2026 | 2026-11-17 | Public open data / ODbL state count summary (no geometry redistributed) | `4,522,646` live VGIN footprints in `VA` + Microsoft v2 state building counts across remaining 10 states |
+| All 11 Official State GIS Open Data Portals | AZGeo (`services.arcgis.com`), CT Open Data (`services3.arcgis.com`), HI Statewide GIS (`geodata.hawaii.gov`), NH GRANIT (`nhgeodata.unh.edu`), OR GEOHub & RLIS (`services1.arcgis.com`, `services2.arcgis.com`), PA PASDA & WPRDC (`mapservices.pasda.psu.edu`, `data.wprdc.org`), RI RIGIS (`services2.arcgis.com`), TN OIR GIS (`tnmap.tn.gov`), UT UGRC SGID (`services1.arcgis.com`), VA VGIN (`vginmaps.vdem.virginia.gov`), WI SCO (`services3.arcgis.com`) | 2024–2026 live feature services | 2026-11-17 | State open-data terms; aggregate counts only | `17,350,539` observed parcel/cadastral/zoning/conservation feature counts across all 11 states; zero geometry or owner fields |
+
+**Official-sources allowlist.** `OFFICIAL_ALLOWED_HOSTS` in `src/data/official_sources.py` permits HTTPS requests only to `www2.census.gov`, `api.bls.gov`, `services.arcgis.com`, `services1.arcgis.com`, `services2.arcgis.com`, `services3.arcgis.com`, `geodata.hawaii.gov`, `nhgeodata.unh.edu`, `vginmaps.vdem.virginia.gov`, `mapservices.pasda.psu.edu`, and `tnmap.tn.gov`. Plain `http://` and unlisted hosts raise `FetchDenied`.
+
 # Restricted, Sensitive, or Personal Data
 
 No dataset of individuals, households, owners, or mailing addresses is used or stored. Parcel services were queried for counts, sums, and lot-size bins. The adapter refuses records that contain owner, co-owner, mailing address, or account-number fields (`FORBIDDEN_PARCEL_FIELDS`). The committed JSON cannot be walked back to a person. County medians are Census published cells, already aggregated. No restricted-use Census file, no state wage file, and no brokerage listing feed is used.

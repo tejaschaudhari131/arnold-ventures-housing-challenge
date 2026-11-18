@@ -54,6 +54,11 @@
   var aduCompareCache = {};
   var coreMapMetric = "homes";
   var corePinned = null;
+  var dataSourcesDoc = null;
+  var insightsDoc = null;
+  var singleStairOn = false;
+  var activeStanceId = "balanced";
+  var insightsRequestId = 0;
 
   var statusEl = document.getElementById("status");
   var stateList = document.getElementById("state-list");
@@ -76,6 +81,7 @@
   var briefEl = document.getElementById("brief");
   var caseBody = document.getElementById("case-body");
   var caseProgress = document.getElementById("case-progress");
+  var insightsMount = document.getElementById("insights-mount");
 
   function setStatus(text) {
     statusEl.textContent = text || "";
@@ -1024,7 +1030,18 @@
       "<p>Homes " + tagged(county.housing_units, "observed", integer) +
       ". Median value " + tagged(county.median_value, valueTag, function (value) { return "$" + integer(value); }) +
       ". Selected scenario " + tagged(county[column], "calculated", integer) +
-      " (" + escapeHtml(liftText) + ") · " + escapeHtml(bInfo.note) + "</p>";
+      " (" + escapeHtml(liftText) + ") · " + escapeHtml(bInfo.note) + "</p>" +
+      '<div class="exports"><button type="button" class="btn-pill" id="county-open-insights">Inspect ' +
+      escapeHtml(county.name) + ' AMI breakeven &amp; official GIS</button></div>';
+    var jumpBtn = document.getElementById("county-open-insights");
+    if (jumpBtn) {
+      jumpBtn.addEventListener("click", function () {
+        var tab = document.getElementById("tab-insights");
+        var panel = document.getElementById("panel-insights");
+        if (tab) activateTab(tab);
+        if (panel && panel.scrollIntoView) panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   }
 
   function renderMap() {
@@ -1210,6 +1227,7 @@
       function choose() {
         selectedFips = node.getAttribute("data-fips");
         renderStateMap();
+        loadInsights();
       }
       node.addEventListener("click", choose);
       node.addEventListener("keydown", function (event) {
@@ -1497,6 +1515,234 @@
       });
   }
 
+  function renderInsights() {
+    if (!insightsMount) return;
+    if (!insightsDoc) {
+      insightsMount.innerHTML = '<p class="help">Loading official data hub, HUD AMI breakeven rents, and code screen…</p>';
+      return;
+    }
+    var aff = insightsDoc.affordability_screen;
+    var obsCtx = aff.observed_context || {};
+    var codeCap = insightsDoc.building_code_and_capacity;
+    var stairImp = codeCap.single_stair_impact;
+    var wf = codeCap.workforce_capacity;
+    var wfObs = wf.observed_bls;
+    var wfAbs = wf.absorption_metrics;
+    var stancesWrap = insightsDoc.priority_stances;
+    var stances = stancesWrap.stances || [];
+    var chosenStance = stances[0];
+    stances.forEach(function (s) {
+      if (s.id === activeStanceId) chosenStance = s;
+    });
+    var card = insightsDoc.official_data_card;
+    var cObs = card.observed;
+    var cComp = card.completeness;
+    var mktPct = Math.round(Number(cObs.vacant_market_available_share || 0) * 100);
+    var seasPct = Math.round(Number(cObs.vacant_seasonal_share || 0) * 100);
+    var othPct = Math.max(0, 100 - mktPct - seasPct);
+
+    var amiPills = (aff.ami_bands || []).map(function (b) {
+      return '<div class="ami-pill">' +
+        '<span class="ami-band">' + escapeHtml(b.label) + "</span>" +
+        '<strong>$' + integer(b.max_monthly_housing_budget) + "/mo</strong> " + badge("calculated") +
+        '<span class="ami-inc">≤$' + integer(b.annual_income_ceiling) + "/yr</span>" +
+        "</div>";
+    }).join("");
+
+    var protoRows = (aff.prototypes || []).map(function (p) {
+      var m = p.metrics;
+      var sav = Number(m.monthly_rent_savings || 0);
+      return "<tr>" +
+        "<td><strong>" + escapeHtml(p.label) + "</strong><div class='help'>" + escapeHtml(p.lever_note) + "</div></td>" +
+        "<td>" + integer(m.unit_sqft) + " sq ft " + badge("assumed") + "</td>" +
+        "<td>$" + integer(m.breakeven_rent_before) + "/mo " + badge("calculated") +
+          "<div class='ami-chip before'>" + escapeHtml(p.lowest_ami_band_before) + "</div></td>" +
+        "<td><strong>$" + integer(m.breakeven_rent_after) + "/mo</strong> " + badge("calculated") +
+          "<div class='ami-chip after'>" + escapeHtml(p.lowest_ami_band_after) + "</div></td>" +
+        "<td>" + (sav > 0 ? "−$" + integer(sav) + "/mo" : "$0/mo") + " " + badge("calculated") + "</td>" +
+        "</tr>";
+    }).join("");
+
+    var fmrText = obsCtx.hud_fmr_2br
+      ? " · HUD FY2026 2BR FMR $" + integer(obsCtx.hud_fmr_2br) + "/mo " + badge("observed")
+      : "";
+
+    var stanceButtons = stances.map(function (s) {
+      var on = chosenStance && s.id === chosenStance.id;
+      return '<button type="button" class="stance-btn' + (on ? " active" : "") + '" aria-pressed="' + (on ? "true" : "false") + '" data-stance-id="' + escapeHtml(s.id) + '">' +
+        escapeHtml(s.label) + "</button>";
+    }).join("");
+
+    var stanceRanks = chosenStance ? (chosenStance.rankings || []).map(function (r, idx) {
+      var sc = r.scores;
+      var w = Math.max(4, Math.min(100, Number(sc.composite_score || 0)));
+      return '<div class="stance-row">' +
+        '<div class="stance-rank-head">' +
+          '<span><strong>#' + (idx + 1) + " · " + escapeHtml(r.label) + "</strong></span>" +
+          '<span><strong>' + oneDecimal(sc.composite_score) + " pts</strong> " + badge("calculated") +
+          " · +" + integer(sc.net_completions_5yr) + " homes</span>" +
+        "</div>" +
+        '<div class="stance-bar-track" aria-hidden="true"><i style="width:' + w.toFixed(1) + '%"></i></div>' +
+        "</div>";
+    }).join("") : "";
+
+    var wts = chosenStance ? chosenStance.weights : {};
+    var weightLine = chosenStance
+      ? "Value-judgment weights: Supply " + Math.round((wts.supply || 0) * 100) + "% " + badge("assumed") +
+        " · Affordability " + Math.round((wts.affordability || 0) * 100) + "% " + badge("assumed") +
+        " · Transit &amp; compact land " + Math.round((wts.compact_transit || 0) * 100) + "% " + badge("assumed") +
+        " · Fast / zero-backfill " + Math.round((wts.speed_fiscal || 0) * 100) + "% " + badge("assumed")
+      : "";
+
+    var matrixHtml = "";
+    if (dataSourcesDoc && dataSourcesDoc.states) {
+      var stateRows = dataSourcesDoc.states.map(function (st) {
+        var om = st.observed_metrics;
+        var cp = st.completeness;
+        return "<tr" + (st.code === stateCode ? ' class="selected-row"' : "") + ">" +
+          "<td><strong>" + escapeHtml(st.code) + "</strong> · " + escapeHtml(st.name) + "</td>" +
+          '<td><a href="' + escapeHtml(st.portal_url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(st.portal_name) + "</a></td>" +
+          "<td>" + integer(om.parcel_records_observed) + " parcels · " + integer(om.zoning_or_landuse_records) + " zoning/LU " + badge("observed") + "</td>" +
+          "<td>" + integer(om.ntad_transit_stops) + " stops " + badge("observed") + "</td>" +
+          "<td>" + oneDecimal(om.bls_jobs_latest_thousands) + "k (" + signedPercent(om.bls_jobs_change_pct) + ") " + badge("observed") + "</td>" +
+          "<td>" + Math.round(om.vacant_market_available_share * 100) + "% mkt / " + Math.round(om.vacant_seasonal_share * 100) + "% seasonal " + badge("observed") + "</td>" +
+          "<td>" + cp.benchmark_completeness + "% → <strong>" + cp.extended_completeness + "%</strong> " + badge("calculated") + "</td>" +
+          "</tr>";
+      }).join("");
+
+      var famRows = (dataSourcesDoc.handbook_families || []).map(function (f) {
+        return "<tr><td><strong>" + escapeHtml(f.name) + "</strong></td><td>" +
+          escapeHtml(f.vintage) + "</td><td>" + escapeHtml(f.license) + "</td><td><span class='pill t1'>" +
+          escapeHtml(f.status) + "</span></td></tr>";
+      }).join("");
+
+      matrixHtml =
+        '<details class="hub-matrix-details">' +
+          '<summary>View all 11 official state GIS portals (<code>data/DATA_SOURCES.md</code>) &amp; 10 Handbook dataset families</summary>' +
+          '<div class="hub-matrix-body">' +
+            '<div class="table-wrap" role="region" tabindex="0" aria-label="All eleven official state GIS portals">' +
+              "<table><thead><tr><th>State</th><th>Official Portal</th><th>Observed GIS Records</th><th>USDOT Stops</th><th>BLS Workforce</th><th>ACS B25004 Vacancy</th><th>Coverage</th></tr></thead><tbody>" +
+              stateRows + "</tbody></table>" +
+            "</div>" +
+            "<h4>All 10 Challenge Handbook &amp; Starter Dataset Families</h4>" +
+            '<div class="table-wrap" role="region" tabindex="0" aria-label="Integrated Handbook dataset families">' +
+              "<table><thead><tr><th>Dataset Family</th><th>Vintage Loaded</th><th>License / Terms</th><th>Status</th></tr></thead><tbody>" +
+              famRows + "</tbody></table>" +
+            "</div>" +
+          "</div>" +
+        "</details>";
+    }
+
+    insightsMount.innerHTML =
+      '<article class="insight-card">' +
+        '<div class="panel-head">' +
+          "<div>" +
+            '<p class="step-kicker">1 · Household Affordability &amp; Building-Code Modernization</p>' +
+            "<h3>" + escapeHtml(aff.geography_label) + " — HUD AMI Breakeven Rent &amp; Single-Stair Screen</h3>" +
+          "</div>" +
+          (insightsDoc.selected_county_fips
+            ? '<button type="button" class="btn-pill" id="insights-clear-county">Show statewide ' + escapeHtml(insightsDoc.state_name) + "</button>"
+            : "") +
+        "</div>" +
+        '<p class="help">Observed median income <strong>$' + integer(obsCtx.median_income) + "</strong> " + badge("observed") +
+          " · Median gross rent <strong>$" + integer(obsCtx.median_rent) + "/mo</strong> " + badge("observed") +
+          fmrText + ". " + escapeHtml(aff.scope_note) + "</p>" +
+        '<label class="stair-toggle" for="single-stair-toggle">' +
+          '<input type="checkbox" id="single-stair-toggle"' + (singleStairOn ? " checked" : "") + ">" +
+          '<span><strong>Include Single-Stair 6-Story Building Code Reform</strong> — allows one pressurized stair on sprinklered 3–6 story blocks (≤4 homes/floor), unlocking <strong>+' +
+          integer(stairImp.incremental_homes_from_single_stair) + " extra package homes</strong> in " + escapeHtml(insightsDoc.state_name) + " " + badge("calculated") + "</span>" +
+        "</label>" +
+        '<div class="ami-grid" aria-label="HUD AMI monthly housing budgets">' + amiPills + "</div>" +
+        '<div class="table-wrap" role="region" tabindex="0" aria-label="Before and after reform breakeven monthly rent by prototype">' +
+          "<table><thead><tr><th>Infill Prototype</th><th>Size</th><th>Before Reform Breakeven</th><th>After Reform Breakeven</th><th>Monthly Cost Relief</th></tr></thead><tbody>" +
+          protoRows + "</tbody></table>" +
+        "</div>" +
+        '<div class="workforce-strip">' +
+          "<div><strong>BLS Construction Workforce (" + escapeHtml(insightsDoc.state) + "):</strong> " +
+            oneDecimal(wfObs.bls_jobs_latest_thousands) + "k jobs (" + signedPercent(wfObs.bls_jobs_change_2020_2025_pct) + " vs 2020) " + badge("observed") +
+            " · Materials PPI +" + oneDecimal(cObs.national_ppi_inflation_2020_latest_pct) + "% (2020–2025) " + badge("observed") + "</div>" +
+          "<div><strong>Workforce Absorption:</strong> +" + oneDecimal(wfAbs.incremental_homes_per_1k_workers) +
+            " added homes / 1,000 workers / yr (vs " + oneDecimal(wfAbs.baseline_homes_per_1k_workers) + " baseline) " + badge("calculated") +
+            " · <span class='wf-badge'>" + escapeHtml(wf.labor_strain_tier) + "</span></div>" +
+        "</div>" +
+      "</article>" +
+
+      '<article class="insight-card">' +
+        '<p class="step-kicker">2 · Value Judgments vs. Model Outputs (3-Point Caution Band)</p>' +
+        "<h3>Stakeholder Priority Stances — Which Standalone Reform Ranks First?</h3>" +
+        '<p class="help">' + escapeHtml(stancesWrap.methodology_note) + "</p>" +
+        '<div class="stance-bar" role="group" aria-label="Stakeholder priority stances">' + stanceButtons + "</div>" +
+        (chosenStance
+          ? '<div class="callout stance-callout">' +
+              "<p><strong>" + escapeHtml(chosenStance.label) + ":</strong> " + escapeHtml(chosenStance.summary) + "</p>" +
+              "<p>" + (chosenStance.too_close_to_call ? '<span class="badge-uncertain">Too close to call (≤3 pts)</span> ' : "") +
+              escapeHtml(chosenStance.caution_note) + "</p>" +
+              '<p class="help">' + weightLine + "</p>" +
+            "</div>" +
+            '<div class="stance-ranks">' + stanceRanks + "</div>"
+          : "") +
+      "</article>" +
+
+      '<article class="insight-card">' +
+        '<p class="step-kicker">3 · Official Hackathon Data Coverage (' + escapeHtml(insightsDoc.state_name) + ')</p>' +
+        '<h3><a href="' + escapeHtml(card.portal_url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(card.portal_name) + "</a></h3>" +
+        "<p>" + escapeHtml(card.headline_finding) + "</p>" +
+        '<div class="hub-kpi-grid">' +
+          '<div class="hub-kpi"><span>Data Completeness</span><strong>' + cComp.benchmark_completeness + "% → " + cComp.extended_completeness + "%</strong> " + badge("calculated") + "<small>Benchmark Tier " + cComp.tier + " vs. Extended Hub</small></div>" +
+          '<div class="hub-kpi"><span>Observed GIS Features</span><strong>' + integer(cObs.parcel_records_observed) + "</strong> " + badge("observed") + "<small>Parcels + " + integer(cObs.zoning_or_landuse_records) + " zoning/land-use records</small></div>" +
+          '<div class="hub-kpi"><span>Transit &amp; Footprints</span><strong>' + integer(cObs.ntad_transit_stops) + " stops</strong> " + badge("observed") + "<small>" + (cObs.rail_stations + cObs.brt_stations) + " major rail/BRT · " + integer(cObs.building_footprints) + " footprints</small></div>" +
+          '<div class="hub-kpi"><span>ACS B25004 Vacancy Split</span><strong>' + mktPct + "% market</strong> " + badge("observed") + "<small>" + seasPct + "% seasonal · " + othPct + "% other (" + integer(cObs.vacant_total) + " vacant)</small>" +
+            '<div class="vac-bar" aria-hidden="true"><i class="vac-mkt" style="width:' + mktPct + '%"></i><i class="vac-seas" style="width:' + seasPct + '%"></i><i class="vac-oth" style="width:' + othPct + '%"></i></div>' +
+          "</div>" +
+        "</div>" +
+        matrixHtml +
+      "</article>";
+
+    var stairBox = document.getElementById("single-stair-toggle");
+    if (stairBox) {
+      stairBox.addEventListener("change", function () {
+        singleStairOn = !!stairBox.checked;
+        loadInsights();
+      });
+    }
+    var clearCountyBtn = document.getElementById("insights-clear-county");
+    if (clearCountyBtn) {
+      clearCountyBtn.addEventListener("click", function () {
+        selectedFips = null;
+        if (result) renderMap();
+        loadInsights();
+      });
+    }
+    insightsMount.querySelectorAll("[data-stance-id]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        activeStanceId = btn.getAttribute("data-stance-id") || "balanced";
+        renderInsights();
+      });
+    });
+  }
+
+  function loadInsights() {
+    if (!insightsMount) return;
+    var iid = ++insightsRequestId;
+    var payload = {
+      state: stateCode,
+      overrides: overrides,
+      reforms: reformsPayload(),
+      single_stair: singleStairOn,
+    };
+    if (selectedFips) payload.county = selectedFips;
+    post("/api/insights", payload)
+      .then(function (doc) {
+        if (iid !== insightsRequestId) return;
+        insightsDoc = doc;
+        renderInsights();
+      })
+      .catch(function () {
+        if (iid !== insightsRequestId) return;
+        insightsMount.innerHTML = '<p class="help">Could not load insights for this selection.</p>';
+      });
+  }
+
   async function simulate() {
     var id = ++requestId;
     setStatus("Calculating " + stateCode + "…");
@@ -1511,6 +1757,7 @@
     setStatus("");
     render();
     loadHeroBand();
+    loadInsights();
     if (caseStudy && stateCode === "PA") {
       caseStudy = null;
     }
@@ -1548,6 +1795,10 @@
     if (tab.getAttribute("data-tab") === "cross" && !crossOut.innerHTML.trim()) {
       runCrossCheck();
     }
+    if (tab.getAttribute("data-tab") === "insights") {
+      if (insightsDoc) renderInsights();
+      else loadInsights();
+    }
     if (tab.getAttribute("data-tab") === "brief" && result) renderBrief();
   }
 
@@ -1578,6 +1829,18 @@
     });
   }
 
+  var openInsightsBtn = document.getElementById("open-insights");
+  if (openInsightsBtn) {
+    openInsightsBtn.addEventListener("click", function () {
+      var insTab = document.getElementById("tab-insights");
+      var insPanel = document.getElementById("panel-insights");
+      if (insTab) activateTab(insTab);
+      if (insPanel && insPanel.scrollIntoView) {
+        insPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  }
+
   var openPortability = document.getElementById("open-portability");
   if (openPortability) {
     openPortability.addEventListener("click", function () {
@@ -1600,11 +1863,13 @@
       selectedFips = countyPick.value;
       mapScope = "state";
       renderMap();
+      loadInsights();
     });
   }
 
   document.getElementById("reset").addEventListener("click", function () {
     overrides = {};
+    singleStairOn = false;
     REFORMS.forEach(function (id) {
       reformOn[id] = true;
       reformWeight[id] = 1;
@@ -1618,6 +1883,7 @@
     mapScope = "nation";
     selectedFips = null;
     renderMap();
+    loadInsights();
   });
 
   document.getElementById("export-csv").addEventListener("click", function () { download("csv"); });
@@ -1701,11 +1967,17 @@
 
   renderReformMix();
   renderCorePresets();
-  Promise.all([request("/api/states"), request("/api/map"), request("/api/adu-compare?state=PA")])
+  Promise.all([
+    request("/api/states"),
+    request("/api/map"),
+    request("/api/adu-compare?state=PA"),
+    request("/api/data-sources").catch(function () { return null; })
+  ])
     .then(function (payloads) {
       mapDoc = payloads[1];
       aduCompareCache.PA = payloads[2];
       aduCompare = payloads[2];
+      dataSourcesDoc = payloads[3];
       fillAduFeeNote();
       renderStates(payloads[0].states);
       var known = (payloads[0].states || []).some(function (row) { return row.code === stateCode; });

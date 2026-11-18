@@ -352,6 +352,40 @@ class App:
 
         return comparison(self._check_state(state))
 
+    def data_sources(self) -> dict[str, Any]:
+        from src.model.playhouse_insights import official_sources_catalog
+
+        return official_sources_catalog(self.fixtures)
+
+    def insights(self, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+        from src.model.playhouse_insights import build_state_insights
+
+        payload = payload or {}
+        state = self._check_state(str(payload.get("state", "PA")))
+        overrides = payload.get("overrides") or {}
+        if not isinstance(overrides, dict):
+            raise AssumptionError("overrides must be an object.")
+        county_raw = payload.get("county")
+        county = str(county_raw).strip() if county_raw else None
+        raw_stair = payload.get("single_stair", False)
+        if isinstance(raw_stair, bool):
+            single_stair = raw_stair
+        elif str(raw_stair).strip().lower() in {"1", "true", "yes", "on"}:
+            single_stair = True
+        elif str(raw_stair).strip().lower() in {"0", "false", "no", "off", ""}:
+            single_stair = False
+        else:
+            raise AssumptionError("single_stair must be boolean.")
+        return build_state_insights(
+            self.fixtures,
+            self.assumptions,
+            state,
+            county=county,
+            overrides=overrides,
+            reform_weights=self._reforms(payload.get("reforms")),
+            single_stair=single_stair,
+        )
+
     def export(
         self,
         state: str,
@@ -555,6 +589,17 @@ def make_handler(app: App):
                     self._send(200, body, mime, filename)
                 elif path == "/api/adu-compare":
                     self._json(200, app.adu_compare(query.get("state", ["PA"])[0]))
+                elif path == "/api/data-sources":
+                    self._json(200, app.data_sources(), cache_control=ASSET_CACHE)
+                elif path == "/api/insights":
+                    insights_payload: dict[str, Any] = {
+                        "state": query.get("state", ["PA"])[0],
+                    }
+                    if "county" in query and query["county"]:
+                        insights_payload["county"] = query["county"][0]
+                    if "single_stair" in query and query["single_stair"]:
+                        insights_payload["single_stair"] = query["single_stair"][0]
+                    self._json(200, app.insights(insights_payload))
                 else:
                     self._json(404, {"error": "Not found"})
             except AssumptionError as exc:
@@ -574,6 +619,8 @@ def make_handler(app: App):
                     self._json(200, app.sensitivity(payload))
                 elif parsed.path == "/api/crossval":
                     self._json(200, app.crossval(payload))
+                elif parsed.path == "/api/insights":
+                    self._json(200, app.insights(payload))
                 elif parsed.path == "/api/lab/recompute":
                     self._json(200, app.lab_recompute(payload))
                 elif parsed.path == "/api/lab/mix":

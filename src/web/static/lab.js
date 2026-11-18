@@ -665,6 +665,7 @@
       renderTryPa();
       renderAll();
       loadMix();
+      loadLabInsights();
       if (keepOverrides && Object.keys(overrides).length) scheduleRecompute();
       if (whyOpen) loadWhy();
       setStatus("");
@@ -1370,6 +1371,7 @@
     renderCountyDetail();
     renderPinBox();
     renderKeyPoints();
+    loadLabInsights();
     if (whyOpen) loadWhy();
     writeUrl();
   }
@@ -2389,6 +2391,56 @@
         " " + tag("calculated") + ". " + escapeHtml(doc.note || "");
     }).catch(function () {
       el.textContent = "Open the screening view Cross-check tab to run the comparison on CT, WI, UT, and HI.";
+    });
+  }
+
+  var labInsightsSeq = 0;
+  function loadLabInsights() {
+    var box = document.getElementById("lab-insights-body");
+    if (!box) return;
+    var seq = ++labInsightsSeq;
+    var url = "/api/insights?state=" + encodeURIComponent(stateCode) +
+      (selectedFips ? "&county=" + encodeURIComponent(selectedFips) : "") +
+      "&single_stair=1";
+    fetch(url).then(function (res) {
+      if (!res.ok) throw new Error("insights request failed");
+      return res.json();
+    }).then(function (doc) {
+      if (seq !== labInsightsSeq) return;
+      var aff = doc.affordability_screen || {};
+      var ctx = aff.observed_context || {};
+      var card = doc.official_data_card || {};
+      var cObs = card.observed || {};
+      var wf = (doc.building_code_and_capacity || {}).workforce_capacity || {};
+      var wfObs = wf.observed_bls || {};
+      var protos = (aff.prototypes || []).slice(0, 2);
+      var mktShare = Math.round(Number(cObs.vacant_market_available_share || 0) * 100);
+      var seasShare = Math.round(Number(cObs.vacant_seasonal_share || 0) * 100);
+      var fmrLine = ctx.hud_fmr_2br
+        ? " · HUD FY2026 2BR FMR $" + integer(ctx.hud_fmr_2br) + "/mo " + tag("observed")
+        : "";
+      var protoLines = protos.map(function (p) {
+        var m = p.metrics || {};
+        return "<li><strong>" + escapeHtml(p.label) + ":</strong> $" +
+          integer(m.breakeven_rent_before) + "/mo (" + escapeHtml(p.lowest_ami_band_before) +
+          ") → <strong>$" + integer(m.breakeven_rent_after) + "/mo</strong> (" +
+          escapeHtml(p.lowest_ami_band_after) + ") " + tag("calculated") + "</li>";
+      }).join("");
+      box.innerHTML =
+        "<p><strong>" + escapeHtml(aff.geography_label || stateCode) + "</strong> · Median income $" +
+        integer(ctx.median_income) + " " + tag("observed") + fmrLine + "</p>" +
+        "<ul>" +
+        protoLines +
+        "<li><strong>Official GIS (" + escapeHtml(card.portal_name || stateCode) + "):</strong> " +
+        escapeHtml(card.headline_finding || "") + " " + tag("observed") + "</li>" +
+        "<li><strong>Vacancy &amp; BLS Workforce:</strong> " + mktShare + "% market-available vs. " +
+        seasShare + "% seasonal vacant (ACS B25004) · " +
+        Number(wfObs.bls_jobs_latest_thousands || 0).toFixed(1) + "k construction jobs " + tag("observed") + "</li>" +
+        "</ul>" +
+        "<p class='help'>Cost-based breakeven rent screen (not a market-rent projection); includes 50% fee cut, parking repeal, and single-stair 3–6 story code efficiency.</p>";
+    }).catch(function () {
+      if (seq !== labInsightsSeq) return;
+      box.innerHTML = "<p class='help'>County affordability &amp; official GIS summary unavailable.</p>";
     });
   }
 

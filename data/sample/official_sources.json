@@ -1,0 +1,648 @@
+{
+  "access_date": "2026-11-17",
+  "method": "Aggregate public statistics only across all 11 Challenge states in data/DATA_SOURCES.md and all 10 Challenge Handbook recommended national dataset families. Owner names, mailing addresses, and parcel account numbers are never queried or stored.",
+  "handbook_families": [
+    {
+      "id": "acs_stock_prices",
+      "name": "U.S. Census American Community Survey (ACS)",
+      "vintage": "2019\u20132023 (11-state) & 2020\u20132024 (PA/NH Lab)",
+      "status": "integrated",
+      "license": "Public domain, U.S. government work"
+    },
+    {
+      "id": "acs_usps_vacancy",
+      "name": "Vacancy Status Breakdown (ACS B25004 / HUD-USPS Context)",
+      "vintage": "ACS 2019\u20132023 5-year table B25004",
+      "status": "integrated",
+      "license": "Public domain, U.S. government work"
+    },
+    {
+      "id": "census_bps",
+      "name": "Census Building Permits Survey (BPS)",
+      "vintage": "2022\u20132024 (11-state) & 2023\u20132025 (PA/NH Lab)",
+      "status": "integrated",
+      "license": "Public domain, U.S. government work"
+    },
+    {
+      "id": "fhfa_hpi",
+      "name": "FHFA All-Transactions House Price Index",
+      "vintage": "2000\u20132025 annual workbook",
+      "status": "integrated",
+      "license": "Public FHFA statistical release"
+    },
+    {
+      "id": "bls_construction",
+      "name": "Bureau of Labor Statistics (CES Construction Workforce & PPI)",
+      "vintage": "2020\u20132025 monthly series averaged by year",
+      "status": "integrated",
+      "license": "Public domain, U.S. government work"
+    },
+    {
+      "id": "ntd_ntad_transit",
+      "name": "USDOT / FTA National Transit Map & Screened Major Stops",
+      "vintage": "2025\u20132026 NTAD FeatureServer + agency major-stop inventory",
+      "status": "integrated",
+      "license": "Public domain, U.S. Department of Transportation"
+    },
+    {
+      "id": "land_cover_gazetteer",
+      "name": "Land Cover, Conservation & Gazetteer Land/Water",
+      "vintage": "2024 Census Gazetteer + HI/OR/RI/NH/AZ/PA state land-use layers",
+      "status": "integrated",
+      "license": "Public domain / State open-data aggregates"
+    },
+    {
+      "id": "building_footprints",
+      "name": "Building Footprints (VGIN Live Layer + Microsoft v2 Summary Counts)",
+      "vintage": "VGIN 2026 live count + Microsoft USBuildingFootprints v2 summary",
+      "status": "integrated",
+      "license": "Aggregate structure counts only (no ODbL geometry redistributed)"
+    },
+    {
+      "id": "hud_fmr_ami",
+      "name": "HUD FY2026 Fair Market Rents & Area Median Income Reference",
+      "vintage": "HUD FY2026 county FMR (PA/NH Lab) + ACS B19013/B25064 AMI rent bands (11 states)",
+      "status": "integrated",
+      "license": "Public domain, U.S. Department of Housing and Urban Development"
+    },
+    {
+      "id": "state_gis_portals",
+      "name": "Official 11-State GIS Open Data Portals (data/DATA_SOURCES.md)",
+      "vintage": "2025\u20132026 live ArcGIS REST / MapServer / CKAN aggregates",
+      "status": "integrated",
+      "license": "State open data; aggregate non-PII counts and area shares only"
+    }
+  ],
+  "national_bls_ppi": {
+    "series_id": "WPUSI012011",
+    "label": "BLS Producer Price Index: Construction Materials (WPUSI012011)",
+    "index_2020": 239.18,
+    "index_latest": 337.91,
+    "latest_year": 2025,
+    "inflation_2020_latest_pct": 41.28
+  },
+  "states": {
+    "AZ": {
+      "code": "AZ",
+      "fips": "04",
+      "name": "Arizona",
+      "portal": {
+        "portal_name": "AZGeo Open Data Hub",
+        "portal_url": "https://azgeo-data-hub-agic.hub.arcgis.com/",
+        "catalog_note": "Statewide Land Ownership (Private vs BLM/USFS/Tribal/State Trust) plus regional parcel service."
+      },
+      "gis": {
+        "gis_status": "live_observed_aggregates",
+        "parcel_records_observed": 86925,
+        "zoning_or_landuse_records": 9,
+        "private_land_share": 0.1723,
+        "public_and_tribal_land_share": 0.8277,
+        "headline_finding": "AZGeo LandOwnership shows only 17.2% of Arizona land is privately held (82.8% Federal, Tribal, or State Trust), concentrating housing reform inside existing metro envelopes.",
+        "endpoints": [
+          "https://services.arcgis.com/cghC2lEIpJ2TRrs5/arcgis/rest/services/LandOwnership/FeatureServer/0",
+          "https://services.arcgis.com/cghC2lEIpJ2TRrs5/arcgis/rest/services/Parcels/FeatureServer/0"
+        ]
+      },
+      "vacancy_b25004": {
+        "total_vacant": 345653.0,
+        "for_rent": 52788.0,
+        "rented_not_occ": 12150.0,
+        "for_sale": 19787.0,
+        "sold_not_occ": 13138.0,
+        "seasonal": 172996.0,
+        "migrant": 899.0,
+        "other_vacant": 73895.0,
+        "market_available_share": 0.21,
+        "seasonal_share": 0.5005,
+        "other_vacant_share": 0.2138,
+        "non_market_share": 0.7143
+      },
+      "geography": {
+        "land_sqmi": 113655.4,
+        "water_sqmi": 329.73,
+        "water_share": 0.0029
+      },
+      "bls_construction": {
+        "series_id": "SMU04000002000000001",
+        "sector_note": "Construction (CES supersector 20)",
+        "jobs_2020_thousands": 174.08,
+        "jobs_latest_thousands": 224.61,
+        "jobs_latest_year": 2025,
+        "jobs_change_2020_2025_pct": 29.03
+      },
+      "ntad_transit_stops": 12388,
+      "microsoft_building_footprints": 2738732
+    },
+    "CT": {
+      "code": "CT",
+      "fips": "09",
+      "name": "Connecticut",
+      "portal": {
+        "portal_name": "Connecticut Open Data (CAMA & Parcel Layer)",
+        "portal_url": "https://data.ct.gov/",
+        "catalog_note": "Statewide CAMA and parcel layer with residential lot-size bins and municipal zone codes."
+      },
+      "gis": {
+        "gis_status": "live_observed_tier1",
+        "parcel_records_observed": 1320686,
+        "sf_lots_binned": 569165,
+        "zoning_or_landuse_records": 1320686,
+        "headline_finding": "Connecticut CAMA & Parcel Layer covers 1,320,686 statewide parcels with 569,165 single-family lots binned by exact square footage.",
+        "endpoints": [
+          "https://geodata.ct.gov/datasets/82a733423a244c43a9d4bf552954cea9_0"
+        ]
+      },
+      "vacancy_b25004": {
+        "total_vacant": 115879.0,
+        "for_rent": 23288.0,
+        "rented_not_occ": 4702.0,
+        "for_sale": 8931.0,
+        "sold_not_occ": 5768.0,
+        "seasonal": 27572.0,
+        "migrant": 225.0,
+        "other_vacant": 45393.0,
+        "market_available_share": 0.278,
+        "seasonal_share": 0.2379,
+        "other_vacant_share": 0.3917,
+        "non_market_share": 0.6297
+      },
+      "geography": {
+        "land_sqmi": 4842.49,
+        "water_sqmi": 701.21,
+        "water_share": 0.1265
+      },
+      "bls_construction": {
+        "series_id": "SMU09000002000000001",
+        "sector_note": "Construction (CES supersector 20)",
+        "jobs_2020_thousands": 56.94,
+        "jobs_latest_thousands": 64.2,
+        "jobs_latest_year": 2025,
+        "jobs_change_2020_2025_pct": 12.75
+      },
+      "ntad_transit_stops": 14181,
+      "microsoft_building_footprints": 1215624
+    },
+    "HI": {
+      "code": "HI",
+      "fips": "15",
+      "name": "Hawaii",
+      "portal": {
+        "portal_name": "Hawaii Statewide GIS Program",
+        "portal_url": "https://geoportal.hawaii.gov/",
+        "catalog_note": "Statewide TMK parcel count and State Land Use Commission district acreage."
+      },
+      "gis": {
+        "gis_status": "live_observed_tier1",
+        "parcel_records_observed": 384035,
+        "urban_land_share": 0.049502,
+        "zoning_or_landuse_records": 4,
+        "land_use_acres": {
+          "urban": 204061.61,
+          "agricultural": 1885398.998,
+          "conservation": 2022332.929,
+          "rural": 10458.788
+        },
+        "headline_finding": "Hawaii Statewide GIS records 384,035 TMK parcels; only 4.95% of state land is in the State Land Use Urban District.",
+        "endpoints": [
+          "https://geoportal.hawaii.gov/datasets/HiStateGIS::parcels-hawaii-statewide"
+        ]
+      },
+      "vacancy_b25004": {
+        "total_vacant": 75914.0,
+        "for_rent": 15603.0,
+        "rented_not_occ": 1699.0,
+        "for_sale": 3306.0,
+        "sold_not_occ": 2044.0,
+        "seasonal": 31638.0,
+        "migrant": 239.0,
+        "other_vacant": 21385.0,
+        "market_available_share": 0.2491,
+        "seasonal_share": 0.4168,
+        "other_vacant_share": 0.2817,
+        "non_market_share": 0.6985
+      },
+      "geography": {
+        "land_sqmi": 6422.59,
+        "water_sqmi": 4547.27,
+        "water_share": 0.4145
+      },
+      "bls_construction": {
+        "series_id": "SMU15000001500000001",
+        "sector_note": "Mining, Logging, and Construction combined (CES supersector 15)",
+        "jobs_2020_thousands": 36.78,
+        "jobs_latest_thousands": 40.26,
+        "jobs_latest_year": 2025,
+        "jobs_change_2020_2025_pct": 9.46
+      },
+      "ntad_transit_stops": 4800,
+      "microsoft_building_footprints": 252908
+    },
+    "NH": {
+      "code": "NH",
+      "fips": "33",
+      "name": "New Hampshire",
+      "portal": {
+        "portal_name": "NH GRANIT Data Discovery",
+        "portal_url": "https://www.nhgeodata.unh.edu/",
+        "catalog_note": "Statewide CAD Parcel Mosaic and Open Land Use developed/undeveloped acreage."
+      },
+      "gis": {
+        "gis_status": "live_observed_aggregates",
+        "parcel_records_observed": 617065,
+        "zoning_or_landuse_records": 61808,
+        "developed_land_share_sample": 0.2312,
+        "headline_finding": "NH GRANIT Statewide Parcel Mosaic provides 617,065 parcel records and 61,808 regional open land-use polygons (23.1% developed acreage).",
+        "endpoints": [
+          "https://nhgeodata.unh.edu/hosting/rest/services/Hosted/CAD_ParcelMosaic/FeatureServer/0",
+          "https://nhgeodata.unh.edu/hosting/rest/services/Hosted/EC_LandUse_OpenData/FeatureServer/0"
+        ]
+      },
+      "vacancy_b25004": {
+        "total_vacant": 93067.0,
+        "for_rent": 6214.0,
+        "rented_not_occ": 2572.0,
+        "for_sale": 1758.0,
+        "sold_not_occ": 1923.0,
+        "seasonal": 66029.0,
+        "migrant": 131.0,
+        "other_vacant": 14440.0,
+        "market_available_share": 0.0857,
+        "seasonal_share": 0.7095,
+        "other_vacant_share": 0.1552,
+        "non_market_share": 0.8646
+      },
+      "geography": {
+        "land_sqmi": 8953.79,
+        "water_sqmi": 396.09,
+        "water_share": 0.0424
+      },
+      "bls_construction": {
+        "series_id": "SMU33000002000000001",
+        "sector_note": "Construction (CES supersector 20)",
+        "jobs_2020_thousands": 28.02,
+        "jobs_latest_thousands": 32.44,
+        "jobs_latest_year": 2025,
+        "jobs_change_2020_2025_pct": 15.77
+      },
+      "ntad_transit_stops": 3033,
+      "microsoft_building_footprints": 577936
+    },
+    "OR": {
+      "code": "OR",
+      "fips": "41",
+      "name": "Oregon",
+      "portal": {
+        "portal_name": "State of Oregon GEOHub & Metro RLIS Discovery",
+        "portal_url": "https://geohub.oregon.gov/pages/9f4e2fffa6bb4328913a7adb7401d2b1",
+        "catalog_note": "Statewide standardized zoning polygons (2023), Urban Growth Boundaries (2025), and Metro RLIS public taxlots."
+      },
+      "gis": {
+        "gis_status": "live_observed_aggregates",
+        "parcel_records_observed": 648079,
+        "zoning_or_landuse_records": 114823,
+        "residential_or_mixed_zone_polygons": 18410,
+        "ugb_boundary_count": 217,
+        "headline_finding": "Oregon GEOHub & Metro RLIS provide 648,079 Portland-metro public taxlots, 114,823 standardized zoning polygons (18,410 residential/mixed), and 217 official Urban Growth Boundaries.",
+        "endpoints": [
+          "https://services2.arcgis.com/McQ0OlIABe29rJJy/arcgis/rest/services/Taxlots_(Public)/FeatureServer/3",
+          "https://services1.arcgis.com/CD5mKowwN6nIaqd8/arcgis/rest/services/library_bnd_or_zoning_2023/FeatureServer/56",
+          "https://services1.arcgis.com/CD5mKowwN6nIaqd8/arcgis/rest/services/library_bnd_or_urban_growth_boundaries_2025/FeatureServer/0"
+        ]
+      },
+      "vacancy_b25004": {
+        "total_vacant": 137083.0,
+        "for_rent": 24819.0,
+        "rented_not_occ": 5152.0,
+        "for_sale": 8050.0,
+        "sold_not_occ": 5614.0,
+        "seasonal": 55839.0,
+        "migrant": 468.0,
+        "other_vacant": 37141.0,
+        "market_available_share": 0.2398,
+        "seasonal_share": 0.4073,
+        "other_vacant_share": 0.2709,
+        "non_market_share": 0.6783
+      },
+      "geography": {
+        "land_sqmi": 95996.75,
+        "water_sqmi": 2381.77,
+        "water_share": 0.0242
+      },
+      "bls_construction": {
+        "series_id": "SMU41000002000000001",
+        "sector_note": "Construction (CES supersector 20)",
+        "jobs_2020_thousands": 108.33,
+        "jobs_latest_thousands": 112.98,
+        "jobs_latest_year": 2025,
+        "jobs_change_2020_2025_pct": 4.29
+      },
+      "ntad_transit_stops": 14498,
+      "microsoft_building_footprints": 1873786
+    },
+    "PA": {
+      "code": "PA",
+      "fips": "42",
+      "name": "Pennsylvania",
+      "portal": {
+        "portal_name": "Pennsylvania Spatial Data Access (PASDA) & WPRDC",
+        "portal_url": "https://www.pasda.psu.edu/",
+        "catalog_note": "PASDA county parcel/conservation MapServers plus WPRDC Allegheny County lot-size bins."
+      },
+      "gis": {
+        "gis_status": "live_observed_aggregates",
+        "parcel_records_observed": 516548,
+        "allegheny_wprdc_residential_lots": 403843,
+        "pasda_erie_county_parcels": 112705,
+        "pasda_conservation_easements": 5709,
+        "pasda_public_mapservers": 171,
+        "zoning_or_landuse_records": 5709,
+        "headline_finding": "PASDA hosts 171 public GIS services including 112,705 Erie County parcels and 5,709 conservation easements, paired with 403,843 WPRDC Allegheny residential lots.",
+        "endpoints": [
+          "https://mapservices.pasda.psu.edu/server/rest/services/pasda/ErieCountyParcels/MapServer/0",
+          "https://mapservices.pasda.psu.edu/server/rest/services/pasda/PennsylvaniaLandTrustAssociation/MapServer/0"
+        ]
+      },
+      "vacancy_b25004": {
+        "total_vacant": 544324.0,
+        "for_rent": 83610.0,
+        "rented_not_occ": 24223.0,
+        "for_sale": 34429.0,
+        "sold_not_occ": 28324.0,
+        "seasonal": 146462.0,
+        "migrant": 474.0,
+        "other_vacant": 226802.0,
+        "market_available_share": 0.2169,
+        "seasonal_share": 0.2691,
+        "other_vacant_share": 0.4167,
+        "non_market_share": 0.6857
+      },
+      "geography": {
+        "land_sqmi": 44742.09,
+        "water_sqmi": 1311.83,
+        "water_share": 0.0285
+      },
+      "bls_construction": {
+        "series_id": "SMU42000002000000001",
+        "sector_note": "Construction (CES supersector 20)",
+        "jobs_2020_thousands": 241.62,
+        "jobs_latest_thousands": 263.03,
+        "jobs_latest_year": 2025,
+        "jobs_change_2020_2025_pct": 8.86
+      },
+      "ntad_transit_stops": 42740,
+      "microsoft_building_footprints": 4965213
+    },
+    "RI": {
+      "code": "RI",
+      "fips": "44",
+      "name": "Rhode Island",
+      "portal": {
+        "portal_name": "Rhode Island Geographic Information System (RIGIS)",
+        "portal_url": "https://www.rigis.org/",
+        "catalog_note": "Municipal Zoning & Overlay Zones plus 2025 Statewide Land Use acreage."
+      },
+      "gis": {
+        "gis_status": "live_observed_aggregates",
+        "parcel_records_observed": 0,
+        "zoning_polygons_observed": 1639,
+        "zoning_or_landuse_records": 28000,
+        "urban_development_land_share": 0.1374,
+        "conservation_and_reserve_share": 0.3412,
+        "headline_finding": "RIGIS provides 1,639 municipal zoning polygons and 26,361 2025 land-use polygons (13.7% Urban Development vs 34.1% Conservation/Reserve).",
+        "endpoints": [
+          "https://services2.arcgis.com/S8zZg9pg23JUEexQ/arcgis/rest/services/RI_Zoning/FeatureServer/0",
+          "https://services2.arcgis.com/S8zZg9pg23JUEexQ/arcgis/rest/services/PLAN_Land_Use_2025_spf/FeatureServer/0"
+        ]
+      },
+      "vacancy_b25004": {
+        "total_vacant": 47713.0,
+        "for_rent": 7706.0,
+        "rented_not_occ": 1856.0,
+        "for_sale": 2137.0,
+        "sold_not_occ": 1539.0,
+        "seasonal": 17794.0,
+        "migrant": 6.0,
+        "other_vacant": 16675.0,
+        "market_available_share": 0.2063,
+        "seasonal_share": 0.3729,
+        "other_vacant_share": 0.3495,
+        "non_market_share": 0.7224
+      },
+      "geography": {
+        "land_sqmi": 1033.89,
+        "water_sqmi": 511.08,
+        "water_share": 0.3308
+      },
+      "bls_construction": {
+        "series_id": "SMU44000002000000001",
+        "sector_note": "Construction (CES supersector 20)",
+        "jobs_2020_thousands": 18.97,
+        "jobs_latest_thousands": 22.6,
+        "jobs_latest_year": 2025,
+        "jobs_change_2020_2025_pct": 19.14
+      },
+      "ntad_transit_stops": 4203,
+      "microsoft_building_footprints": 392581
+    },
+    "TN": {
+      "code": "TN",
+      "fips": "47",
+      "name": "Tennessee",
+      "portal": {
+        "portal_name": "Tennessee Comptroller GIS & TNMap OIR Portal",
+        "portal_url": "https://www.comptroller.tn.gov/office-functions/pa/gisredistricting/redistricting-and-land-use-maps.html",
+        "catalog_note": "TNMap county/municipal boundaries; Comptroller raw parcel downloads require a web Request Form."
+      },
+      "gis": {
+        "gis_status": "live_admin_plus_gated_parcels",
+        "parcel_records_observed": 0,
+        "zoning_or_landuse_records": 440,
+        "incorporated_municipalities": 345,
+        "counties_verified": 95,
+        "headline_finding": "TNMap verifies 345 incorporated municipalities across 95 counties; Tennessee Comptroller raw parcel/land-use files require a manual web Request Form per DATA_SOURCES.md.",
+        "endpoints": [
+          "https://tnmap.tn.gov/arcgis/rest/services/ADMINISTRATIVE_BOUNDARIES/COUNTY_BOUNDARIES_AND_CITY_BOUNDARIES/MapServer/0"
+        ]
+      },
+      "vacancy_b25004": {
+        "total_vacant": 326729.0,
+        "for_rent": 60642.0,
+        "rented_not_occ": 12867.0,
+        "for_sale": 18415.0,
+        "sold_not_occ": 13954.0,
+        "seasonal": 58530.0,
+        "migrant": 477.0,
+        "other_vacant": 161844.0,
+        "market_available_share": 0.242,
+        "seasonal_share": 0.1791,
+        "other_vacant_share": 0.4953,
+        "non_market_share": 0.6745
+      },
+      "geography": {
+        "land_sqmi": 41224.34,
+        "water_sqmi": 905.55,
+        "water_share": 0.0215
+      },
+      "bls_construction": {
+        "series_id": "SMU47000002000000001",
+        "sector_note": "Construction (CES supersector 20)",
+        "jobs_2020_thousands": 130.08,
+        "jobs_latest_thousands": 166.03,
+        "jobs_latest_year": 2025,
+        "jobs_change_2020_2025_pct": 27.64
+      },
+      "ntad_transit_stops": 15081,
+      "microsoft_building_footprints": 3212306
+    },
+    "UT": {
+      "code": "UT",
+      "fips": "49",
+      "name": "Utah",
+      "portal": {
+        "portal_name": "Utah Geospatial Resource Center (SGID)",
+        "portal_url": "https://gis.utah.gov/products/sgid/cadastre/parcels/",
+        "catalog_note": "Utah Housing Unit Inventory plus SGID Land Information Record (LIR) county parcel layers."
+      },
+      "gis": {
+        "gis_status": "live_observed_tier1_plus_sgid",
+        "parcel_records_observed": 817831,
+        "housing_inventory_records": 702461,
+        "wasatch_front_lir_parcels": 817831,
+        "zoning_or_landuse_records": 702461,
+        "headline_finding": "Utah SGID combines 702,461 Housing Unit Inventory records (mean SF lot 22,218 sq ft) with 817,831 live LIR parcels across Salt Lake, Utah, and Davis counties.",
+        "endpoints": [
+          "https://services1.arcgis.com/99lidPhWCzftIe9K/arcgis/rest/services/HousingUnitInventory/FeatureServer/0",
+          "https://services1.arcgis.com/99lidPhWCzftIe9K/arcgis/rest/services/Parcels_SaltLake_LIR/FeatureServer/0"
+        ]
+      },
+      "vacancy_b25004": {
+        "total_vacant": 98186.0,
+        "for_rent": 19212.0,
+        "rented_not_occ": 3368.0,
+        "for_sale": 3975.0,
+        "sold_not_occ": 3160.0,
+        "seasonal": 46968.0,
+        "migrant": 258.0,
+        "other_vacant": 21245.0,
+        "market_available_share": 0.2362,
+        "seasonal_share": 0.4784,
+        "other_vacant_share": 0.2164,
+        "non_market_share": 0.6947
+      },
+      "geography": {
+        "land_sqmi": 82595.71,
+        "water_sqmi": 2302.39,
+        "water_share": 0.0271
+      },
+      "bls_construction": {
+        "series_id": "SMU49000002000000001",
+        "sector_note": "Construction (CES supersector 20)",
+        "jobs_2020_thousands": 115.95,
+        "jobs_latest_thousands": 142.05,
+        "jobs_latest_year": 2025,
+        "jobs_change_2020_2025_pct": 22.51
+      },
+      "ntad_transit_stops": 6617,
+      "microsoft_building_footprints": 1081586
+    },
+    "VA": {
+      "code": "VA",
+      "fips": "51",
+      "name": "Virginia",
+      "portal": {
+        "portal_name": "Virginia GIS Clearinghouse (VGIN)",
+        "portal_url": "https://vgin.vdem.virginia.gov/pages/clearinghouse",
+        "catalog_note": "Statewide Virginia Parcels FeatureServer and Building Footprints layer."
+      },
+      "gis": {
+        "gis_status": "live_observed_aggregates",
+        "parcel_records_observed": 4174364,
+        "state_gis_building_footprints": 4522646,
+        "zoning_or_landuse_records": 4174364,
+        "headline_finding": "Virginia VGIN Clearinghouse provides 4,174,364 statewide parcel polygons and 4,522,646 VGIN building footprints with height/story attributes.",
+        "endpoints": [
+          "https://vginmaps.vdem.virginia.gov/arcgis/rest/services/VA_Base_Layers/VA_Parcels/FeatureServer/0",
+          "https://vginmaps.vdem.virginia.gov/arcgis/rest/services/VA_Base_Layers/VA_Building_Footprints/FeatureServer/0"
+        ]
+      },
+      "vacancy_b25004": {
+        "total_vacant": 328524.0,
+        "for_rent": 57205.0,
+        "rented_not_occ": 16907.0,
+        "for_sale": 20213.0,
+        "sold_not_occ": 15085.0,
+        "seasonal": 75802.0,
+        "migrant": 604.0,
+        "other_vacant": 142708.0,
+        "market_available_share": 0.2357,
+        "seasonal_share": 0.2307,
+        "other_vacant_share": 0.4344,
+        "non_market_share": 0.6651
+      },
+      "geography": {
+        "land_sqmi": 39481.39,
+        "water_sqmi": 3293.42,
+        "water_share": 0.077
+      },
+      "bls_construction": {
+        "series_id": "SMU51000002000000001",
+        "sector_note": "Construction (CES supersector 20)",
+        "jobs_2020_thousands": 202.83,
+        "jobs_latest_thousands": 228.12,
+        "jobs_latest_year": 2025,
+        "jobs_change_2020_2025_pct": 12.47
+      },
+      "ntad_transit_stops": 43788,
+      "microsoft_building_footprints": 3079351
+    },
+    "WI": {
+      "code": "WI",
+      "fips": "55",
+      "name": "Wisconsin",
+      "portal": {
+        "portal_name": "Wisconsin State Cartographer's Office (SCO)",
+        "portal_url": "https://www.sco.wisc.edu/data/parcels/",
+        "catalog_note": "Wisconsin Statewide Parcels DB V1200 improved residential lot-size bins."
+      },
+      "gis": {
+        "gis_status": "live_observed_tier1",
+        "parcel_records_observed": 1188351,
+        "sf_lots_binned": 1188351,
+        "zoning_or_landuse_records": 1188351,
+        "headline_finding": "Wisconsin SCO V1200 provides 1,188,351 improved residential parcels across 8 lot-size bins.",
+        "endpoints": [
+          "https://www.sco.wisc.edu/parcels/data/"
+        ]
+      },
+      "vacancy_b25004": {
+        "total_vacant": 304722.0,
+        "for_rent": 38701.0,
+        "rented_not_occ": 7265.0,
+        "for_sale": 10430.0,
+        "sold_not_occ": 5315.0,
+        "seasonal": 175681.0,
+        "migrant": 488.0,
+        "other_vacant": 66842.0,
+        "market_available_share": 0.1612,
+        "seasonal_share": 0.5765,
+        "other_vacant_share": 0.2194,
+        "non_market_share": 0.7959
+      },
+      "geography": {
+        "land_sqmi": 54168.03,
+        "water_sqmi": 11328.68,
+        "water_share": 0.173
+      },
+      "bls_construction": {
+        "series_id": "SMU55000002000000001",
+        "sector_note": "Construction (CES supersector 20)",
+        "jobs_2020_thousands": 124.12,
+        "jobs_latest_thousands": 146.23,
+        "jobs_latest_year": 2025,
+        "jobs_change_2020_2025_pct": 17.81
+      },
+      "ntad_transit_stops": 17292,
+      "microsoft_building_footprints": 3173347
+    }
+  }
+}
