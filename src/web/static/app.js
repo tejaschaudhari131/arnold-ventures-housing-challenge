@@ -1,4 +1,5 @@
-/* Stateframe client. Recalculates by calling the equation server.
+/* Stateframe v3 Legislative Studio client (11-State Screening Lens).
+   Recalculates live by calling the structural equation server (src/model/equations.py).
    Nothing on this page stores a precomputed grid. */
 (function () {
   "use strict";
@@ -18,7 +19,8 @@
     calculated: "Arithmetic in src/model/equations.py, using observed inputs and published assumptions.",
   };
   var stateCode = "PA";
-  var scenarioId = "adu";
+  var scenarioId = "combined";
+  var studioDepth = "briefing";
   var parameters = [];
   var overrides = {};
   var reformOn = { adu: true, missing_middle: true, tod: true, parking: true, fees: true };
@@ -26,6 +28,10 @@
     var q = new URLSearchParams(location.search);
     var st = (q.get("st") || "").toUpperCase();
     if (st) stateCode = st;
+    var depthParam = (q.get("depth") || "").toLowerCase();
+    if (depthParam === "briefing" || depthParam === "markup" || depthParam === "audit") {
+      studioDepth = depthParam;
+    }
     if (q.has("on")) {
       var raw = q.get("on") || "";
       REFORMS.forEach(function (id) { reformOn[id] = false; });
@@ -38,8 +44,10 @@
     }
   })();
   var reformWeight = { adu: 1, missing_middle: 1, tod: 1, parking: 1, fees: 1 };
+  var stateCatalog = [];
   var result = null;
   var mapDoc = null;
+  var geoAllDoc = null;
   var mapScope = "state";
   var selectedFips = null;
   var lastBand = null;
@@ -62,6 +70,11 @@
 
   var statusEl = document.getElementById("status");
   var stateList = document.getElementById("state-list");
+  var studioStateSelect = document.getElementById("studio-state-select");
+  var statesDrawer = document.getElementById("states-drawer");
+  var assumptionsDrawer = document.getElementById("assumptions-drawer");
+  var studioBackdrop = document.getElementById("studio-backdrop");
+  var overrideBadge = document.getElementById("override-badge");
   var headline = document.getElementById("headline");
   var cards = document.getElementById("cards");
   var compareBody = document.querySelector("#compare-table tbody");
@@ -82,9 +95,69 @@
   var caseBody = document.getElementById("case-body");
   var caseProgress = document.getElementById("case-progress");
   var insightsMount = document.getElementById("insights-mount");
+  var briefingStripMount = document.getElementById("briefing-strip-mount");
 
   function setStatus(text) {
-    statusEl.textContent = text || "";
+    if (statusEl) statusEl.textContent = text || "";
+  }
+
+  function setStudioDepth(nextDepth, skipTabSwitch) {
+    if (nextDepth !== "briefing" && nextDepth !== "markup" && nextDepth !== "audit") {
+      nextDepth = "briefing";
+    }
+    studioDepth = nextDepth;
+    if (document.body) {
+      document.body.setAttribute("data-depth", studioDepth);
+    }
+    document.querySelectorAll("[data-depth-btn]").forEach(function (btn) {
+      var on = btn.getAttribute("data-depth-btn") === studioDepth;
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    if (!skipTabSwitch && studioDepth === "markup") {
+      var insTab = document.getElementById("tab-insights");
+      if (insTab) activateTab(insTab, true);
+    }
+  }
+
+  function closeDrawers() {
+    if (statesDrawer) statesDrawer.hidden = true;
+    if (assumptionsDrawer) assumptionsDrawer.hidden = true;
+    if (studioBackdrop) studioBackdrop.hidden = true;
+    var btnStates = document.getElementById("toggle-states-drawer");
+    var btnAssump = document.getElementById("toggle-assumptions-drawer");
+    if (btnStates) btnStates.setAttribute("aria-expanded", "false");
+    if (btnAssump) btnAssump.setAttribute("aria-expanded", "false");
+  }
+
+  function openDrawer(which) {
+    closeDrawers();
+    if (which === "states" && statesDrawer) {
+      statesDrawer.hidden = false;
+      if (studioBackdrop) studioBackdrop.hidden = false;
+      var btnStates = document.getElementById("toggle-states-drawer");
+      if (btnStates) btnStates.setAttribute("aria-expanded", "true");
+      var closeBtn = document.getElementById("close-states-drawer");
+      if (closeBtn) closeBtn.focus();
+    } else if (which === "assumptions" && assumptionsDrawer) {
+      assumptionsDrawer.hidden = false;
+      if (studioBackdrop) studioBackdrop.hidden = false;
+      var btnAssump = document.getElementById("toggle-assumptions-drawer");
+      if (btnAssump) btnAssump.setAttribute("aria-expanded", "true");
+      var closeAssump = document.getElementById("close-assumptions-drawer");
+      if (closeAssump) closeAssump.focus();
+    }
+  }
+
+  function updateOverrideBadge() {
+    if (!overrideBadge) return;
+    var count = Object.keys(overrides).length;
+    REFORMS.forEach(function (id) {
+      if (!reformOn[id] || Math.abs(Number(reformWeight[id]) - 1) > 1e-6) count += 1;
+    });
+    if (singleStairOn) count += 1;
+    overrideBadge.hidden = count === 0;
+    overrideBadge.textContent = String(count);
   }
 
   function integer(value) {
@@ -221,8 +294,16 @@
   }
 
   function renderStates(catalog) {
+    stateCatalog = catalog || [];
     stateList.innerHTML = "";
-    catalog.forEach(function (state) {
+    if (studioStateSelect) {
+      var allOpt = '<option value="ALL"' + (mapScope === "nation" ? " selected" : "") + ">All 11 states (476 counties)</option>";
+      studioStateSelect.innerHTML = allOpt + stateCatalog.map(function (st) {
+        return '<option value="' + escapeHtml(st.code) + '"' + (mapScope !== "nation" && st.code === stateCode ? " selected" : "") + ">" +
+          escapeHtml(st.code + " · " + st.name + " (Tier " + st.tier + ")") + "</option>";
+      }).join("");
+    }
+    stateCatalog.forEach(function (state) {
       var button = document.createElement("button");
       button.type = "button";
       button.className = "state-btn" + (state.code === stateCode ? " active" : "");
@@ -239,6 +320,7 @@
       button.addEventListener("click", function () {
         mapScope = "state";
         selectedFips = null;
+        closeDrawers();
         selectState(state.code);
       });
       stateList.appendChild(button);
@@ -305,17 +387,17 @@
         overrides[name] = Number(spec[key]);
       }
     });
+    updateOverrideBadge();
     renderReformMix();
     renderSliders();
     schedule();
   }
 
-  function renderCorePresets() {
-    var box = document.getElementById("core-presets");
+  function populatePresetsContainer(box) {
     if (!box) return;
     box.innerHTML =
       '<p class="aside-label">Committee amendment presets</p>' +
-      '<p class="hint">Load a common bill configuration inside published assumption bands.</p>' +
+      '<p class="hint">Load a common legislative bill configuration inside published assumption bands.</p>' +
       '<div class="preset-grid">' +
       CORE_PRESETS.map(function (p) {
         return '<button type="button" class="preset-btn" data-core-preset="' + escapeHtml(p.id) +
@@ -327,6 +409,11 @@
         applyCorePreset(btn.getAttribute("data-core-preset"));
       });
     });
+  }
+
+  function renderCorePresets() {
+    populatePresetsContainer(document.getElementById("core-presets"));
+    populatePresetsContainer(document.getElementById("core-presets-inline"));
   }
 
   function pinCoreCurrent() {
@@ -347,15 +434,14 @@
     renderCorePin();
   }
 
-  function renderCorePin() {
-    var box = document.getElementById("core-pin");
+  function populatePinContainer(box, suffix) {
     if (!box || !result) return;
     if (!corePinned || corePinned.state !== stateCode) {
       box.innerHTML =
         '<div class="pin-head"><span class="aside-label">Compare bills (A vs. B)</span>' +
-        '<button type="button" class="pin-act" id="core-pin-save">Pin current as A</button></div>' +
+        '<button type="button" class="pin-act" id="core-pin-save' + suffix + '">Pin current as A</button></div>' +
         '<p class="hint">Pin this package, then adjust weights or sliders to compare Bill B against Bill A.</p>';
-      var saveBtn = box.querySelector("#core-pin-save");
+      var saveBtn = box.querySelector("#core-pin-save" + suffix);
       if (saveBtn) saveBtn.addEventListener("click", pinCoreCurrent);
       return;
     }
@@ -370,8 +456,8 @@
     var cDiffStr = (dC > 0 ? "+" : "") + integer(dC);
     box.innerHTML =
       '<div class="pin-head"><span class="aside-label">Pinned A vs. Current B</span>' +
-      '<span class="pin-btns"><button type="button" class="pin-act" id="core-pin-update">Re-pin</button>' +
-      '<button type="button" class="pin-act" id="core-pin-clear">Clear</button></span></div>' +
+      '<span class="pin-btns"><button type="button" class="pin-act" id="core-pin-update' + suffix + '">Re-pin</button>' +
+      '<button type="button" class="pin-act" id="core-pin-clear' + suffix + '">Clear</button></span></div>' +
       '<p class="hint">Pinned A: <strong>' + escapeHtml(corePinned.label) + "</strong></p>" +
       '<div class="pin-table-wrap"><table class="pin-table" aria-label="Pinned package A versus current package B">' +
       "<thead><tr><th>Scope</th><th>Bill A</th><th>Bill B</th><th>Δ (B−A)</th></tr></thead><tbody>" +
@@ -382,10 +468,15 @@
           integer(curC) + "</td><td><strong>" + cDiffStr + "</strong></td></tr>"
         : "") +
       "</tbody></table></div>";
-    var upBtn = box.querySelector("#core-pin-update");
-    var clBtn = box.querySelector("#core-pin-clear");
+    var upBtn = box.querySelector("#core-pin-update" + suffix);
+    var clBtn = box.querySelector("#core-pin-clear" + suffix);
     if (upBtn) upBtn.addEventListener("click", pinCoreCurrent);
     if (clBtn) clBtn.addEventListener("click", function () { corePinned = null; renderCorePin(); });
+  }
+
+  function renderCorePin() {
+    populatePinContainer(document.getElementById("core-pin"), "");
+    populatePinContainer(document.getElementById("core-pin-inline"), "-inline");
   }
 
   function renderReformMix() {
@@ -424,11 +515,13 @@
       box.addEventListener("change", function () {
         reformOn[id] = box.checked;
         range.disabled = !box.checked;
+        updateOverrideBadge();
         schedule();
       });
       range.addEventListener("input", function () {
         reformWeight[id] = Number(range.value);
         value.textContent = Math.round(reformWeight[id] * 100) + "%";
+        updateOverrideBadge();
         schedule();
       });
       row.appendChild(label);
@@ -488,6 +581,7 @@
           } else {
             overrides[spec.name] = next;
           }
+          updateOverrideBadge();
           schedule();
         }
         input.addEventListener("input", onSlide);
@@ -538,35 +632,35 @@
     headline.innerHTML =
       '<div class="hero-summary">' +
       '<div class="hero-summary-top">' +
-      '<span class="step-kicker">Step 1 · Statewide 5-Year Answer</span>' +
-      '<span class="model-badge screening">Screening model · statewide estimate · 11 states</span>' +
+      '<span class="step-kicker">Live Statewide 5-Year Verdict</span>' +
+      '<span class="model-badge screening">Screening Lens · Tier ' + escapeHtml(result.tier) + " · " + escapeHtml(result.code || stateCode) + "</span>" +
       "</div>" +
       '<p class="headline-answer">' + escapeHtml(answer) + badge("calculated") + "</p>" +
       rangeLine +
       '<p class="middle-est">Middle estimate <span data-bind="scenarios.combined.incremental_completions">' +
-      integer(pack) + '</span> extra homes, on top of <span data-bind="baseline_completions_5yr">' +
+      integer(pack) + '</span> extra homes (' + escapeHtml(signedPercent(lift)) + '), on top of <span data-bind="baseline_completions_5yr">' +
       integer(result.baseline_completions_5yr) + "</span> expected." +
       (funnelNote ? ' <span class="funnel-note">· ' + escapeHtml(funnelNote) + "</span>" : "") + "</p>" +
       "</div>" +
       card(
         "Baseline completions",
         tagged(result.baseline_completions_5yr, tagOf(result, "baseline_completions_5yr"), integer),
-        "Five-year homes completed if today's permit pace continues, calculated from observed permits and assumed completion ratios."
+        "Five-year homes completed if current permit pace continues."
       ) +
       card(
         "Package, net new",
         tagged(pack, "calculated", integer),
-        signedPercent(lift) + " versus baseline. Overlap among switched-on reforms is removed."
+        signedPercent(lift) + " vs. baseline · Overlap removed."
       ) +
       card(
         "Walkshed",
         tagged(result.walkshed_sqmi, tagOf(result, "walkshed_sqmi"), function (value) { return oneDecimal(value) + " sq mi"; }),
-        "Calculated area around major transit stops after an assumed overlap discount."
+        "Transit station area after overlap discount."
       ) +
       card(
         "Lot screen",
         tagged(result.lot_feasible_share, lotTag, function (value) { return Math.round(value * 100) + "%"; }),
-        result.lot_feasible_note || "Share of single-family lots that can hold an extra apartment."
+        result.lot_feasible_note || "Feasible single-family lot share."
       );
   }
 
@@ -589,11 +683,14 @@
 
   function renderCards() {
     cards.innerHTML = "";
-    ORDER.forEach(function (id) {
+    /* Show combined package first, then the 5 standalone reforms ranked/ordered, plus baseline */
+    var studioOrder = ["combined", "adu", "missing_middle", "tod", "parking", "fees", "baseline"];
+    studioOrder.forEach(function (id) {
       var row = result.scenarios[id];
       var article = document.createElement("article");
       var off = id !== "baseline" && id !== "combined" && !reformOn[id];
-      article.className = "scenario-card" + (id === scenarioId ? " selected" : "") + (off ? " off" : "");
+      article.className = "scenario-card" + (id === scenarioId ? " selected" : "") + (off ? " off" : "") +
+        (id === "combined" ? " is-package-card" : "");
       var before = result.baseline_completions_5yr;
       var after = row.completions_5yr;
       var net = id === "baseline" ? 0 : row.incremental_completions;
@@ -616,16 +713,24 @@
         box.addEventListener("click", function (event) { event.stopPropagation(); });
         box.addEventListener("change", function () {
           reformOn[id] = box.checked;
+          updateOverrideBadge();
           renderReformMix();
           schedule();
         });
         label.appendChild(box);
         label.appendChild(document.createTextNode("In package"));
         top.appendChild(label);
+      } else if (id === "combined") {
+        var activeCount = REFORMS.filter(function (rid) { return !!reformOn[rid]; }).length;
+        var pkgPill = document.createElement("span");
+        pkgPill.className = "pill t1";
+        pkgPill.textContent = activeCount + " of 5 bills on";
+        top.appendChild(pkgPill);
       }
       article.appendChild(top);
       if (close) {
         var flag = document.createElement("p");
+        flag.className = "card-close-flag";
         flag.innerHTML = '<span class="badge-uncertain" title="The published assumption range includes both a gain and a loss.">Outcome uncertain: under some assumptions this reform adds no homes.</span> ' +
           escapeHtml(close);
         article.appendChild(flag);
@@ -639,12 +744,16 @@
       grid.innerHTML =
         "<div><div class='k'>Before</div><div class='v'>" + tagged(before, "calculated", integer) + "</div></div>" +
         "<div><div class='k'>After</div><div class='v'>" + tagged(after, "calculated", integer) + "</div></div>" +
-        "<div><div class='k'>Net new</div><div class='v'>" + tagged(net, "calculated", integer) + "</div></div>";
+        "<div><div class='k'>Net new</div><div class='v net-highlight'>" + tagged(net, "calculated", integer) + "</div></div>";
       article.appendChild(grid);
       titleBtn.setAttribute("aria-pressed", id === scenarioId ? "true" : "false");
       function choose() { selectScenario(id); }
       titleBtn.addEventListener("click", function (event) {
         event.stopPropagation();
+        choose();
+      });
+      article.addEventListener("click", function (event) {
+        if (event.target && (event.target.tagName === "INPUT" || event.target.tagName === "LABEL")) return;
         choose();
       });
       cards.appendChild(article);
@@ -782,6 +891,7 @@
     rows.forEach(function (county) {
       Object.keys(totals).forEach(function (key) { totals[key] += county[key]; });
       var tr = document.createElement("tr");
+      if (county.fips === selectedFips) tr.className = "selected";
       var valueTag = county.value_imputed ? "assumed" : "observed";
       var flag = county.close_call ? ' <span class="badge-uncertain" title="The published assumption range includes both a gain and a loss.">Outcome uncertain</span>' : "";
       tr.innerHTML =
@@ -798,7 +908,9 @@
       tr.addEventListener("click", function () {
         selectedFips = county.fips;
         mapScope = "state";
+        if (studioStateSelect) studioStateSelect.value = stateCode;
         renderMap();
+        loadInsights();
       });
       countyBody.appendChild(tr);
     });
@@ -868,13 +980,31 @@
       "<p>" + badge("calculated") + " " + escapeHtml(LEGEND.calculated) + "</p>" +
       "<p><strong>What this cannot tell you.</strong> " + escapeHtml((chosen.cannot && chosen.cannot[0]) || "") + "</p>" +
       (aduCompare ? "<p class='adu-fee-note'>" + escapeHtml(aduCompare.notes.docs) + "</p>" : "") +
-      "<p>Housing stock and prices are Census ACS figures. Permits are the Building Permits Survey. The map uses Census gazetteer interior points. County integers sum to the rounded state total. Tejas Chaudhari, Yoon Yik Ng, and Christopher Severns, Carnegie Mellon University. Apache-2.0.</p>" +
+      "<p>Housing stock and prices are Census ACS figures. Permits are the Building Permits Survey. County boundaries are Census cb_2024_us_county_5m cartographic polygons. County integers sum to the rounded state total. Tejas Chaudhari, Yoon Yik Ng, and Christopher Severns, Carnegie Mellon University. Apache-2.0.</p>" +
       "</div>";
   }
 
   function pointsFor(code) {
     if (!mapDoc || !mapDoc.points) return [];
     return mapDoc.points.filter(function (point) { return point.state === code; });
+  }
+
+  function geoCountiesFor(code) {
+    if (!geoAllDoc || !geoAllDoc.states) return [];
+    return geoAllDoc.states[code] || [];
+  }
+
+  function boundsOfRings(counties) {
+    var minX = 180, minY = 90, maxX = -180, maxY = -90;
+    counties.forEach(function (c) {
+      (c.rings || []).forEach(function (ring) {
+        ring.forEach(function (pt) {
+          minX = Math.min(minX, pt[0]); maxX = Math.max(maxX, pt[0]);
+          minY = Math.min(minY, pt[1]); maxY = Math.max(maxY, pt[1]);
+        });
+      });
+    });
+    return { minX: minX, minY: minY, maxX: maxX, maxY: maxY };
   }
 
   function boundsOf(points) {
@@ -928,17 +1058,35 @@
     return null;
   }
 
+  function defaultFocusFips() {
+    if (!result || !result.counties || !result.counties.length) return null;
+    if (result.focus_county) {
+      var target = String(result.focus_county).toLowerCase();
+      for (var i = 0; i < result.counties.length; i += 1) {
+        if (String(result.counties[i].name || "").toLowerCase().indexOf(target) >= 0) {
+          return result.counties[i].fips;
+        }
+      }
+    }
+    var best = result.counties[0];
+    result.counties.forEach(function (c) {
+      if ((Number(c.housing_units) || 0) > (Number(best.housing_units) || 0)) best = c;
+    });
+    return best ? best.fips : null;
+  }
+
   function metricOf(county) {
     if (!county) return 0;
     return Number(county[scenarioColumn(scenarioId)] || 0);
   }
 
-  function colorFor(value, max) {
-    var t = max > 0 ? Math.max(0, value) / max : 0;
-    var r = Math.round(244 - t * 220);
-    var g = Math.round(240 - t * 140);
-    var b = Math.round(230 - t * 160);
-    return "rgb(" + r + "," + g + "," + b + ")";
+  function choroplethColor(value, max) {
+    if (!max || value <= 0) return "#dce6f0";
+    var t = Math.sqrt(Math.max(0, Math.min(1, value / max)));
+    var h = Math.round(205 - 38 * t);
+    var s = Math.round(35 + 36 * t);
+    var l = Math.round(86 - 52 * t);
+    return "hsl(" + h + "," + s + "%," + l + "%)";
   }
 
   var CORE_BOTTLENECKS = {
@@ -983,14 +1131,17 @@
 
   function renderCoreMapMetrics() {
     var box = document.getElementById("core-map-metrics");
+    var toolbar = box && box.closest ? box.closest(".map-toolbar") : null;
     var leg = document.getElementById("core-bottleneck-legend");
     if (!box) return;
     if (mapScope === "nation") {
       box.hidden = true;
+      if (toolbar) toolbar.hidden = true;
       if (leg) leg.hidden = true;
       return;
     }
     box.hidden = false;
+    if (toolbar) toolbar.hidden = false;
     var modes = [
       { id: "homes", label: "Extra homes" },
       { id: "lift", label: "% Lift vs. baseline" },
@@ -1016,29 +1167,51 @@
     }
     var valueTag = county.value_imputed ? "assumed" : "observed";
     var column = scenarioColumn(scenarioId);
+    var chosenScenario = result.scenarios[scenarioId] || result.scenarios.combined;
     var bInfo = coreCountyBottleneck(county);
     var lift = coreCountyLiftPct(county);
     var liftText = scenarioId === "baseline" ? "baseline view" : ((lift >= 0 ? "+" : "") + lift.toFixed(1) + "% vs. baseline");
     countyDetail.hidden = false;
     countyDetail.innerHTML =
-      "<strong>" + escapeHtml(county.name) + "</strong> " +
-      '<span class="b-pill ' + escapeHtml(bInfo.id) + '">' + escapeHtml(bInfo.label) + "</span> " +
-      (county.close_call ? '<span class="badge-uncertain" title="The published assumption range includes both a gain and a loss.">Outcome uncertain</span> ' : "") +
-      "<p class='plain'>" + escapeHtml(county.name) + " rolls into " + escapeHtml(result.name) +
-      " through the same county pro forma as every other county. The state total is the sum, not a separate model. " +
-      (county.close_call_reason || "This county is not sitting on the feasibility hurdle.") + "</p>" +
-      "<p>Homes " + tagged(county.housing_units, "observed", integer) +
-      ". Median value " + tagged(county.median_value, valueTag, function (value) { return "$" + integer(value); }) +
-      ". Selected scenario " + tagged(county[column], "calculated", integer) +
-      " (" + escapeHtml(liftText) + ") · " + escapeHtml(bInfo.note) + "</p>" +
-      '<div class="exports"><button type="button" class="btn-pill" id="county-open-insights">Inspect ' +
-      escapeHtml(county.name) + ' AMI breakeven &amp; official GIS</button></div>';
+      '<div class="receipt-card-head">' +
+        '<div><span class="step-kicker">Pinned County Receipt · ' + escapeHtml(county.context || "County") + '</span>' +
+        "<strong>" + escapeHtml(county.name) + "</strong> " +
+        '<span class="b-pill ' + escapeHtml(bInfo.id) + '">' + escapeHtml(bInfo.label) + "</span> " +
+        (county.close_call ? '<span class="badge-uncertain" title="The published assumption range includes both a gain and a loss.">Outcome uncertain</span>' : "") +
+        "</div>" +
+        '<div class="receipt-hero-kpi"><span class="k">' + escapeHtml(chosenScenario.label) + '</span>' +
+        '<span class="v">' + (scenarioId === "baseline" ? "" : "+") + tagged(county[column], "calculated", integer) + "</span>" +
+        '<span class="s">' + escapeHtml(liftText) + "</span></div>" +
+      "</div>" +
+      '<div class="receipt-mini-grid">' +
+        "<div><span>Existing homes</span><strong>" + tagged(county.housing_units, "observed", integer) + "</strong></div>" +
+        "<div><span>Median value</span><strong>" + tagged(county.median_value, valueTag, function (v) { return "$" + integer(v); }) + "</strong></div>" +
+        "<div><span>5-yr baseline</span><strong>" + tagged(county.baseline_completions, "calculated", integer) + "</strong></div>" +
+        "<div><span>Full 5-bill pkg</span><strong>+" + tagged(county.combined, "calculated", integer) + "</strong></div>" +
+      "</div>" +
+      "<p class='plain'>" + escapeHtml(bInfo.note) + " " +
+      escapeHtml(county.close_call_reason || "County integers sum to the statewide total.") + "</p>" +
+      '<div class="exports">' +
+        '<button type="button" class="btn-pill" id="county-open-insights">Inspect ' + escapeHtml(county.name) + " HUD AMI breakeven &amp; GIS</button>" +
+        '<button type="button" class="btn-pill" id="county-open-math">Trace county-to-state equations</button>' +
+      "</div>";
     var jumpBtn = document.getElementById("county-open-insights");
     if (jumpBtn) {
       jumpBtn.addEventListener("click", function () {
+        setStudioDepth("markup", true);
         var tab = document.getElementById("tab-insights");
         var panel = document.getElementById("panel-insights");
-        if (tab) activateTab(tab);
+        if (tab) activateTab(tab, true);
+        if (panel && panel.scrollIntoView) panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+    var mathBtn = document.getElementById("county-open-math");
+    if (mathBtn) {
+      mathBtn.addEventListener("click", function () {
+        setStudioDepth("audit", true);
+        var tab = document.getElementById("tab-math");
+        var panel = document.getElementById("panel-math");
+        if (tab) activateTab(tab, true);
         if (panel && panel.scrollIntoView) panel.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     }
@@ -1046,8 +1219,8 @@
 
   function renderMap() {
     renderCoreMapMetrics();
-    if (!mapDoc || !result) {
-      mapStage.textContent = "County interior points are still loading.";
+    if (!result || (!mapDoc && !geoAllDoc)) {
+      mapStage.textContent = "County cartographic boundaries are loading…";
       return;
     }
     if (mapScope === "nation") renderNationMap();
@@ -1055,136 +1228,214 @@
   }
 
   function renderStateMap() {
-    var points = pointsFor(stateCode);
-    mapTitle.textContent = result.name + " counties";
-    if (!points.length) {
-      mapStage.textContent = "No gazetteer points for this state.";
-      return;
+    var chosenScenario = result.scenarios[scenarioId] || result.scenarios.combined;
+    mapTitle.textContent = result.name + " · " + chosenScenario.label;
+    if (!selectedFips || !countyByFips(selectedFips)) {
+      selectedFips = defaultFocusFips();
     }
-    var box = boundsOf(points);
+    var geoCounties = geoCountiesFor(stateCode);
     var width = 800;
-    var height = 520;
+    var height = 500;
     var maxMetric = 0;
     var bCounts = { zoning: 0, fee: 0, market: 0 };
-    points.forEach(function (point) {
-      var c = countyByFips(point.fips);
+    (result.counties || []).forEach(function (c) {
       var m = coreMapMetric === "lift" ? coreCountyLiftPct(c) : metricOf(c);
       maxMetric = Math.max(maxMetric, Math.abs(m));
       var b = coreCountyBottleneck(c);
       bCounts[b.id] = (bCounts[b.id] || 0) + 1;
     });
+
     var bLeg = document.getElementById("core-bottleneck-legend");
     if (bLeg) {
+      bLeg.hidden = false;
       if (coreMapMetric === "bottleneck") {
-        bLeg.hidden = false;
         bLeg.innerHTML =
           '<span class="b-dot zoning"></span> Zoning-locked (' + bCounts.zoning + ") · " +
           '<span class="b-dot fee"></span> Fee-sensitive (' + bCounts.fee + ") · " +
           '<span class="b-dot market"></span> Rent/cost-constrained (' + bCounts.market + ")";
       } else if (coreMapMetric === "lift") {
-        bLeg.hidden = false;
-        bLeg.textContent = "Circle shade shows 5-year % lift over each county's baseline completions.";
+        bLeg.innerHTML = '<span class="choropleth-ramp" aria-hidden="true"></span> Polygon shade shows 5-year % lift over baseline completions (peak ' +
+          signedPercent(maxMetric) + ").";
       } else {
-        bLeg.hidden = true;
-        bLeg.textContent = "";
+        bLeg.innerHTML = '<span class="choropleth-ramp" aria-hidden="true"></span> Polygon shade shows 5-year net homes for <strong>' +
+          escapeHtml(chosenScenario.label) + "</strong> (peak +" + integer(maxMetric) + " in one county).";
       }
     }
-    var hull = convexHull(points.map(function (point) { return project(point, box, width, height); }));
-    var hullPath = hull.map(function (pair, index) {
-      return (index === 0 ? "M" : "L") + pair[0].toFixed(1) + " " + pair[1].toFixed(1);
-    }).join(" ") + " Z";
-    var circles = points.map(function (point) {
-      var county = countyByFips(point.fips);
-      var xy = project(point, box, width, height);
-      var value = metricOf(county);
-      var lift = coreCountyLiftPct(county);
-      var bInfo = coreCountyBottleneck(county);
-      var fill = coreMapMetric === "bottleneck"
-        ? bInfo.color
-        : colorFor(coreMapMetric === "lift" ? lift : value, maxMetric);
-      var radius = 5 + 9 * Math.sqrt((county ? county.housing_units : 1) / result.housing_units);
-      var selected = point.fips === selectedFips;
-      var suffix = coreMapMetric === "bottleneck"
-        ? ", " + bInfo.label + " (" + integer(value) + ")"
-        : (coreMapMetric === "lift" ? ", " + (lift >= 0 ? "+" : "") + lift.toFixed(1) + "% lift (" + integer(value) + ")" : ", " + integer(value) + " calculated");
-      var label = (county ? county.name : point.name) + suffix;
-      return '<circle data-fips="' + point.fips + '" cx="' + xy[0].toFixed(1) +
-        '" cy="' + xy[1].toFixed(1) + '" r="' + radius.toFixed(1) + '" fill="' + fill +
-        '" stroke="' + (selected ? "#9a4e24" : "#1c2430") + '" stroke-width="' + (selected ? 2.5 : 0.6) +
-        '"><title>' + escapeHtml(label) + "</title></circle>" +
-        '<circle class="map-hit" data-fips="' + point.fips + '" cx="' + xy[0].toFixed(1) +
-        '" cy="' + xy[1].toFixed(1) + '" r="12" fill="transparent"><title>' + escapeHtml(label) + "</title></circle>";
-    }).join("");
-    mapStage.innerHTML =
-      '<svg viewBox="0 0 ' + width + " " + height + '" role="group" aria-label="Map of ' + escapeHtml(result.name) + ' counties, colored by the selected scenario">' +
-      '<rect width="100%" height="100%" fill="#f7f3ea"></rect>' +
-      '<path d="' + hullPath + '" fill="#e7f0e4" stroke="#0f6b4e" stroke-width="1.5"></path>' +
-      circles +
-      "</svg>";
+
+    if (geoCounties.length) {
+      var box = boundsOfRings(geoCounties);
+      var midLat = ((box.minY + box.maxY) / 2) * Math.PI / 180;
+      var xspan = Math.max(0.05, (box.maxX - box.minX) * Math.cos(midLat));
+      var yspan = Math.max(0.05, box.maxY - box.minY);
+      var pad = 20;
+      var scale = Math.min((width - 2 * pad) / xspan, (height - 2 * pad) / yspan);
+      var drawW = xspan * scale;
+      var drawH = yspan * scale;
+      var offX = (width - drawW) / 2;
+      var offY = (height - drawH) / 2;
+      var xy = function (lon, lat) {
+        return [
+          offX + (lon - box.minX) * Math.cos(midLat) * scale,
+          height - offY - (lat - box.minY) * scale,
+        ];
+      };
+
+      var selectedPathHtml = "";
+      var paths = geoCounties.map(function (gc) {
+        var county = countyByFips(gc.fips);
+        var value = metricOf(county);
+        var lift = coreCountyLiftPct(county);
+        var bInfo = coreCountyBottleneck(county);
+        var fill = coreMapMetric === "bottleneck"
+          ? bInfo.color
+          : choroplethColor(coreMapMetric === "lift" ? lift : value, maxMetric);
+        var d = (gc.rings || []).map(function (ring) {
+          return ring.map(function (pt, idx) {
+            var p = xy(pt[0], pt[1]);
+            return (idx === 0 ? "M" : "L") + p[0].toFixed(1) + " " + p[1].toFixed(1);
+          }).join(" ") + " Z";
+        }).join(" ");
+        var isSelected = gc.fips === selectedFips;
+        var suffix = coreMapMetric === "bottleneck"
+          ? " · " + bInfo.label + " (+" + integer(value) + ")"
+          : (coreMapMetric === "lift"
+            ? " · " + (lift >= 0 ? "+" : "") + lift.toFixed(1) + "% lift (+" + integer(value) + ")"
+            : " · +" + integer(value) + " homes calculated");
+        var label = (county ? county.name : gc.name) + suffix;
+        var basePoly =
+          '<path class="county-poly' + (isSelected ? " selected" : "") + '" role="button" aria-label="' + escapeHtml(label) +
+          '" data-fips="' + gc.fips + '" d="' + d + '" fill="' + fill +
+          '" stroke="#ffffff" stroke-width="0.9"><title>' + escapeHtml(label) + "</title></path>" +
+          '<path class="map-hit" data-fips="' + gc.fips + '" d="' + d + '" fill="transparent"><title>' + escapeHtml(label) + "</title></path>";
+        if (isSelected) {
+          selectedPathHtml = '<path d="' + d + '" fill="none" stroke="#112238" stroke-width="2.8" pointer-events="none"></path>';
+        }
+        return basePoly;
+      }).join("");
+
+      mapStage.innerHTML =
+        '<svg viewBox="0 0 ' + width + " " + height + '" role="group" aria-label="Choropleth map of ' + escapeHtml(result.name) + ' counties, colored by ' + escapeHtml(chosenScenario.label) + '">' +
+        '<rect width="100%" height="100%" rx="10" fill="#f4f1e8"></rect>' +
+        paths +
+        selectedPathHtml +
+        "</svg>";
+    } else {
+      /* Fallback to interior gazetteer points if polygon archive unavailable */
+      var points = pointsFor(stateCode);
+      if (!points.length) {
+        mapStage.textContent = "No county geometry available for this state.";
+        return;
+      }
+      var pBox = boundsOf(points);
+      var hull = convexHull(points.map(function (point) { return project(point, pBox, width, height); }));
+      var hullPath = hull.map(function (pair, index) {
+        return (index === 0 ? "M" : "L") + pair[0].toFixed(1) + " " + pair[1].toFixed(1);
+      }).join(" ") + " Z";
+      var circles = points.map(function (point) {
+        var county = countyByFips(point.fips);
+        var pxy = project(point, pBox, width, height);
+        var value = metricOf(county);
+        var fill = choroplethColor(value, maxMetric);
+        var radius = 5 + 9 * Math.sqrt((county ? county.housing_units : 1) / result.housing_units);
+        var selected = point.fips === selectedFips;
+        var label = (county ? county.name : point.name) + ", " + integer(value) + " calculated";
+        return '<circle data-fips="' + point.fips + '" cx="' + pxy[0].toFixed(1) +
+          '" cy="' + pxy[1].toFixed(1) + '" r="' + radius.toFixed(1) + '" fill="' + fill +
+          '" stroke="' + (selected ? "#112238" : "#1c2430") + '" stroke-width="' + (selected ? 2.5 : 0.6) +
+          '"><title>' + escapeHtml(label) + "</title></circle>" +
+          '<circle class="map-hit" data-fips="' + point.fips + '" cx="' + pxy[0].toFixed(1) +
+          '" cy="' + pxy[1].toFixed(1) + '" r="12" fill="transparent"><title>' + escapeHtml(label) + "</title></circle>";
+      }).join("");
+      mapStage.innerHTML =
+        '<svg viewBox="0 0 ' + width + " " + height + '" role="group" aria-label="Map of ' + escapeHtml(result.name) + ' counties">' +
+        '<rect width="100%" height="100%" fill="#f4f1e8"></rect>' +
+        '<path d="' + hullPath + '" fill="#e7f0e4" stroke="#0f6b4e" stroke-width="1.5"></path>' +
+        circles +
+        "</svg>";
+    }
+
     bindMapKeys();
-    bindRoving(mapStage, "[data-fips]");
+    bindRoving(mapStage, ".county-poly[data-fips], circle[data-fips]:not(.map-hit)");
     renderCountySelect();
     renderCountyDetail(selectedFips ? countyByFips(selectedFips) : null);
     renderCorePin();
   }
 
-  function stateShape(code, pts, localBox, originX, originY, drawW, drawH) {
-    var hull = convexHull(pts.map(function (point) { return project(point, localBox, drawW, drawH); }));
-    if (hull.length < 3) return "";
-    var path = hull.map(function (pair, index) {
-      var x = pair[0] + originX;
-      var y = pair[1] + originY;
-      return (index === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1);
-    }).join(" ") + " Z";
-    var cx = 0;
-    var cy = 0;
-    hull.forEach(function (pair) { cx += pair[0] + originX; cy += pair[1] + originY; });
-    cx /= hull.length;
-    cy /= hull.length;
+  function statePolygonsGroup(code, localBox, originX, originY, drawW, drawH) {
+    var counties = geoCountiesFor(code);
+    if (!counties.length) return "";
+    var midLat = ((localBox.minY + localBox.maxY) / 2) * Math.PI / 180;
+    var xspan = Math.max(0.05, (localBox.maxX - localBox.minX) * Math.cos(midLat));
+    var yspan = Math.max(0.05, localBox.maxY - localBox.minY);
+    var scale = Math.min(drawW / xspan, drawH / yspan);
+    var ox = originX + (drawW - xspan * scale) / 2;
+    var oy = originY + (drawH - yspan * scale) / 2;
     var active = code === stateCode;
-    return '<g role="button" tabindex="0" data-state="' + code + '">' +
-      '<path d="' + path + '" fill="' + (active ? "#cfe6d8" : "#e4ecf5") + '" stroke="#1e3a5f" stroke-width="1.4"></path>' +
-      '<text x="' + cx.toFixed(1) + '" y="' + (cy + 4).toFixed(1) + '" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#1c2430">' + code + "</text>" +
-      "<title>" + code + "</title></g>";
+    var stMeta = stateCatalog.filter(function (s) { return s.code === code; })[0];
+    var fill = active ? "#0e6e5c" : (stMeta && stMeta.tier === 1 ? "#c7dcf2" : "#e3dfd4");
+    var stroke = active ? "#112238" : "#516173";
+    var countyPaths = counties.map(function (c) {
+      var d = (c.rings || []).map(function (ring) {
+        return ring.map(function (pt, idx) {
+          var px = ox + (pt[0] - localBox.minX) * Math.cos(midLat) * scale;
+          var py = oy + (localBox.maxY - pt[1]) * scale;
+          return (idx === 0 ? "M" : "L") + px.toFixed(1) + " " + py.toFixed(1);
+        }).join(" ") + " Z";
+      }).join(" ");
+      return '<path class="county-poly" d="' + d + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (active ? "0.9" : "0.5") + '"></path>';
+    }).join("");
+    var stBox = boundsOfRings(counties);
+    var stMidLon = (stBox.minX + stBox.maxX) / 2;
+    var stMidLat = (stBox.minY + stBox.maxY) / 2;
+    var cx = ox + (stMidLon - localBox.minX) * Math.cos(midLat) * scale;
+    var cy = oy + (localBox.maxY - stMidLat) * scale;
+    var titleText = stMeta ? (stMeta.name + " (Tier " + stMeta.tier + ")") : code;
+    return '<g role="button" tabindex="0" data-state="' + code + '" aria-label="Select ' + escapeHtml(titleText) + '">' +
+      countyPaths +
+      '<rect x="' + (cx - 14).toFixed(1) + '" y="' + (cy - 9).toFixed(1) + '" width="28" height="18" rx="4" fill="' + (active ? "#112238" : "rgba(255,255,255,0.88)") + '"></rect>' +
+      '<text x="' + cx.toFixed(1) + '" y="' + (cy + 4).toFixed(1) + '" text-anchor="middle" font-size="11" font-weight="700" font-family="sans-serif" fill="' + (active ? "#ffffff" : "#112238") + '">' + code + "</text>" +
+      "<title>" + escapeHtml(titleText) + "</title></g>";
   }
 
   function renderNationMap() {
-    mapTitle.textContent = "Eleven states";
-    var groups = {};
-    mapDoc.points.forEach(function (point) {
-      if (!groups[point.state]) groups[point.state] = [];
-      groups[point.state].push(point);
-    });
-    var insetCodes = { HI: true, CT: true, RI: true, NH: true };
-    var mainland = mapDoc.points.filter(function (point) { return !insetCodes[point.state]; });
-    var box = boundsOf(mainland);
+    mapTitle.textContent = "All 11 Challenge States";
     var width = 800;
     var height = 460;
-    var shapes = Object.keys(groups).filter(function (code) { return !insetCodes[code]; }).map(function (code) {
-      return stateShape(code, groups[code], box, 0, 0, width, height);
-    }).join("");
-    var hiBox = boundsOf(groups.HI || []);
-    shapes += stateShape("HI", groups.HI || [], hiBox, 28, 330, 136, 100);
-    [
-      { code: "CT", x: 620, y: 40, w: 52, h: 136 },
-      { code: "RI", x: 676, y: 40, w: 52, h: 136 },
-      { code: "NH", x: 732, y: 40, w: 50, h: 136 },
-    ].forEach(function (cell) {
-      var pts = groups[cell.code] || [];
-      if (!pts.length) return;
-      shapes += stateShape(cell.code, pts, boundsOf(pts), cell.x, cell.y, cell.w, cell.h);
-    });
-    mapStage.innerHTML =
-      '<svg viewBox="0 0 800 460" role="group" aria-label="Map of the eleven challenge states. Hawaii and southern New England are inset so the small states stay clickable.">' +
-      '<rect width="100%" height="100%" fill="#f7f3ea"></rect>' +
-      '<rect x="16" y="300" width="160" height="144" fill="#fffdf8" stroke="#d9d0c2"></rect>' +
-      '<text x="24" y="316" font-size="12" font-family="sans-serif" fill="#5c6570">Hawaii</text>' +
-      '<rect x="612" y="12" width="176" height="176" fill="#fffdf8" stroke="#d9d0c2"></rect>' +
-      '<text x="620" y="28" font-size="11" font-family="sans-serif" fill="#5c6570">CT, RI, NH</text>' +
-      shapes +
-      "</svg>";
-    bindMapKeys();
-    bindRoving(mapStage, "[data-state]");
+    if (geoAllDoc && geoAllDoc.states) {
+      var insetCodes = { HI: true, CT: true, RI: true, NH: true };
+      var mainlandCounties = [];
+      Object.keys(geoAllDoc.states).forEach(function (code) {
+        if (!insetCodes[code]) mainlandCounties = mainlandCounties.concat(geoAllDoc.states[code]);
+      });
+      var mainBox = boundsOfRings(mainlandCounties);
+      var shapes = Object.keys(geoAllDoc.states).filter(function (code) { return !insetCodes[code]; }).map(function (code) {
+        return statePolygonsGroup(code, mainBox, 24, 18, width - 220, height - 36);
+      }).join("");
+      shapes += statePolygonsGroup("HI", boundsOfRings(geoCountiesFor("HI")), 26, 322, 142, 106);
+      [
+        { code: "NH", x: 616, y: 36, w: 156, h: 112 },
+        { code: "CT", x: 616, y: 168, w: 156, h: 102 },
+        { code: "RI", x: 616, y: 290, w: 156, h: 112 },
+      ].forEach(function (cell) {
+        var cList = geoCountiesFor(cell.code);
+        if (cList.length) {
+          shapes += statePolygonsGroup(cell.code, boundsOfRings(cList), cell.x, cell.y, cell.w, cell.h);
+        }
+      });
+      mapStage.innerHTML =
+        '<svg viewBox="0 0 800 460" role="group" aria-label="Cartographic map of the eleven challenge states. Hawaii and New England states are inset for legibility.">' +
+        '<rect width="100%" height="100%" rx="10" fill="#f4f1e8"></rect>' +
+        '<rect x="16" y="300" width="164" height="142" rx="8" fill="#ffffff" stroke="#d9d0c2"></rect>' +
+        '<text x="26" y="318" font-size="11" font-weight="700" font-family="sans-serif" fill="#4f5862">HAWAII (TIER 1)</text>' +
+        '<rect x="604" y="16" width="180" height="426" rx="8" fill="#ffffff" stroke="#d9d0c2"></rect>' +
+        '<text x="616" y="34" font-size="11" font-weight="700" font-family="sans-serif" fill="#4f5862">NEW ENGLAND ZOOM</text>' +
+        shapes +
+        "</svg>";
+      bindMapKeys();
+      bindRoving(mapStage, "[data-state]");
+      countyDetail.hidden = true;
+      return;
+    }
     countyDetail.hidden = true;
   }
 
@@ -1194,12 +1445,14 @@
     var seen = {};
     nodes.forEach(function (node) {
       var key = node.getAttribute("data-fips") || node.getAttribute("data-state");
-      if (seen[key]) return;
+      if (!key || seen[key]) return;
       seen[key] = true;
       unique.push(node);
     });
     unique.forEach(function (node, index) {
-      node.tabIndex = index === 0 ? 0 : -1;
+      var key = node.getAttribute("data-fips");
+      var isSel = key && key === selectedFips;
+      node.tabIndex = isSel || (!selectedFips && index === 0) ? 0 : -1;
       node.addEventListener("keydown", function (event) {
         var next = index;
         if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % unique.length;
@@ -1227,6 +1480,7 @@
       function choose() {
         selectedFips = node.getAttribute("data-fips");
         renderStateMap();
+        renderCounties();
         loadInsights();
       }
       node.addEventListener("click", choose);
@@ -1416,6 +1670,7 @@
         " when the extract is hidden. Package band width " +
         tagged(item.band_width_full, "calculated", integer) + " full versus " +
         tagged(item.band_width_imputed, "calculated", integer) + " imputed (" + escapeHtml(ratio) + ").</p>" +
+        '<div class="table-wrap" role="region" tabindex="0" aria-label="Cross-check table for ' + escapeHtml(code) + '">' +
         "<table><thead><tr><th>Scenario</th><th>Full</th><th>Hidden parcels</th><th>Error</th><th>State median screen</th><th>Error</th></tr></thead><tbody>";
       Object.keys(names).forEach(function (id) {
         var block = item.scenarios[id];
@@ -1425,7 +1680,7 @@
           "</td><td>" + tagged(block.state_screen.other, "calculated", integer) +
           "</td><td>" + errorText(block.state_screen) + "</td></tr>";
       });
-      html += "</tbody></table>";
+      html += "</tbody></table></div>";
       cardEl.innerHTML = html;
       crossOut.appendChild(cardEl);
     });
@@ -1458,6 +1713,7 @@
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", active ? "true" : "false");
     });
+    if (studioStateSelect) studioStateSelect.value = mapScope === "nation" ? "ALL" : stateCode;
   }
 
   async function ensureAduCompare(code) {
@@ -1475,6 +1731,8 @@
     stateCode = code;
     overrides = {};
     corePinned = null;
+    selectedFips = null;
+    updateOverrideBadge();
     tornado.innerHTML = "";
     band.textContent = "";
     lastBand = null;
@@ -1515,7 +1773,66 @@
       });
   }
 
+  function renderBriefingStrip() {
+    if (!briefingStripMount || !insightsDoc) return;
+    var aff = insightsDoc.affordability_screen || {};
+    var protos = aff.prototypes || [];
+    var aduProto = protos[0];
+    var mmProto = protos[1] || protos[0];
+    var stancesWrap = insightsDoc.priority_stances || {};
+    var stances = stancesWrap.stances || [];
+    var chosenStance = stances[0];
+    stances.forEach(function (s) {
+      if (s.id === activeStanceId) chosenStance = s;
+    });
+    var topRank = chosenStance && chosenStance.rankings && chosenStance.rankings[0];
+    var cardDoc = insightsDoc.official_data_card || {};
+    var cObs = cardDoc.observed || {};
+    var cComp = cardDoc.completeness || {};
+
+    var aduLine = aduProto
+      ? "$" + integer(aduProto.metrics.breakeven_rent_before) + " → <strong>$" + integer(aduProto.metrics.breakeven_rent_after) + "/mo</strong> (" + escapeHtml(aduProto.lowest_ami_band_after) + ")"
+      : "—";
+    var mmLine = mmProto
+      ? "$" + integer(mmProto.metrics.breakeven_rent_before) + " → <strong>$" + integer(mmProto.metrics.breakeven_rent_after) + "/mo</strong> (" + escapeHtml(mmProto.lowest_ami_band_after) + ")"
+      : "—";
+
+    var stanceMiniBtns = stances.map(function (s) {
+      var on = chosenStance && s.id === chosenStance.id;
+      return '<button type="button" class="mini-stance-pill' + (on ? " active" : "") + '" aria-pressed="' + (on ? "true" : "false") + '" data-mini-stance="' + escapeHtml(s.id) + '">' +
+        escapeHtml(s.label.split("&")[0].trim()) + "</button>";
+    }).join("");
+
+    briefingStripMount.innerHTML =
+      '<article class="briefing-tile">' +
+        '<span class="step-kicker">HUD AMI Breakeven (' + escapeHtml(aff.geography_label || stateCode) + ')</span>' +
+        "<p class='tile-main'>Backyard ADU: " + aduLine + " " + badge("calculated") + "</p>" +
+        "<p class='help'>" + escapeHtml(mmProto ? mmProto.label : "Multiplex") + ": " + mmLine + "</p>" +
+      "</article>" +
+      '<article class="briefing-tile">' +
+        '<span class="step-kicker">Stakeholder Priority Stance</span>' +
+        "<p class='tile-main'>" + (topRank ? ("#1 " + escapeHtml(topRank.label) + " (" + oneDecimal(topRank.scores.composite_score) + " pts)") : "—") +
+        (chosenStance && chosenStance.too_close_to_call ? ' <span class="badge-uncertain">≤3 pt tie</span>' : "") + "</p>" +
+        '<div class="mini-stance-row" role="group" aria-label="Quick priority stance">' + stanceMiniBtns + "</div>" +
+      "</article>" +
+      '<article class="briefing-tile">' +
+        '<span class="step-kicker">Official State GIS &amp; Workforce</span>' +
+        "<p class='tile-main'>" + escapeHtml(cardDoc.portal_name || stateCode) + " · <strong>" +
+        escapeHtml(String(cComp.benchmark_completeness || 0)) + "% → " + escapeHtml(String(cComp.extended_completeness || 0)) + "%</strong> " + badge("calculated") + "</p>" +
+        "<p class='help'>" + integer(cObs.parcel_records_observed) + " parcels · " + integer(cObs.ntad_transit_stops) + " transit stops " + badge("observed") + "</p>" +
+      "</article>";
+
+    briefingStripMount.querySelectorAll("[data-mini-stance]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        activeStanceId = btn.getAttribute("data-mini-stance") || "balanced";
+        renderBriefingStrip();
+        if (insightsMount) renderInsights();
+      });
+    });
+  }
+
   function renderInsights() {
+    renderBriefingStrip();
     if (!insightsMount) return;
     if (!insightsDoc) {
       insightsMount.innerHTML = '<p class="help">Loading official data hub, HUD AMI breakeven rents, and code screen…</p>';
@@ -1534,9 +1851,9 @@
     stances.forEach(function (s) {
       if (s.id === activeStanceId) chosenStance = s;
     });
-    var card = insightsDoc.official_data_card;
-    var cObs = card.observed;
-    var cComp = card.completeness;
+    var cardDoc = insightsDoc.official_data_card;
+    var cObs = cardDoc.observed;
+    var cComp = cardDoc.completeness;
     var mktPct = Math.round(Number(cObs.vacant_market_available_share || 0) * 100);
     var seasPct = Math.round(Number(cObs.vacant_seasonal_share || 0) * 100);
     var othPct = Math.max(0, 100 - mktPct - seasPct);
@@ -1685,8 +2002,8 @@
 
       '<article class="insight-card">' +
         '<p class="step-kicker">3 · Official Hackathon Data Coverage (' + escapeHtml(insightsDoc.state_name) + ')</p>' +
-        '<h3><a href="' + escapeHtml(card.portal_url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(card.portal_name) + "</a></h3>" +
-        "<p>" + escapeHtml(card.headline_finding) + "</p>" +
+        '<h3><a href="' + escapeHtml(cardDoc.portal_url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(cardDoc.portal_name) + "</a></h3>" +
+        "<p>" + escapeHtml(cardDoc.headline_finding) + "</p>" +
         '<div class="hub-kpi-grid">' +
           '<div class="hub-kpi"><span>Data Completeness</span><strong>' + cComp.benchmark_completeness + "% → " + cComp.extended_completeness + "%</strong> " + badge("calculated") + "<small>Benchmark Tier " + cComp.tier + " vs. Extended Hub</small></div>" +
           '<div class="hub-kpi"><span>Observed GIS Features</span><strong>' + integer(cObs.parcel_records_observed) + "</strong> " + badge("observed") + "<small>Parcels + " + integer(cObs.zoning_or_landuse_records) + " zoning/land-use records</small></div>" +
@@ -1702,6 +2019,7 @@
     if (stairBox) {
       stairBox.addEventListener("change", function () {
         singleStairOn = !!stairBox.checked;
+        updateOverrideBadge();
         loadInsights();
       });
     }
@@ -1722,7 +2040,6 @@
   }
 
   function loadInsights() {
-    if (!insightsMount) return;
     var iid = ++insightsRequestId;
     var payload = {
       state: stateCode,
@@ -1739,7 +2056,7 @@
       })
       .catch(function () {
         if (iid !== insightsRequestId) return;
-        insightsMount.innerHTML = '<p class="help">Could not load insights for this selection.</p>';
+        if (insightsMount) insightsMount.innerHTML = '<p class="help">Could not load insights for this selection.</p>';
       });
   }
 
@@ -1777,7 +2094,10 @@
       .catch(fail);
   }
 
-  function activateTab(tab) {
+  function activateTab(tab, preserveDepth) {
+    if (!preserveDepth && studioDepth === "briefing") {
+      setStudioDepth("audit", true);
+    }
     document.querySelectorAll(".tab").forEach(function (other) {
       var on = other === tab;
       other.classList.toggle("active", on);
@@ -1819,6 +2139,88 @@
     });
   });
 
+  /* Studio Depth Buttons & Quick Prompts */
+  document.querySelectorAll("[data-depth-btn]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var target = btn.getAttribute("data-depth-btn");
+      setStudioDepth(target);
+      if (target === "markup") {
+        var ribbon = document.getElementById("studio-markup-ribbon");
+        if (ribbon && ribbon.scrollIntoView) ribbon.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } else if (target === "audit") {
+        var shell = document.getElementById("analysis-shell");
+        if (shell && shell.scrollIntoView) shell.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-depth-jump]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var target = btn.getAttribute("data-depth-jump");
+      setStudioDepth(target);
+      var dest = target === "markup" ? document.getElementById("panel-insights") : document.getElementById("analysis-shell");
+      if (dest && dest.scrollIntoView) dest.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  var collapseBtn = document.getElementById("collapse-to-briefing");
+  if (collapseBtn) {
+    collapseBtn.addEventListener("click", function () {
+      setStudioDepth("briefing", true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  /* Command Bar State Quick-Jump & Drawers */
+  if (studioStateSelect) {
+    studioStateSelect.addEventListener("change", function () {
+      var val = studioStateSelect.value;
+      if (val === "ALL") {
+        mapScope = "nation";
+        selectedFips = null;
+        renderMap();
+        return;
+      }
+      if (!val) return;
+      mapScope = "state";
+      selectedFips = null;
+      selectState(val);
+    });
+  }
+  var btnToggleStates = document.getElementById("toggle-states-drawer");
+  if (btnToggleStates) {
+    btnToggleStates.addEventListener("click", function () {
+      if (statesDrawer && !statesDrawer.hidden) closeDrawers();
+      else openDrawer("states");
+    });
+  }
+  var btnCloseStates = document.getElementById("close-states-drawer");
+  if (btnCloseStates) btnCloseStates.addEventListener("click", closeDrawers);
+
+  var btnToggleAssump = document.getElementById("toggle-assumptions-drawer");
+  if (btnToggleAssump) {
+    btnToggleAssump.addEventListener("click", function () {
+      if (assumptionsDrawer && !assumptionsDrawer.hidden) closeDrawers();
+      else openDrawer("assumptions");
+    });
+  }
+  var inlineTuneBtn = document.getElementById("inline-tune-btn");
+  if (inlineTuneBtn) {
+    inlineTuneBtn.addEventListener("click", function () { openDrawer("assumptions"); });
+  }
+  var btnCloseAssump = document.getElementById("close-assumptions-drawer");
+  if (btnCloseAssump) btnCloseAssump.addEventListener("click", closeDrawers);
+  if (studioBackdrop) studioBackdrop.addEventListener("click", closeDrawers);
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      if ((statesDrawer && !statesDrawer.hidden) || (assumptionsDrawer && !assumptionsDrawer.hidden)) {
+        event.preventDefault();
+        closeDrawers();
+      }
+    }
+  });
+
   var moreBtn = document.getElementById("more-tabs");
   var moreList = document.getElementById("more-tab-list");
   if (moreBtn && moreList) {
@@ -1829,12 +2231,22 @@
     });
   }
 
+  var openMarkupPresets = document.getElementById("open-markup-presets");
+  if (openMarkupPresets) {
+    openMarkupPresets.addEventListener("click", function () {
+      setStudioDepth("markup", true);
+      var rib = document.getElementById("studio-markup-ribbon");
+      if (rib && rib.scrollIntoView) rib.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
   var openInsightsBtn = document.getElementById("open-insights");
   if (openInsightsBtn) {
     openInsightsBtn.addEventListener("click", function () {
+      setStudioDepth("markup", true);
       var insTab = document.getElementById("tab-insights");
       var insPanel = document.getElementById("panel-insights");
-      if (insTab) activateTab(insTab);
+      if (insTab) activateTab(insTab, true);
       if (insPanel && insPanel.scrollIntoView) {
         insPanel.scrollIntoView({ behavior: "smooth", block: "start" });
       }
@@ -1844,16 +2256,39 @@
   var openPortability = document.getElementById("open-portability");
   if (openPortability) {
     openPortability.addEventListener("click", function () {
+      setStudioDepth("audit", true);
       if (moreList && moreList.hidden) {
         moreList.hidden = false;
         if (moreBtn) moreBtn.setAttribute("aria-expanded", "true");
       }
       var crossTab = document.getElementById("tab-cross");
       var crossPanel = document.getElementById("panel-cross");
-      if (crossTab) activateTab(crossTab);
+      if (crossTab) activateTab(crossTab, true);
       if (crossPanel && crossPanel.scrollIntoView) {
         crossPanel.scrollIntoView({ behavior: "smooth", block: "start" });
       }
+    });
+  }
+
+  var openAuditMath = document.getElementById("open-audit-math");
+  if (openAuditMath) {
+    openAuditMath.addEventListener("click", function () {
+      setStudioDepth("audit", true);
+      var mathTab = document.getElementById("tab-math");
+      var mathPanel = document.getElementById("panel-math");
+      if (mathTab) activateTab(mathTab, true);
+      if (mathPanel && mathPanel.scrollIntoView) {
+        mathPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  }
+
+  var skipMapLink = document.querySelector(".skip-map");
+  if (skipMapLink) {
+    skipMapLink.addEventListener("click", function () {
+      setStudioDepth("audit", true);
+      var cTab = document.getElementById("tab-counties");
+      if (cTab) activateTab(cTab, true);
     });
   }
 
@@ -1862,7 +2297,9 @@
     countyPick.addEventListener("change", function () {
       selectedFips = countyPick.value;
       mapScope = "state";
+      if (studioStateSelect) studioStateSelect.value = stateCode;
       renderMap();
+      renderCounties();
       loadInsights();
     });
   }
@@ -1874,6 +2311,7 @@
       reformOn[id] = true;
       reformWeight[id] = 1;
     });
+    updateOverrideBadge();
     renderReformMix();
     renderSliders();
     simulate().catch(fail);
@@ -1882,6 +2320,7 @@
   document.getElementById("map-back").addEventListener("click", function () {
     mapScope = "nation";
     selectedFips = null;
+    if (studioStateSelect) studioStateSelect.value = "ALL";
     renderMap();
     loadInsights();
   });
@@ -1965,19 +2404,22 @@
     setStatus("");
   }
 
+  setStudioDepth(studioDepth, true);
   renderReformMix();
   renderCorePresets();
   Promise.all([
     request("/api/states"),
     request("/api/map"),
     request("/api/adu-compare?state=PA"),
-    request("/api/data-sources").catch(function () { return null; })
+    request("/api/data-sources").catch(function () { return null; }),
+    request("/api/geo").catch(function () { return null; })
   ])
     .then(function (payloads) {
       mapDoc = payloads[1];
       aduCompareCache.PA = payloads[2];
       aduCompare = payloads[2];
       dataSourcesDoc = payloads[3];
+      geoAllDoc = payloads[4];
       fillAduFeeNote();
       renderStates(payloads[0].states);
       var known = (payloads[0].states || []).some(function (row) { return row.code === stateCode; });

@@ -234,6 +234,26 @@ class App:
     def map_points(self) -> dict[str, Any]:
         return json.loads(COUNTY_POINTS.read_text(encoding="utf-8"))
 
+    def geo_11states(self, state: str | None = None) -> dict[str, Any]:
+        from src.data.geo_11states import GEO_11STATES_PATH
+
+        if not hasattr(self, "_geo_11states_cache"):
+            self._geo_11states_cache = json.loads(GEO_11STATES_PATH.read_text(encoding="utf-8"))
+        doc = self._geo_11states_cache
+        if not state or state.strip().upper() == "ALL":
+            total = sum(len(items) for items in (doc.get("states") or {}).values())
+            return {**doc, "count": total}
+        code = self._check_state(state)
+        counties = doc["states"][code]
+        return {
+            "source": doc["source"],
+            "license": doc["license"],
+            "url": doc["url"],
+            "state": code,
+            "count": len(counties),
+            "counties": counties,
+        }
+
     def sensitivity(self, payload: dict[str, Any]) -> dict[str, Any]:
         state = self._check_state(str(payload.get("state", "PA")))
         scenario = str(payload.get("scenario", "combined"))
@@ -565,6 +585,9 @@ def make_handler(app: App):
                     if raw_state is not None:
                         app._check_state(raw_state[0])
                     self._json(200, app.map_points())
+                elif path == "/api/geo":
+                    raw_state = query.get("state", [None])[0]
+                    self._json(200, app.geo_11states(raw_state), cache_control=ASSET_CACHE)
                 elif path == "/api/case-study":
                     self._json(200, app.case_study())
                 elif path == "/api/lab/results":

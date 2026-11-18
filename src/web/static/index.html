@@ -3,109 +3,166 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Transparent structural simulator of how five state housing reforms change permits and five-year completions across eleven challenge states.">
-  <title>Stateframe — 11-State Housing Policy Screening Simulator</title>
+  <meta name="description" content="Transparent structural legislative studio showing how five state housing reforms change permits and five-year completions across eleven challenge states.">
+  <title>Stateframe — 11-State Legislative Housing Studio</title>
   <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body class="core-body">
+<body class="core-body studio-v3" data-depth="briefing">
   <a class="skip" href="#main">Skip to results</a>
 
   <div class="suite-bar no-print">
-    <a class="suite-brand" href="/">Stateframe <span class="suite-tag">Policy Suite</span></a>
+    <a class="suite-brand" href="/">Stateframe <span class="suite-tag">Legislative Studio</span></a>
     <nav class="suite-nav" aria-label="Stateframe workspaces">
       <a href="/" aria-current="page">11-State Screening</a>
       <a href="/lab">PA &amp; NH County Lab</a>
       <a href="/brief">1-Page Brief</a>
       <a href="/deck">Executive Deck</a>
     </nav>
+
+    <div class="studio-cmd-group">
+      <label class="visually-hidden" for="studio-state-select">Active state</label>
+      <select id="studio-state-select" class="suite-select" aria-label="Active state"></select>
+      <button type="button" class="suite-drawer-btn" id="toggle-states-drawer" aria-expanded="false" aria-controls="states-drawer">Compare 11 States</button>
+    </div>
+
+    <div class="depth-seg" role="group" aria-label="Audience depth mode">
+      <button type="button" class="depth-btn active" data-depth-btn="briefing" aria-pressed="true" title="Clean executive decision view">1 · Briefing</button>
+      <button type="button" class="depth-btn" data-depth-btn="markup" aria-pressed="false" title="Add amendment presets, Bill A/B diff, HUD AMI breakeven &amp; code screen">2 · Markup</button>
+      <button type="button" class="depth-btn" data-depth-btn="audit" aria-pressed="false" title="Full equation trace, Monte Carlo sensitivity, Tier-1 cross-check &amp; county tables">3 · Audit</button>
+    </div>
+
     <span class="suite-spacer"></span>
-    <a class="btn-try suite-cta" href="/lab?st=PA&amp;on=mm,fees,adu,parking&amp;try=1">Try Pennsylvania 2027–31</a>
+
+    <button type="button" class="suite-drawer-btn" id="toggle-assumptions-drawer" aria-expanded="false" aria-controls="assumptions-drawer">
+      Tune Bill &amp; Sliders <span class="drawer-count" id="override-badge" hidden>0</span>
+    </button>
   </div>
 
-  <header class="top">
+  <header class="top studio-lens-strip">
     <div class="brand">
-      <p class="eyebrow">Arnold Ventures / The Turnout Housing Challenge · 11-State Screening Workspace</p>
-      <h1>Stateframe <span class="h1-sub">· 11-State Screening</span></h1>
-      <p class="lede">A transparent structural simulator of how five state housing reforms change permits and completions over five years across eleven challenge states. Every number is tagged observed, assumed, or calculated.</p>
+      <div class="lens-pill-row">
+        <span class="lens-isolation-pill">Active Engine Lens · 11-State Structural Screening (<code>src/model/equations.py</code>)</span>
+        <span class="lens-isolation-note">Statewide county-sum screening across 11 Challenge states · Distinct from PA/NH lot-competition Lab</span>
+      </div>
+      <h1>Stateframe <span class="h1-sub">· 11-State Legislative Studio</span></h1>
+      <p class="lede">Toggle state housing bills, compare county choropleths and bottlenecks side-by-side, and trace every number from observed public data to five-year completions.</p>
     </div>
-    <div class="team">
-      <p class="team-names">Tejas Chaudhari · Yoon Yik Ng · Christopher Severns</p>
-      <p class="org">Carnegie Mellon University</p>
+    <div class="top-right-meta">
+      <a class="btn-try suite-cta no-print" href="/lab?st=PA&amp;on=mm,fees,adu,parking&amp;try=1">Try Pennsylvania 2027–31</a>
+      <div class="team">
+        <p class="team-names">Tejas Chaudhari · Yoon Yik Ng · Christopher Severns</p>
+        <p class="org">Carnegie Mellon University · Arnold Ventures Challenge</p>
+      </div>
     </div>
   </header>
 
-  <div class="layout">
-    <aside class="states" aria-label="States">
-      <p class="aside-label">Step 1 · Select a state (11)</p>
+  <div class="studio-backdrop no-print" id="studio-backdrop" hidden></div>
+
+  <div class="layout studio-layout">
+    <aside class="states studio-drawer studio-drawer-left" id="states-drawer" aria-label="States" hidden>
+      <div class="aside-head">
+        <p class="aside-label">Select or Compare a State (11)</p>
+        <button type="button" class="drawer-close" id="close-states-drawer" aria-label="Close states drawer">Close ✕</button>
+      </div>
       <div id="state-list"></div>
-      <p class="aside-note"><strong>Tier 1</strong> states include a statewide parcel or land-use extract. <strong>Tier 2</strong> states run on free public Census and permit data with imputed parcel shares. County rows always sum to the state.</p>
+      <p class="aside-note"><strong>Tier 1</strong> states include an observed statewide parcel or land-use extract. <strong>Tier 2</strong> states run on public Census ACS, Building Permits Survey, and TIGER files with imputed parcel shares. County integers always sum to the state total.</p>
     </aside>
 
     <main id="main">
       <section class="status" id="status" aria-live="polite"></section>
 
-      <div class="workspace-bar no-print">
+      <div class="workspace-bar studio-orient-bar no-print">
         <div class="workspace-bar-row">
-          <p class="start-here" id="start-here"><strong>Start here:</strong> Read the five-year statewide package answer below, click a county on the map, or pick any reform card to inspect its step-by-step math.</p>
+          <p class="start-here" id="start-here"><strong>Start here:</strong> Read the five-year statewide verdict on the left, toggle any bill in the stack, or click any county polygon on the right to inspect its housing gain and primary bottleneck.</p>
           <p class="legend-bar" id="provenance-legend">
-            <span class="legend-prefix">Provenance tags:</span>
+            <span class="legend-prefix">Quiet provenance:</span>
             <abbr class="tag observed" title="Measured in a public dataset from the official data list and stored for this place.">observed</abbr>
             <abbr class="tag assumed" title="A published assumption or an imputation. It is not a measurement for this place.">assumed</abbr>
             <abbr class="tag calculated" title="Arithmetic in src/model/equations.py, using observed inputs and published assumptions.">calculated</abbr>
           </p>
         </div>
         <div class="entry-actions">
-          <a class="btn-pill" href="#results">1 · Statewide answer</a>
-          <a class="btn-pill" href="#map-title">2 · County map</a>
-          <a class="btn-pill" href="#cards">3 · Benchmark scenarios</a>
-          <a class="btn-pill" href="#panel-compare">4 · Equations &amp; exports</a>
-          <button type="button" class="btn-pill" id="open-insights">Data hub, AMI &amp; code screen</button>
+          <button type="button" class="btn-pill" id="open-markup-presets">Committee presets &amp; Bill A/B diff</button>
+          <button type="button" class="btn-pill" id="open-insights">HUD AMI breakeven, single-stair &amp; GIS hub</button>
           <button type="button" class="btn-pill" id="open-portability">50-state portability &amp; data ROI</button>
+          <button type="button" class="btn-pill" id="open-audit-math">Step-by-step equations &amp; exports</button>
         </div>
       </div>
 
-      <div id="results"></div>
-      <section class="headline no-print" id="headline" aria-label="Statewide answer"></section>
-
-      <section class="map-wrap section-card no-print" aria-label="State and county map">
-        <div class="panel-head">
-          <div>
-            <p class="step-kicker">Step 2 · Geographic Distribution</p>
-            <h2 id="map-title">Counties</h2>
-          </div>
-          <div class="exports">
-            <button type="button" id="map-back">All eleven states</button>
-            <a class="skip-map" href="#county-table">Skip map to table</a>
-          </div>
+      <!-- Markup Studio Ribbon (Visible in Depth 2: Markup & Depth 3: Audit) -->
+      <section class="studio-markup-ribbon no-print" id="studio-markup-ribbon" aria-label="Committee markup presets and bill comparison">
+        <div class="markup-ribbon-grid">
+          <div id="core-presets-inline" class="markup-preset-strip"></div>
+          <div id="core-pin-inline" class="markup-pin-strip"></div>
         </div>
-        <p class="help" id="map-help">Click a state, then a county. Circles sit on Census interior points. The outline is the convex hull of those points, not a legal boundary.</p>
-        <div class="map-toolbar">
-          <div class="metric-chips" id="core-map-metrics" role="group" aria-label="County map metric"></div>
-          <label class="county-pick" for="county-select">
-            <span>Choose a county</span>
-            <select id="county-select"></select>
-          </label>
-        </div>
-        <p class="help bottleneck-legend" id="core-bottleneck-legend" hidden></p>
-        <div id="map-stage"></div>
-        <div id="county-detail" class="callout" hidden></div>
       </section>
 
-      <section class="section-card no-print" aria-label="Scenario cards">
-        <div class="panel-head">
-          <div>
-            <p class="step-kicker">Step 3 · Benchmark Scenarios</p>
-            <h2>Compare standalone reforms &amp; combined package</h2>
-          </div>
-          <p class="help">Before is five-year completions under current rules. After adds the reform. Toggle <strong>In package</strong> to include or exclude a reform.</p>
+      <!-- Above-the-Fold 2-Pane Split Legislative Studio -->
+      <div class="studio-split no-print">
+        <div class="studio-col-left">
+          <div id="results"></div>
+          <section class="headline" id="headline" aria-label="Statewide answer"></section>
+
+          <section class="section-card studio-bill-card" aria-label="Scenario cards">
+            <div class="panel-head studio-bill-head">
+              <div>
+                <p class="step-kicker">Interactive Bill Builder · 5 Reforms</p>
+                <h2>Build &amp; compare the legislative package</h2>
+              </div>
+              <button type="button" class="btn-pill" id="inline-tune-btn">Tune weights &amp; sliders ▸</button>
+            </div>
+            <p class="help studio-bill-hint">Click a reform title to focus the county choropleth and equation trace on that bill. Toggle <strong>In package</strong> to include or exclude it from the joint package.</p>
+            <div class="cards studio-bill-stack" id="cards"></div>
+          </section>
         </div>
-        <div class="cards" id="cards"></div>
+
+        <section class="map-wrap section-card studio-col-right" aria-label="State and county map">
+          <div class="panel-head">
+            <div>
+              <p class="step-kicker">County Choropleth &amp; Pinned Receipt</p>
+              <h2 id="map-title">Counties</h2>
+            </div>
+            <div class="exports">
+              <button type="button" id="map-back">All eleven states</button>
+              <a class="skip-map" href="#county-table">Skip map to table</a>
+            </div>
+          </div>
+          <p class="help" id="map-help">Click any county polygon (or switch to All eleven states) to inspect its five-year net new homes, primary feasibility bottleneck, and HUD AMI breakeven rent. Public-domain Census <code>cb_2024_us_county_5m</code> boundaries.</p>
+          <div class="map-toolbar">
+            <div class="metric-chips" id="core-map-metrics" role="group" aria-label="County map metric"></div>
+            <label class="county-pick" for="county-select">
+              <span>County</span>
+              <select id="county-select"></select>
+            </label>
+          </div>
+          <p class="help bottleneck-legend" id="core-bottleneck-legend" hidden></p>
+          <div id="map-stage"></div>
+          <div id="county-detail" class="callout studio-county-receipt" hidden></div>
+        </section>
+      </div>
+
+      <!-- Briefing Executive Snapshot Strip (Always crisp in Briefing Mode; links into Markup & Audit) -->
+      <section class="studio-briefing-strip no-print" id="studio-briefing-strip" aria-label="Affordability, priority stances, and official data snapshot">
+        <div class="briefing-strip-grid" id="briefing-strip-mount">
+          <div class="briefing-tile"><span class="step-kicker">HUD AMI Breakeven</span><p class="help">Loading cost-based monthly breakeven rents…</p></div>
+          <div class="briefing-tile"><span class="step-kicker">Stakeholder Stance</span><p class="help">Loading priority stance rankings…</p></div>
+          <div class="briefing-tile"><span class="step-kicker">Official State GIS Hub</span><p class="help">Loading state portal &amp; Handbook coverage…</p></div>
+        </div>
+        <div class="studio-depth-prompt">
+          <span>Want deeper legislative stress-testing?</span>
+          <button type="button" class="btn-pill" data-depth-jump="markup">Open 2 · Markup Studio (AMI Table, Single-Stair &amp; Bill A/B Diff)</button>
+          <button type="button" class="btn-pill" data-depth-jump="audit">Open 3 · Analyst Audit (Equations, Monte Carlo, Cross-Check &amp; CSV/JSON)</button>
+        </div>
       </section>
 
-      <div class="analysis-shell">
+      <!-- Deep Analysis Workbench (Revealed in Markup & Audit Modes, or on Print / Tab Click) -->
+      <div class="analysis-shell" id="analysis-shell">
         <div class="analysis-nav-wrap no-print">
-          <p class="step-kicker">Step 4 · Equations, Tables, Sensitivity &amp; Exports</p>
+          <div class="panel-head">
+            <p class="step-kicker">Deep Audit Workbench · Equations, Tables, Affordability, Sensitivity &amp; Exports</p>
+            <button type="button" class="btn-pill" id="collapse-to-briefing">Return to compact 1 · Briefing view</button>
+          </div>
           <nav class="tabs no-print" aria-label="Result views">
             <div class="tablist" role="tablist" aria-label="Result views">
               <button type="button" class="tab active" role="tab" id="tab-compare" data-tab="compare" aria-selected="true" aria-controls="panel-compare">Compare</button>
@@ -256,10 +313,13 @@
       </details>
     </main>
 
-    <aside class="assumptions" aria-label="Assumptions">
+    <aside class="assumptions studio-drawer studio-drawer-right" id="assumptions-drawer" aria-label="Assumptions" hidden>
       <div class="aside-head">
         <h2>Bill &amp; Assumptions</h2>
-        <button type="button" id="reset">Reset</button>
+        <div class="drawer-head-actions">
+          <button type="button" id="reset">Reset</button>
+          <button type="button" class="drawer-close" id="close-assumptions-drawer" aria-label="Close assumptions drawer">Close ✕</button>
+        </div>
       </div>
       <p class="help">Sliders stay inside the published low-to-high band. Reset restores every assumption and turns every reform back on at full weight.</p>
       <div id="core-pin" class="pin-box"></div>
@@ -270,7 +330,7 @@
   </div>
 
   <footer>
-    <p>Stateframe is open source under the Apache License 2.0. Structural equations live in <code>src/model/equations.py</code>. Default values live in <code>config/assumptions.yaml</code>. No machine-learning model is used. Map points are Census gazetteer interior points, not a copied basemap.</p>
+    <p>Stateframe is open source under the Apache License 2.0. Structural equations live in <code>src/model/equations.py</code>. Default values live in <code>config/assumptions.yaml</code>. No machine-learning model is used. County choropleth boundaries are simplified public-domain Census <code>cb_2024_us_county_5m</code> polygons.</p>
     <p>Tejas Chaudhari (tchaudha@andrew.cmu.edu), Yoon Yik Ng (yoonyikn@andrew.cmu.edu), Christopher Severns (cseverns@andrew.cmu.edu), Carnegie Mellon University.</p>
     <p class="build-stamp">Build <!-- BUILD_STAMP --></p>
   </footer>

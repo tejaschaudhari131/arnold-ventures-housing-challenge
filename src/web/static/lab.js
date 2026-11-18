@@ -84,6 +84,8 @@
   var projBox = null;
   var mapMetric = "homes";
   var pinnedView = null;
+  var labDepth = "briefing";
+  var labAdjustOpen = false;
 
   var statusEl = document.getElementById("status");
   var headline = document.getElementById("headline");
@@ -100,6 +102,41 @@
   var whyToggle = document.getElementById("why-toggle");
   var envelopeNote = document.getElementById("envelope-note");
   var stateSelect = document.getElementById("state-select");
+  var labAdjustEl = document.getElementById("adjust");
+  var labBackdrop = document.getElementById("lab-backdrop");
+  var labAdjustBtn = document.getElementById("toggle-lab-adjust");
+  var labOverrideBadge = document.getElementById("lab-override-badge");
+
+  function setLabDepth(next) {
+    if (next !== "briefing" && next !== "markup" && next !== "audit") next = "briefing";
+    labDepth = next;
+    if (document.body && document.body.setAttribute) {
+      document.body.setAttribute("data-depth", labDepth);
+    }
+    document.querySelectorAll("[data-depth-btn]").forEach(function (btn) {
+      btn.setAttribute("aria-pressed", btn.getAttribute("data-depth-btn") === labDepth ? "true" : "false");
+    });
+  }
+
+  function setLabAdjust(open) {
+    labAdjustOpen = !!open;
+    if (labAdjustEl) labAdjustEl.hidden = !labAdjustOpen;
+    if (labBackdrop) labBackdrop.hidden = !labAdjustOpen;
+    if (labAdjustBtn) labAdjustBtn.setAttribute("aria-expanded", labAdjustOpen ? "true" : "false");
+    if (labAdjustOpen) {
+      var closeBtn = document.getElementById("close-lab-adjust");
+      if (closeBtn) closeBtn.focus();
+    } else if (labAdjustBtn) {
+      labAdjustBtn.focus();
+    }
+  }
+
+  function updateLabOverrideBadge() {
+    var count = Object.keys(overrides || {}).length;
+    if (!labOverrideBadge) return;
+    labOverrideBadge.hidden = count === 0;
+    labOverrideBadge.textContent = String(count);
+  }
 
   function setStatus(text) { statusEl.textContent = text || ""; }
 
@@ -538,7 +575,10 @@
     var county = q.get("county");
     if (county) selectedFips = county;
     var v = q.get("view");
-    if (v === "map" || v === "table" || v === "chart") view = v;
+    if (v === "map" || v === "table" || v === "chart") {
+      view = v;
+      if (v === "table" || v === "chart") setLabDepth("audit");
+    }
     if (on.size === 1) scenarioId = selectedIds()[0];
     else if (on.size === 4) scenarioId = "package";
   }
@@ -676,6 +716,7 @@
 
   function renderAll() {
     renderStateNotice();
+    updateLabOverrideBadge();
     if (!locked || locked.state !== stateCode) return;
     renderHeadline();
     renderCount();
@@ -1852,6 +1893,7 @@
     Object.keys(preset.bounds).forEach(function (name) {
       overrides[name] = resolveBoundValue(name, preset.bounds[name]);
     });
+    updateLabOverrideBadge();
     writeUrl();
     if (locked && locked.state === stateCode) {
       runRecompute();
@@ -1864,9 +1906,7 @@
   }
 
   function renderPresets() {
-    var box = document.getElementById("preset-box");
-    if (!box) return;
-    box.innerHTML =
+    var html =
       '<p class="aside-label">Committee amendment presets</p>' +
       '<p class="hint">One click loads a legislative scenario inside published assumption bands.</p>' +
       '<div class="preset-grid">' +
@@ -1876,9 +1916,14 @@
           escapeHtml(p.label) + "</button>";
       }).join("") +
       "</div>";
-    box.querySelectorAll("[data-preset]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        applyPreset(btn.getAttribute("data-preset"));
+    ["preset-box", "preset-box-inline"].forEach(function (boxId) {
+      var box = document.getElementById(boxId);
+      if (!box) return;
+      box.innerHTML = html;
+      box.querySelectorAll("[data-preset]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          applyPreset(btn.getAttribute("data-preset"));
+        });
       });
     });
   }
@@ -1916,44 +1961,48 @@
   }
 
   function renderPinBox() {
-    var box = document.getElementById("pin-box");
-    if (!box || !locked) return;
-    if (!pinnedView || pinnedView.state !== stateCode) {
-      box.innerHTML =
+    if (!locked) return;
+    var isUnpinned = !pinnedView || pinnedView.state !== stateCode;
+    var html = "";
+    if (isUnpinned) {
+      html =
         '<div class="pin-head"><span class="aside-label">Compare amendments (A vs. B)</span>' +
-        '<button type="button" class="pin-act" id="pin-save">Pin current as A</button></div>' +
+        '<button type="button" class="pin-act" data-pin-act="save">Pin current as A</button></div>' +
         '<p class="hint">Pin this view, then flip bills or move sliders to see the exact statewide and county delta.</p>';
-      var saveBtn = box.querySelector("#pin-save");
-      if (saveBtn) saveBtn.addEventListener("click", pinCurrent);
-      return;
+    } else {
+      var curTotal = Number(packageTotal().c) || 0;
+      var dState = curTotal - pinnedView.total;
+      var cRow = selectedFips ? countyRow(selectedFips) : null;
+      var curCounty = cRow ? (Number(countyMapValue(cRow)) || 0) : 0;
+      var pinCounty = (cRow && Object.prototype.hasOwnProperty.call(pinnedView.byCounty, cRow.fips))
+        ? pinnedView.byCounty[cRow.fips]
+        : 0;
+      var dCounty = curCounty - pinCounty;
+      var cName = cRow ? cRow.name.replace(/ County$/i, "") : "County";
+      html =
+        '<div class="pin-head"><span class="aside-label">Pinned A vs. Current B</span>' +
+        '<span class="pin-btns"><button type="button" class="pin-act" data-pin-act="update">Re-pin</button>' +
+        '<button type="button" class="pin-act" data-pin-act="clear">Clear</button></span></div>' +
+        '<p class="hint">Pinned A: <strong>' + escapeHtml(pinnedView.label) + "</strong></p>" +
+        '<div class="pin-table-wrap"><table class="pin-table" aria-label="Pinned baseline A versus current view B">' +
+        "<thead><tr><th>Scope</th><th>Bill A</th><th>Bill B</th><th>Δ (B−A)</th></tr></thead><tbody>" +
+        "<tr><td>" + escapeHtml(stateCode) + " total</td><td>" + signed(pinnedView.total) + "</td><td>" + signed(curTotal) +
+        "</td><td><strong>" + signed(dState) + "</strong></td></tr>" +
+        (cRow
+          ? "<tr><td>" + escapeHtml(cName) + "</td><td>" + signed(pinCounty) + "</td><td>" + signed(curCounty) +
+            "</td><td><strong>" + signed(dCounty) + "</strong></td></tr>"
+          : "") +
+        "</tbody></table></div>";
     }
-    var curTotal = Number(packageTotal().c) || 0;
-    var dState = curTotal - pinnedView.total;
-    var cRow = selectedFips ? countyRow(selectedFips) : null;
-    var curCounty = cRow ? (Number(countyMapValue(cRow)) || 0) : 0;
-    var pinCounty = (cRow && Object.prototype.hasOwnProperty.call(pinnedView.byCounty, cRow.fips))
-      ? pinnedView.byCounty[cRow.fips]
-      : 0;
-    var dCounty = curCounty - pinCounty;
-    var cName = cRow ? cRow.name.replace(/ County$/i, "") : "County";
-    box.innerHTML =
-      '<div class="pin-head"><span class="aside-label">Pinned A vs. Current B</span>' +
-      '<span class="pin-btns"><button type="button" class="pin-act" id="pin-update">Re-pin</button>' +
-      '<button type="button" class="pin-act" id="pin-clear">Clear</button></span></div>' +
-      '<p class="hint">Pinned A: <strong>' + escapeHtml(pinnedView.label) + "</strong></p>" +
-      '<div class="pin-table-wrap"><table class="pin-table" aria-label="Pinned baseline A versus current view B">' +
-      "<thead><tr><th>Scope</th><th>Bill A</th><th>Bill B</th><th>Δ (B−A)</th></tr></thead><tbody>" +
-      "<tr><td>" + escapeHtml(stateCode) + " total</td><td>" + signed(pinnedView.total) + "</td><td>" + signed(curTotal) +
-      "</td><td><strong>" + signed(dState) + "</strong></td></tr>" +
-      (cRow
-        ? "<tr><td>" + escapeHtml(cName) + "</td><td>" + signed(pinCounty) + "</td><td>" + signed(curCounty) +
-          "</td><td><strong>" + signed(dCounty) + "</strong></td></tr>"
-        : "") +
-      "</tbody></table></div>";
-    var upBtn = box.querySelector("#pin-update");
-    var clBtn = box.querySelector("#pin-clear");
-    if (upBtn) upBtn.addEventListener("click", pinCurrent);
-    if (clBtn) clBtn.addEventListener("click", clearPin);
+    ["pin-box", "pin-box-inline"].forEach(function (boxId) {
+      var box = document.getElementById(boxId);
+      if (!box) return;
+      box.innerHTML = html;
+      box.querySelectorAll("[data-pin-act]").forEach(function (btn) {
+        var act = btn.getAttribute("data-pin-act");
+        btn.addEventListener("click", act === "clear" ? clearPin : pinCurrent);
+      });
+    });
   }
 
   function renderSliders() {
@@ -2734,6 +2783,35 @@
     });
   }
   document.addEventListener("click", function (event) {
+    var depthBtn = event.target.closest ? event.target.closest("[data-depth-btn]") : null;
+    if (depthBtn) {
+      setLabDepth(depthBtn.getAttribute("data-depth-btn"));
+      return;
+    }
+    var openDepthBtn = event.target.closest ? event.target.closest("[data-open-depth]") : null;
+    if (openDepthBtn) {
+      var targetDepth = openDepthBtn.getAttribute("data-open-depth");
+      setLabDepth(targetDepth);
+      var targetSec = document.getElementById(targetDepth === "markup" ? "lab-markup-ribbon" : "where");
+      if (targetSec) targetSec.scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" });
+      return;
+    }
+    var jumpLink = event.target.closest ? event.target.closest("[data-lab-jump]") : null;
+    if (jumpLink) {
+      var jumpDepth = jumpLink.getAttribute("data-lab-jump");
+      if (jumpDepth === "audit") setLabDepth("audit");
+      else if (jumpDepth === "markup" && labDepth === "briefing") setLabDepth("markup");
+      if (jumpLink.getAttribute("href") === "#county-table") {
+        setView("table");
+      }
+      return;
+    }
+    var skipMap = event.target.closest ? event.target.closest(".skip-map") : null;
+    if (skipMap) {
+      setLabDepth("audit");
+      setView("table");
+      return;
+    }
     var moreDrivers = event.target.closest ? event.target.closest("#drivers-more") : null;
     if (moreDrivers) {
       showAllDrivers = !showAllDrivers;
@@ -2743,6 +2821,7 @@
     var adjust = event.target.closest ? event.target.closest(".driver-adjust") : null;
     if (adjust) {
       var name = adjust.getAttribute("data-driver");
+      setLabAdjust(true);
       var input = document.getElementById("lab-slider-" + name);
       if (input) {
         var details = input.closest("details");
@@ -2771,6 +2850,40 @@
       countyQuery = countyFind.value || "";
       renderTable();
     });
+    countyFind.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" && locked) {
+        event.preventDefault();
+        var qText = (countyFind.value || "").trim().toLowerCase();
+        if (!qText) return;
+        var hit = docCounties().filter(function (c) {
+          return String(c.name || "").toLowerCase().indexOf(qText) >= 0;
+        })[0];
+        if (hit) chooseCounty(hit.fips);
+      }
+    });
+  }
+  if (labAdjustBtn) {
+    labAdjustBtn.addEventListener("click", function () {
+      setLabAdjust(!labAdjustOpen);
+    });
+  }
+  var closeLabAdjustBtn = document.getElementById("close-lab-adjust");
+  if (closeLabAdjustBtn) {
+    closeLabAdjustBtn.addEventListener("click", function () {
+      setLabAdjust(false);
+    });
+  }
+  if (labBackdrop) {
+    labBackdrop.addEventListener("click", function () {
+      setLabAdjust(false);
+    });
+  }
+  var openAdjustLink = document.getElementById("open-adjust-link");
+  if (openAdjustLink) {
+    openAdjustLink.addEventListener("click", function (event) {
+      event.preventDefault();
+      setLabAdjust(true);
+    });
   }
   whyToggle.addEventListener("click", function () {
     setWhy(!whyOpen);
@@ -2779,7 +2892,7 @@
     setWhy(false);
   });
   document.getElementById("why-adjust").addEventListener("click", function () {
-    document.getElementById("adjust").scrollIntoView({ behavior: RM ? "auto" : "smooth" });
+    setLabAdjust(true);
   });
   document.addEventListener("focusin", function (event) {
     var bar = document.getElementById("mini-total");
@@ -2807,6 +2920,11 @@
       if (!document.getElementById("tour").hidden) {
         event.preventDefault();
         showTour(99);
+        return;
+      }
+      if (labAdjustOpen) {
+        event.preventDefault();
+        setLabAdjust(false);
         return;
       }
       if (whyOpen) {
@@ -2846,11 +2964,14 @@
   document.getElementById("export-png").addEventListener("click", exportPng);
   document.getElementById("export-pdf").addEventListener("click", printBrief);
   document.getElementById("print-brief").addEventListener("click", printBrief);
+  var quickPrintBtn = document.getElementById("print-brief-quick");
+  if (quickPrintBtn) quickPrintBtn.addEventListener("click", printBrief);
   document.getElementById("copy-view").addEventListener("click", copyView);
   document.getElementById("copy-view-where").addEventListener("click", copyView);
   document.getElementById("try-pa").addEventListener("click", tryPennsylvania);
   document.getElementById("tour-btn").addEventListener("click", function (event) {
     lastFocus = event.target;
+    if (labDepth === "briefing") setLabDepth("markup");
     showTour(0);
   });
   document.getElementById("tour-next").addEventListener("click", function () { showTour(tourIndex + 1); });

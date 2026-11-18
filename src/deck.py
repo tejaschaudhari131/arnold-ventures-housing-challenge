@@ -437,7 +437,7 @@ bash scripts/run.sh            # starts stdlib server at http://127.0.0.1:8080 (
 </head>
 <body class="deck-body">
   <header class="suite-bar deck-bar no-print">
-    <a class="suite-brand" href="/">Stateframe <span class="suite-tag">Policy Suite</span></a>
+    <a class="suite-brand" href="/">Stateframe <span class="suite-tag">Legislative Studio</span></a>
     <nav class="suite-nav" aria-label="Stateframe workspaces">
       <a href="/">11-State Screening</a>
       <a href="/lab">PA &amp; NH County Lab</a>
